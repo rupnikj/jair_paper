@@ -1,0 +1,582 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{nips11submit_e,times,url,comment,amsmath,amsfonts}
+%\documentstyle[nips10submit_09,times,art10]{article} % For LaTeX 2.09
+
+\usepackage{amsmath}
+%\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\newcommand{\RR}{\mathbb{R}}
+
+\title{Spanning Spaces: Learning Cross-Lingual Similarities}
+
+\begin{comment}
+\author{
+Jan Rupnik \\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{jan.rupnik@ijs.si} \\
+\And
+Andrej Muhi\v c\\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{andrej.muhic@ijs.si} \\
+\AND
+Primo\v z \v Skraba \\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{primoz.skraba@ijs.si} \\
+}
+\end{comment}
+\author{
+Jan Rupnik, Andrej Muhi\v c, Primo\v z \v Skraba \\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{(jan.rupnik),(andrej.muhic),(primoz.skraba)@ijs.si} \\
+}
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+\newcommand{\X}{\mathbb{X}}
+\newcommand{\Y}{\mathbb{Y}}
+
+
+\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+In analyzing multilingual text corpora, we have the practical
+problem of computing similarities between documents in different
+languages. Given two documents in different languages, we use
+monolingual similarity to an aligned set to compute a similarity
+across languages. We derive several algorithms and show their
+relationship the choice of similarity function. We also show
+experimental results illustrating the approach.
+\end{abstract}
+
+
+
+\section{Introduction}
+Many machine learning tasks such as clustering, classification,
+retrieval, etc. rely on computing a metric to compare (data
+points). In our motivating example, multilingual corpora, we are
+usually faced with an overwhelming imbalance: some languages have
+far more documents than others.  Exacerbating the problem is that
+the intersection can be small or non-existent. Therefore, we must
+use what alignments exist. In this paper, we derive algorithms
+based on 2 general approaches. We find that one approach is
+approximated by cross-canonical correlation analysis
+(CCA)~\cite{Hotelling} and latent semantic indexing (LSI)\cite{lsi} approximates another.
+
+In the next section we derive algorithms based on analyzing the
+covariance structure of the aligned data.  We then conclude by
+briefly discussing experimental results on the Europarl
+dataset~\cite{europarl} and generalizations and future
+directions.
+
+\section{Approach}
+
+We begin with a collection of documents in two
+languages\footnote{The extension to multiple language is
+ discussed in the Discussion section.}. The documents are
+represented via bag-of-words as vector spaces $\X$ and
+$\Y$. There are several possible choices of monolingual
+similarity functions. We consider functions of the form:
+$x'C_{\X\X}^i x$ for $i\in \mathbb{Z}$. For $i=0$, we recover the
+squared Euclidean distance and for $i=-1$, we get the Mahalanobis
+distance.
+
+As input, we take a choice of $i$ (choice of inner product) along
+with an alignment of $\X$ and $\Y$. The problem is to find a
+mapping which respects both monolingual similarity and measures
+cross-lingual similarity.  There are two pragmatic approaches to finding the mapping. In the
+first we reduce the problem to monolingual similarity. We
+find some mapping $f: \X \rightarrow \Y$. For a pair of elements
+$x\in\X$ and $y\in\Y$, we compute their similarity as the
+similarity of $f(x)$ and $y$ in $\Y$. The second approach is to
+find an aligned joint basis for $\X$ and $\Y$, which can be
+interpreted as mapping both elements to a common space and
+computing similarity in this common representation.
+
+For the latter approach, we use LSI to find an aligned basis and
+for the former we used least-squares regression. We tested these
+approaches for 3 choices of similarity: $i=-1,0,1$, corresponding
+to Mahalanobis distance, Euclidean distance, and the metric
+weighted by the covariance matrix.
+
+The output of all the algorithms is a linear map (a matrix)
+denoted $B$, which computes the cross-lingual similarity as $x^T B
+y$ for $x\in\X$ and $y \in \Y$. The simplest choice for $B$ is
+$C_{\X\Y}$, the cross-covariance matrix.
+
+{\bf LSI:} To compute $B$, we take the first $d$
+eigenvalue-eigenvector pairs $\left(\mu_i, [{u_\X^i}^T,
+  {u_\Y^i}^T]^T\right)$ of the cross-covariance matrix, we obtain the approximation of the full
+covariance matrix:
+\begin{equation}
+\begin{bmatrix}
+  C_{\X \X} & C_{\X \Y} \\
+  C_{\Y \X} & C_{\Y \Y}
+\end{bmatrix} \approx \sum_{i = 1}^d \mu_i \begin{bmatrix} u_\X^i \\ u_\Y^i \end{bmatrix} \cdot \begin{bmatrix} {u_\X^i}^T & {u_\Y^i}^T \end{bmatrix}, \qquad \qquad B = \sum_{i = 1}^d \mu_i u_\X^i {u_\Y^i}^T\approx C_{\X \Y}
+\end{equation}
+The definition of $B$ comes from comparing the upper-right
+block. This also shows that LSI approximates the simplest choice
+of $B$. It is however far more computationally efficient because
+it first finds a low-dimensional representation.
+
+{\bf Regression:} To find $B$ using regression, we compute the
+optimal regression matrix as $ C_{\Y \X} (C_{\X \X})^{-1}$. This
+corresponds to the mapping $f$ mentioned above.  The inner
+product on the space $\Y$ induces $B$ for computing the
+similarities between elements in $\X$ and $\Y$: for $B$ it holds
+that $x^T B y = \langle f (x), y \rangle$. Therefore $B$ depends
+on the metric on $\Y$. For the inner product corresponding to
+$C_{\Y\Y}$, $B$ can be derived as $C_{\X \X}^{-1}C_{\X
+  \Y}C_{\Y \Y}$.
+
+Note that in the case of regression, we have a choice of which
+direction we map: $\X\rightarrow\Y$ or $\Y\rightarrow\X$ except
+for Mahalanobis metric where the formula for $B$ is
+symmetric. Due to space constraints we only note here that CCA approximates the least-squares
+regression for this metric just as LSI approximates the
+cross-covariance matrix.
+
+\section{Experiments}
+To evaluate a cross-similarity matrix performs, we used
+monolingual similarity matrices for supervision. All experiments
+are based on an aligned bilingual corpus of English and German
+documents and all computations were performed by selecting an
+aligned subset of $5000$ documents $T_X, T_Y$ for learning $B$
+and an aligned set of $500$ documents $R_X, R_Y$
+for testing. For the monolingual similarities $\langle \cdot, \cdot
+\rangle_X$ and $\langle \cdot, \cdot \rangle_Y$ we compute
+monolingual similarity scores: $S_X := \langle R_X, R_X
+\rangle_X$ and $S_Y:= \langle R_Y, R_Y \rangle_Y$ and compare the
+similarities to $S_{XY} := R_X^T B R_Y$. The measure chosen was
+the average correlation coefficient between rows of $S_{XY}$ and
+rows of $S_Y$ and the average correlation coefficient between the
+columns of $S_{XY}$ and rows of $S_Y$.
+
+We first observe that metrics $C_{X X}^i$ with higher exponent
+$i$ are easier to learn (the average correlation coefficients
+between the monolingual and cross-lingual similarity profiles are
+around $0.9$. We also observe that $i=-1$ is the only approach
+that performs relatively well in the inner product space
+$C_{XX}^{-1}$ when compared to the other approaches. This is
+predicted by the theory since the cross-view similarity matrix
+was derived for that objective. We also note that the ad-hoc
+approach of $B:= C_{XY}$ and its LSI-based approximation perform
+similarly with only $5$ basis vectors used by LSI, which is quite
+surprising.
+
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|c|}
+\hline
+&\multicolumn{2}{|c|}{}&\multicolumn{5}{|c|}{Regression} \\
+\hline
+&       $C_{xy}$	&LSI & 	$i=-1$& $i=0$(xy)& $i=0$(yx) & $i=1$(xy) & $i=1$(yx)\\
+\hline
+$C_{xx}^{-1}$ &	0.06&	0.05&	0.59&	0.22&	0.21&	0.04&	0.04\\
+\hline
+$C_{yy}^{-1}$ &	0.06&	0.05&	0.58&	0.22&	0.21&	0.04&	0.04\\\hline
+$I_{xx}$     &	0.29&	0.28&	0.70&	0.45&	0.45&	0.27&	0.27\\\hline
+$I_{yy}$     &   0.27&	0.26&	0.66&	0.43&	0.42&	0.25&	0.25\\\hline
+$C_{xx}$     &	0.94&	0.93&	0.34&	0.87&	0.88&	0.94&	0.94\\\hline
+$C_{yy}$     &	0.94&	0.93&	0.33	&0.88&	0.88&	0.95&	0.94\\\hline
+\end{tabular}
+\end{center}
+
+\bibliographystyle{unsrt} \bibliography{nips}
+
+
+\end{document}
+
+From now on we assume a fixed $i$ and denote the Hilbert space
+corresponding the the spaces and choice of inner product by $X =
+\left(\RR^n, \langle\cdot, \cdot\rangle_X\right)$ and $Y =
+\left(\RR^m, \langle\cdot, \cdot\rangle_Y\right)$. Let $d_X :(X,
+X) \rightarrow \RR$ and $d_Y : (Y,Y) \rightarrow \RR$ be the
+induced metrics on $\RR^n$ and $\RR^m$ respectively. Let $X
+\oplus Y$ denote the direct sum of Hilbert spaces with the inner
+product: $\langle (x_1, y_1), (x_2, y_2) \rangle_{X \oplus Y} =
+\langle x_1,x_2 \rangle_X + \langle y_1, y_2 \rangle_Y$. Let $A
+\subset X \oplus Y$ be a Riemannian manifold with metric tensor
+$g$. Let $\pi_X: X \oplus Y \rightarrow X$ and $\pi_Y: X \oplus Y
+\rightarrow Y$ denote projection operators to spaces $X$ and
+$Y$. Let $A_X := \pi_X(A)$ and $A_Y := \pi_X(A)$. Let $\pi_{A_X}
+: X \rightarrow A_X$ and $\pi_{A_Y} : Y \rightarrow A_Y$ denote
+projection operators.
+
+\section{Algorithms}
+
+
+
+\section{Partially Aligned Metric Spaces}
+
+We assume our spaces (document corpora divided by language) are
+mapped from some underlying, space(language)-independent latent
+space denoted $\L$. These mappings differ depending on
+language. For simplicity, we concentrate on the case of two
+spaces: $\X$ and $\Y$. Therefore, we can write $\X
+\overleftarrow{f_x} \L \overrightarrow{f_y} \Y$.  There are
+numerous metrics we can choose within a single space: this
+depends on what similiarity measure we choose between documents.
+
+The 3 methods we concentrate on are kernel versions of
+regression, LSI and CCA~\cite{shawe-taylor04kernel}.  By treating
+the aligned documents as mappings of common samples, we can
+conclude that there exists a bilinear operator for the metrics
+$M_\X \times M_\Y\rightarrow \RR$ and we base this mapping on the
+based on covariance matrices. We show how the different methods
+correspond with different choices of metrics on the space.
+
+The general statement of our problem is: Find an near-isometric
+mapping in between the similiarity spaces for all vectors $x\in
+\X$ and $y\in Y$. By working in the covariance space, this
+problem reduces to finding transformations between basis vectors
+of the two spaces. In all cases, we us the correspondence
+information to find this transformation. We limit ourselves to
+matrix operator $B(x,y) =  y' B x $
+
+{\bf Regression:} In this case we have the choice of minimizing
+$Bx-y$ such that $x$ and $y$ are in correspondence. We can
+optimze its adjoint($\Y\rightarrow\X$). In terms of the
+covariance matrices we can find $f_{\X\rightarrow\Y}(x) =
+C_{\X\X} C_{\Y\Y}^-1 $.  These are obtained by by standard
+multivariate regression analysis where the first gives the
+optimal regression matrix based on the standard inner
+product. Alternatively, if we assume an inner product weighted by
+the covariance matrix, the optimal mapping becomes just the
+cross-correlation matrix.
+
+\textcolor{red}{DRAWBACKS}
+
+{\bf CCA:}
+
+{\bf LSI:}
+
+
+
+In the case of
+aligned samples, we have well-defined covariance matrices
+$C_{\X\X}$ and $C_{\Y\Y}$.
+
+Notation
+
+Let $L_1 = \RR^{n_1},\ldots, L_m = \RR^{n_m}$ be $m$ vector
+spaces. Let $X_1 \in L_1, \ldots, X_m \in L_m$ be continuous
+random vectors with defined covariance matrices $C_{X_i X_i} :=
+E\big(X_i - E(X_i)(X_i - E(X_i))^T\big)$. In this paper we
+consider several possible inner product spaces for $L_1,\ldots,
+L_m$ that are induced by powers of covariance matrices. Let
+$H_i^p := (L_i, \langle \cdot, \cdot \rangle_{(C_{X_i X_i})^p})$
+denote the Hilbert space corresponding to space $L_i$ equipped
+with the inner product induced by the matrix $(C_{X_i X_i})^p$.
+
+Assumption
+
+Random vectors $X_i$ are different representations of some
+underlying random vector $Z \in R^\ell$: $X_i := f_i(Z), \ldots,
+X_m := f_m(Z)$, where each $f_i :\RR^\ell \rightarrow \RR^{n_i}$
+is a mapping. For this reason, we will refer to spaces $L_1,
+\ldots, L_m$ as different views of some latent objects.
+
+Notation
+
+A dataset $D: = [D_1^T,\ldots, D_m^T]^T $ is an aligned data set
+if each $D_i$ can be expressed in the following way: $D_i \in
+\RR^{n_i \times k} = f_i([z_1,\ldots, z_k])$ and $[z_1,\ldots,
+  z_k] \in \RR^{\ell\times k}$ is a sample of $k$ observation
+vectors drawn independently according to distribution of $Z$.
+
+2-view formulation of metric learning
+
+Let $(S_1,S_2)$ denote an aligned sample of $k$ pairs of vectors
+($S_1 \in \RR^{n_1 \times k}, S_2 \in \RR^{n_2 \times
+  k}$). Assign to $S_1$ a matrix of similarities $M_1^p := S_1^T
+C_{X_1 X_1}^p S_1$ and matrix $M_2^p := S_2^T C_{X_2 X_2}^p
+S_2$. These two matrices represent similarities computed in
+$H_1^p$ and $H_2^p$. Our goal is to find a matrix $B$ that can be
+used for computing similarities between vectors in $L_1$ and
+vectors in $L_2$ that is in "concordance" with similarities in
+$H_1^p$ and $H_2^p$. Define $B_{1,2}^p := S_1^T B S_2$. A good
+matrix $B$ for sample $S$ is the one which makes $B_{1,2}^p$
+close to $M_1^p$ and $M_2^p$. There are several possible measures
+of matrix closeness, a typical choice is the Frobenious
+norm. Obviously this is not always achievable, but if the random
+variables $X_1$ and $X_2$ (they are involved in drawing samples
+$S_1$ and $S_2$) share enough of mutual information, it is
+possible, for example in the extreme case where $X_1 = X_2$. This
+leads to the following optimization problem. We will refer to the
+bilinear mapping $B$ as the cross-view similarity measure.
+
+Optimization problem:
+
+
+\begin{equation}\label{eq:opt1}
+\begin{aligned}
+& \underset{B \in \RR^{n_1 \times n_2}}{\text{minimize}}
+& & E_{(S_1,S_2)} ||B_{1,2}^p - M_1^p||_F^2 + ||B_{1,2}^p - M_2^p||_F^2 \\
+\end{aligned}
+\end{equation}
+
+Remark:
+
+$S_1$ and $S_2$ are random matrices (i.i.d. samples of random
+variables $X_1$ and $X_2$) and they are sampled in a way that
+they form an aligned data set.
+
+Questions:
+
+Can the problem be solved analytically?
+
+Does to choice of the parameter $k$ (sample set size) influence the optimal matrix $B$.
+
+Remark:
+
+In practice we only have a single aligned sample, perhaps this
+simplifies the optimization problem (drop the expectation).
+
+Current candidate solutions
+
+For $H_1^0, H_2^0$ we propose: $B := C_{X_1 X_2} C_{X_2 X_2}^{-1}$ or $B := C_{X_1 X_1}^{-1} C_{X_1 X_2}$.
+For $H_1^1, H_2^1$ we propose: $B := C_{X_1 X_2}$.
+For $H_1^2, H_2^2$ we propose: $B := C_{X_1 X_2} C_{X_2 X_2}$ or $B := C_{X_1 X_1} C_{X_1 X_2}$.
+
+Connection to least squares regression
+
+The candidate solutions can be derived easily if we consider
+multivariate regression analysis. The aligned sample $S_1 \in
+\RR^{n_1 \times k}$ and $S_2 \in \RR^{n_2 \times k}$ can be
+interpreted as a set of input output vector pairs. Using the
+method of multivariate least squares regression, an optimal
+regression matrix from $L_1$ to $L_2$ can be computed as:
+$\widetilde{W} := S_2 S_1^T (S_1 S_1^T)^{-1}$. When $k
+\rightarrow \infty$ the expression for $\widetilde{W}$ converges
+to $W:= C_{X_2 X_1} (C_{X_1 X_1})^{-1}$. The inner product on the
+space $L_2$ induces the bilinear mapping $B$ for computing the
+similarities between elements in $L_1$ and $L_2$: the matrix $B$
+is the matrix for which it holds $x^T B y = \langle W x, y
+\rangle$. For the space $H_2^0$ ($L_2$ equipped with the standard
+inner product) we obtain the candidate $B = C_{X_1 X_1}^{-1}
+C_{X_1 X_2}$, whereas $H_2^1$ induces $B = C_{X_1 X_1}^{-1}C_{X_1 X_2}C_{X_2 X_2}$. If the
+direction of the regression is reversed (consider $S_2$ as the
+input vectors and $S_1$ as the output vectors), then the inner
+product structure of $L_1$ is the one that induces $B$. This way
+we obtain the candidate corresponding to $H_1^0$: $B := C_{X_1
+  X_2} C_{X_2 X_2}^{-1} $. The possible problem with the
+regression approach to similarity induction is that only one
+inner product structure is involved in computing $B$, whereas the
+search for $B$ in \ref{eq:opt1} considers both inner product
+spaces.
+
+Three views
+
+Assume that we have three views $X_1,X_2$ and $X_3$. If $C_{X_1 X_3}$ is not available (too few data points to estimate) we propose:
+$B := C_{X_1 X_2} C_{X_2 X_3}$ which fits inner product spaces $H_1^2$ and $H_3^2$.
+
+Long chains are inappropriate practically because they correspond to inner product spaces induced by variance matrices exponentiated to high powers.
+Rank of such matrices drops quickly (it approaches the dimension of the dominant eigen-space of the variance matrix) with the exponent and they typically become unsuitable for practical applications.
+
+CCA, SVD and covariances
+
+CCA and SVD represent two forms of analysis of data based on the covariance structures. They can both be used to extract basis vectors for each view that can be used for computing the bilinear mapping that enables computations of cross-view similarity mappings.
+
+Assume that $m=2$.
+
+Canonical correlation analysis can be formulated as following problem:
+
+\begin{equation*}
+\begin{aligned}
+& \underset{w_1 \in L_1, w_2 \in L_2}{\text{maximize}}
+& &  \frac{w_1' C_{X_1 X_2} w_2}{\sqrt{w_1' C_{X_1 X_1} w_1} \sqrt{w_2' C_{X_2 X_2} w_2}}.
+\end{aligned}
+\end{equation*}
+
+This can be reformulated as:
+\begin{equation}\label{eq:cca}
+\begin{aligned}
+& \underset{w_1 \in L_1, w_2 \in L_2}{\text{maximize}}
+& &  w_1' C_{X_1 X_2} w_2\\
+& \text{subject to}
+& &w_1' C_{X_1 X_1} w_1 = 1
+& &w_2' C_{X_2 X_2} w_2 = 1.
+\end{aligned}
+\end{equation}
+
+Using lagrangian multipliers technique yields a generalized eigenvalue problem:
+$$
+\begin{bmatrix}
+  0 & C_{X_1 X_2} \\
+  C_{X_2 X_1} & 0 \\
+\end{bmatrix} \cdot
+\begin{bmatrix}
+  w_1 \\
+  w_2 \\
+\end{bmatrix} =
+\lambda
+\begin{bmatrix}
+  C_{X_1 X_1} &0  \\
+  0 & C_{X_2 X_2} \\
+\end{bmatrix} \cdot
+\begin{bmatrix}
+  w_1 \\
+  w_2 \\
+\end{bmatrix}
+$$
+
+By inverting the matrices $C_{X_1 X_1}$ and $C_{X_2 X_2}$ we arrive to a standard eigenvalue problem:
+
+$$
+\begin{bmatrix}\label{eq:cca_ev}
+  0 & C_{X_1 X_1}^{-1} C_{X_1 X_2} \\
+  C_{X_2 X_2}^{-1} C_{X_2 X_1} & 0 \\
+\end{bmatrix} \cdot
+\begin{bmatrix}
+  w_1 \\
+  w_2 \\
+\end{bmatrix} =
+\lambda
+\begin{bmatrix}
+  w_1 \\
+  w_2 \\
+\end{bmatrix}
+$$
+
+We then compute the first $d$ largest eigenvectors and their eigenvalues $(\lambda_i, w_1^i, w_2^i),~i=1,\ldots,d$, where $w_1^i$ and $w_2^i$ are scaled so that constraints in \ref{eq:cca} are satisfied: ${w_1^i}^T C_{X_1 X_1} w_1^i = 1$ and ${w_2^i}^T C_{X_2 X_2} w_2^i = 1$.
+
+Combining the constraints with $C_{X_1 X_1}^{-1} C_{X_1 X_2} w_2^i = \lambda_i w_1^i$ from \ref{eq:cca_ev} we observe a close connection between multivariate least squares regression and CCA canonical vectors:
+$$C_{X_1 X_1}^{-1} C_{X_1 Y_1} = \left(\sum_{i=1}^d \lambda_i w_1^i {w_2^i}^T\right)C_{X_2 X_2}$$
+This means that the basis vectors can be used to form a cross-view similarity mapping:
+$$B = \sum_{i=1}^d \lambda_i w_1^i {w_2^i}^T= C_{X_1 X_1}^{-1} C_{X_1 Y_1} C_{X_2 X_2}^{-1}.$$
+
+We have motivated the use of bilinear mapping that seems less biased than the LSR regression variants where the direction of the regression matters.
+
+SVD
+
+Singular value decomposition is a popular approach in dimensionality reduction. It can be readily applied to the cross-view similarity learning in the following way. An aligned sample $\left(S_1, S_2\right)$ of $k$ pairs of observation vectors is analyzed in the following way.
+
+Stack the observations into a matrix of dimensions $k$-by$n_1 +n_2$:
+$$
+S = \begin{bmatrix} S_1 \\ S_2 \end{bmatrix}
+$$
+Compute the singular value decomposition of $S = U \Sigma V^T$ and retain the first $d$ columns of $U$ that correspond to the $d$ largest singular values in $\Sigma$. The vectors $U$ can be computed by solving following eigenvalue problem:
+$$
+\begin{bmatrix}
+  S_1 S_1^T & S_1 S_2^T \\
+  S_2^T S_1 & S_2 S_2^T \\
+\end{bmatrix} \cdot
+\begin{bmatrix}
+  u_1 \\
+  u_2 \\
+\end{bmatrix} =
+\mu
+\begin{bmatrix}
+  u_1 \\
+  u_2 \\
+\end{bmatrix}.
+$$
+Here we decomposed the eigenvectors to fit the block structure imposed by $S_1$ and $S_2$. Dividing both sides of the equation by the sample size and sending the sample size to infinity corresponds to the optimization on the covariance matrices:
+$$
+\begin{bmatrix}
+  C_{X_1 X_1} & C_{X_1 X_2} \\
+  C_{X_2 X_1} & C_{X_2 X_2} \\
+\end{bmatrix} \cdot
+\begin{bmatrix}
+  u_1 \\
+  u_2 \\
+\end{bmatrix} =
+\mu
+\begin{bmatrix}
+  u_1 \\
+  u_2 \\
+\end{bmatrix}.
+$$
+Taking the first $d$ eigenvalue-eigenvector pairs $\left(\mu_i, [{u_1^i}^T, {u_2^i}^T]^T\right)$  we obtain the approximation of the full covariance matrix:
+$$
+\begin{bmatrix}
+  C_{X_1 X_1} & C_{X_1 X_2} \\
+  C_{X_2 X_1} & C_{X_2 X_2} \\
+\end{bmatrix} \approx \sum_{i = 1}^d \mu_i \begin{bmatrix} u_1^i \\ u_2^i \end{bmatrix} \cdot \begin{bmatrix} {u_1^i}^T & {u_2^i}^T \end{bmatrix}
+$$
+Comparing the upper-right block shows:
+$$C_{X_1 X_2} \approx \sum_{i = 1}^d \mu_i u_1^i {u_2^i}^T.$$
+We now see that the SVD based approach yields a cross-view similarity mapping $B = \sum_{i = 1}^d \mu_i u_1^i {u_2^i}^T$ that is an approximation of the regression induced bilinear similarity mapping on inner product space $H_1^1$ (or equivalently $H_2^1$).
+
+
+Kernel CCA, kernel SVD
+
+In order to apply CCA and SVD to Hilbert spaces other than $H_i^0$ we used their kernel counterparts. The modified methods are described in \cite{shawe-taylor04kernel}.
+
+Corrections: leveraging unaligned data
+
+All involved methods were operating on covariance estimates based on aligned samples. In practice we often encounter the situation where some data is aligned but each view contains additional unaligned data. Such data can be used to obtain better estimates of variance matrices $C_{X_i X_i}$. Let $m=2$. Let $\widetilde{S}_1 \in \RR^{n_1 \times s_1}$ represent a sample of the random variable $X_1$ of size $s_1$, $\widetilde{S}_2 \in \RR^{n_2 \times s_2}$ a sample of random variable $X_2$ of size $s_2$ and $\left(\widehat{S}_1 \subset \widetilde{S}_1, \widehat{S}_2 \subset \widetilde{S}_2\right)$ an aligned sample of size $k$. Assume that the random vectors are centered. We can obtain the following empirical estimates: $\widetilde{C}_{X_1 X_1} := \frac{1}{s_1 -1} \widetilde{S}_1 \widetilde{S}_1^T$, $\widetilde{C}_{X_2 X_2} := \frac{1}{s_2 -1} \widetilde{S}_2 \widetilde{S}_2^T$, $\widehat{C}_{X_1 X_1} := \frac{1}{k -1} \widehat{S}_1 \widehat{S}_1^T$, $\widehat{C}_{X_2 X_2} := \frac{1}{k -1} \widehat{S}_2 \widehat{S}_2^T$ and $\widehat{C}_{X_1 X_2} := \frac{1}{k -1} \widehat{S}_1 \widehat{S}_2^T$. All of the mentioned approaches to finding the bilinear form are based on computations involving the empirical estimates. Computations based on replacing $\widehat{C}_{X_1 X_1}$ with $\widetilde{C}_{X_1 X_1}$ and  replacing$\widehat{C}_{X_2 X_2}$ with $\widetilde{C}_{X_2 X_2}$ typically perform worse than results based on $\widehat{C}_{X_1 X_1}$, $\widehat{C}_{X_2 X_2}$ and $\widehat{C}_{X_1 X_2}$ alone.
+
+The approach we propose is to compute the change of basis that transforms $\widehat{C}_{X_1 X_1}$ to $\widetilde{C}_{X_1 X_1}$, $\widehat{C}_{X_2 X_2}$ to $\widetilde{C}_{X_2 X_2}$ and apply it to $\widehat{C}_{X_1 X_2}$. To achieve this we first compute Cholesky decompositions of $\widetilde{C}_{X_1 X_1} = \widetilde{C}_1^T \widetilde{C}_1$, $\widetilde{C}_{X_2 X_2} = \widetilde{C}_2^T \widetilde{C}_2$, $\widehat{C}_{X_1 X_1} = \widehat{C}_1^T \widehat{C}_1$, $\widehat{C}_{X_2 X_2} = \widehat{C}_2^T \widehat{C}_2$. The matrices that perform the required change of basis are: $\widetilde{C}_1 \widehat{C}_1^{-1}$ and $\widetilde{C}_2 \widehat{C}_2^{-1}$. The new input to our methods, the variance and covariance matrices, are: $\widetilde{C}_{X_1 X_1}$, $\widetilde{C}_{X_2 X_2}$ and $\widetilde{C}_1^T \widehat{C}_1^{-T}  \widehat{C}_{X_1 X_2} \widehat{C}_2^{-1} \widetilde{C}_2$.
+
+
+Alternative problem definition: differential geometric approach
+
+Let $X = \left(\RR^n, \langle\cdot, \cdot\rangle_X\right)$ and $Y
+= \left(\RR^m, \langle\cdot, \cdot\rangle_Y\right)$ be two
+Hilbert spaces referred to as views and let $d_X :(X, X)
+\rightarrow \RR$ and $d_Y : (Y,Y) \rightarrow \RR$ be the induced
+metrics on $\RR^n$ and $\RR^m$ respectively. Let $X \oplus Y$
+denote the direct sum of Hilbert spaces where the inner product
+is computed as $\langle (x_1, y_1), (x_2, y_2) \rangle_{X \oplus
+  Y} = \langle x_1,x_2 \rangle_X + \langle y_1, y_2
+\rangle_Y$. Let $A \subset X \oplus Y$ be a Riemannian manifold
+with metric tensor $g$. Let $\pi_X: X \oplus Y \rightarrow X$ and
+$\pi_Y: X \oplus Y \rightarrow Y$ denote projection operators to
+spaces $X$ and $Y$. Let $A_X := \pi_X(A)$ and $A_Y :=
+\pi_X(A)$. Let $\pi_{A_X} : X \rightarrow A_X$ and $\pi_{A_Y} : Y
+\rightarrow A_Y$ denote projection operators.
+
+Idealized assumption: existence of diffeomorphisms $f_X : A_X \rightarrow A$ and $f_Y : A_Y \rightarrow A$.
+
+Define the cross-view measure of distance as the mapping $B_A : (A_X, A_Y) \rightarrow \RR$,
+$$B(x,y) := \int_0^1 \sqrt{ g_{\gamma(t)}\left(\dot{\gamma}(t), \dot{\gamma}(t)\right)}, $$ where $x \in A_X$, $y \in A_Y$, $\gamma$ is a geodesic curve lying in $A$ and $\gamma(0) = \left( x, f_X(x)\right)$ and $\gamma(1) = \left( f_Y(y), y\right)$.
+
+The interpretation of the space $A$ is that it encodes the mutual information between views. An aligned sample $S = (S_X, S_Y) \subset X \oplus Y$ represents a collection of points lying in the space $A$.
+
+ Extending the cross-view measure of distance from $A_X \oplus A_Y$ to full $X \oplus Y$ is straightforward: for $x \in X$ and $y \in Y$ define $B(x,y):= B_A\left(\pi_{A_X}(x), \pi_{A_Y}(y)\right)$.
+
+If $A$ is a linear space
+
+
+
+\section{Algorithms}
+
+\noindent {\bf Baseline:}
+
+\noindent {\bf Regression:}
+
+\noindent {\bf CCA with correction:}
+
+\noindent {\bf Global Methods:}
+
+
+\label{sec:alg}
+\section{Experimentation}
+
+\section{Discussion}
+
+\bibliographystyle{unsrt} \bibliography{nips}
+
+\end{document}

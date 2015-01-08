@@ -1,0 +1,725 @@
+%% LyX 1.3 created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[11pt,twocolumn,english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[latin1]{inputenc}
+\usepackage{hyperref}
+\usepackage{comment}
+\usepackage{amsmath}
+\usepackage{titlesec}
+\usepackage{todonotes}
+\usepackage{graphicx}
+
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection.\ }{0em}{}
+
+
+%\usepackage{todo}
+\pagestyle{empty}
+
+\makeatletter
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\setlength{\topmargin}{-35pt}
+\setlength{\textheight}{690pt}
+\setlength{\textwidth}{445pt}
+\setlength{\columnsep}{18pt}
+\setlength{\oddsidemargin}{3pt}
+\setlength{\evensidemargin}{3pt}
+\setlength{\parindent}{0.5cm}
+
+%
+%         New commands and environments
+%
+
+\newcommand{\bigast}{\mbox{\small$\ast$}}
+\newcommand{\real}{\mbox{\bf R}}
+\newcommand{\RR}{\mathbb{R}}
+
+%
+%         Data for Title
+%
+%A.I. Laboratory
+%Jo¡ zef Stefan Institute
+%Ljubljana, Slovenia
+\title{\vspace*{-25pt}\Large\bf Cross-Lingual Document Similarity} %for Large, Multi-lingual Data \\ based on Wikipedia multilingual alignment}
+\author{\vspace*{-21pt} \ \\ \large {Andrej Muhi\v c, Jan Rupnik, Primo\v z \v Skraba}  \\
+         {\em A.I. Laboratory, Jo\v zef Stefan Institute} \\
+         {\em Jamova 39, 10000 Ljubljana, Slovenia} \\
+         {\em E-mail: andrej.muhic@ijs.si, jan.rupnik@ijs.si, primoz.skraba@ijs.si}}
+\date{ }
+
+
+\usepackage{babel}
+\makeatother
+\begin{document}
+\thispagestyle{empty}
+\maketitle
+
+\noindent \textbf{\emph{\large Abstract.}}
+\emph{In this paper we investigated how to compute similarities between documents written in different languages based
+on a weekly aligned multi-lingual collection of documents. Computing the cross-lingual similarities is based on an aligned set of basis
+vectors obtained by either latent semantic indexing or the $k$-means algorithm on an aligned multi-lingual corpus.
+We evaluated the methods on two data sets: Wikipedia and European Parliament Proceedings Parallel Corpus.
+%compare two methods for computing language independent representations of documents.
+%Such representations allow us to compare documents written in different languages.
+%low rank approximation methods for data
+%obtained by Wikipedia multilingual alignemnt.
+%%We describe the procedure used to obtain Wikipedia multilingual corpus in detail.
+%The resulting corpus is only weakly aligned as correspondences are just links and not direct translations.
+%Its special properties are discussed. %Troubles with parsing Wikipedia data dumps in special markup language are discussed. Rather than focusing only on bilingual retrieval, we
+%We examine the structure in up to 10 chosen languages. The algorithms we
+%choose to compare are $k$-means and cross-lingual latent semantic
+%indexing(CL-LSI).%, and multi-view cannonical correlation analysis
+%%(mCCA). We test these methods on the European Parliament
+%%Proceedings Parallel Corpus.
+\ }\\ \\
+ \emph{} \textbf{\large Keywords. }cross-lingual, similarity, LSI, k-means, Wikipedia, information retrieval
+
+
+
+ \section{Introduction}
+%While the Internet
+%originally had English content almost exclusively, now there is a
+%diversity of different languages well beyond bi-lingual into
+%truly multi-lingual territory. A notable example of phenomenon is the Wikipedia.
+%When extracting topics from documents in multiple languages, we
+%would like to find topics that are not only important within a
+%language but have a corresponding and equivalent representation
+%in the other languages. Machine translation tools are available for well
+%established languages but almost no tools exist for some less represented ones.
+The globalization process increased the availability of the multi-lingual information sources and the need for automatic cross-lingual processing tools.
+The prime example of the process is the Wikipedia - while the majority of the pages in 2001 were written in English, the percentage of English articles dropped to 14\% by 2012.
+Our goal is to find language independent representation of the documents without using machine translation tools which may not always be available.
+Finding a representation which is valid over multiple languages, we can use well-established machine learning tools designed for monolingual text-mining tasks.
+The representations can be interpreted as multi-lingual topics, which can be used as proxies to compute cross-lingual similarities between documents.
+%Wikipedia collection is a huge %Document collections are a typically represented as high dimensional data set
+%, and one of the prime candidates for lower dimensional representations.
+
+Our work focuses on studying non-probabilistic approaches to analysis of
+multi-lingual document collections. The methods we compare
+are described in section~\ref{sec:alg}.
+%Recently a probabilistic
+%approach based on latent Dirichlet allocation was proposed
+%\cite{xLDA}, however no implementations were readily available. We plan to implement it and include it in subsequent studies.
+
+The paper is organized as follows: we first introduce the setting
+of multilingual data, then describe the algorithms and
+datasets. We conclude with the evaluation and discussion.
+\begin{comment}
+Concepts and... are important across countries. However, much of
+what we do is still determined by language. While the Internet
+originally had English content almost exclusively, now there is a
+diversity of different languages well beyond bi-lingual into
+truly multi-lingual territory.
+
+The goal when doing dimensionality reduction on data is to
+capture the ``important parts'' of an underlying dataset. These
+will preserve the properties of the original high dimensional
+data, but faster to deal with algorithmically and highlight the
+components (or mixtures thereof) which best explain the data
+making it useful for interpretation during analysis as well.
+
+metric analysis
+
+The most common representation of the
+
+metric space....
+
+multilingual is important....
+
+
+Initially distance of kernel similarity matrices are not only
+have an approximate low rank structure, but for this study we
+look at matrix with additional structure.
+
+We can view our
+
+
+ Special structure of multi-lingual data
+\end{comment}
+
+
+\section{Multilingual Data}
+
+Our data is a collection of documents in multiple languages along
+with an alignment with correspondences across
+languages. Individual documents are represented as vectors by using the standard vector space model where each term corresponds to a word or a phrase in a fixed vocabulary. An aligned corpus is represented by a set of matrices $D^J$ defined as $D^J := [d_1^J , \ldots , d_{m_j}^J ] \in \RR^{n_J \times m_J}$ where $m_J$ is the number of documents in language $J$ and $n_J$ is the dictionary size. Let $N = \sum_{J=1}^M n_J$, where $M$ is the number of languages. Each multi-lingual document of the aligned corpus is formed as a block vector
+$d_k = [ d_k^1; \dots; d_k^M] \in \RR^{N}$, and documents are indexed so that $d_k^{J_1}$ and $d_k^{J_2}$ is an aligned document pair for all $k, J_1, J_2$.
+%additionally identified by its corresponding language.
+%Each language has also its own dictionary independent of other languages.
+%The individual
+%term-document matrices are grouped according to language giving $
+%\{ D_1, D_2, \ldots, D_\ell\}$.
+
+Our main interest are similarities between documents. We can measure the similarities between documents of the same language
+ by using the cosine similarity. We note that given a
+transformation function between dictionaries, we could compute
+similarities between documents in different languages. However,
+bilingual-dictionaries are not available for many language pairs in the Wikipedia corpus
+and we will rely on document correspondences to compute document similarities across
+languages in the present paper. Note that this implies a correspondence between
+columns in each $D^K$ for all $K$. Translations between
+dictionaries would give us row-based correspondences, but we will
+investigate this approach in future work.
+
+Terms in the dictionary are generally not equally important in
+determining similarity between documents, so we must preprocess
+the documents. We first use term frequency ($TF$), to prune away
+infrequent terms. Rather than take a fixed number of top terms in
+each document we use an adaptive measure.
+
+Let $f(n)$ be a map
+which returns numbers of terms appearing at least $n$ times.  For each language $k$
+we find maximal $n$ such that
+$\max(10^5, N_k)\leq f(n) \leq 6\cdot 10^5,$ where $N_k$ is number of documents in complete
+dictionary of language $k.$ As we do not apply any stemming and lemmatization this ensures that we get well balanced corpus and retain at least of
+$10^5$ words for languages with rather small Wikipedias but potentially rich vocabularies.
+%find $n$ such that
+%\begin{equation}
+%\frac{|f(n+1) - f(n)|}{\mbox{original \# of terms}} < 0.001
+%\end{equation}
+%and used these as the terms for the document.
+Once this pruning
+step is complete, we further re-weight the remaining terms. A term
+weight should correspond to the importance of the term for the
+given corpus.  The common weighting scheme is called Term
+Frequency Inverse Document Frequency (TFIDF) weighting. An
+Inverse Document Frequency (IDF) weight for the dictionary term $j$
+is defined as $w_j = \log( DF_j )$, where $DF_j$ is the number of
+documents in the corpus which contain term $j$.  A document
+TFIDF vector is its original vector multiplied element-wise by the
+weights. The $j$-th element of a document vector is given by $
+TF_j \log( DF_j )$. Finally, we re-normalize each vector to have
+Euclidean norm equal to 1.
+
+\section{Algorithms}
+\label{sec:alg}
+We compute the low rank approximation of the term-document
+matrix using two algorithms: $k$-means\cite{h-ca-75} and
+cross-lingual latent semantic indexing(CL-LSI)\cite{cl_lsi}.
+%, and
+%multi-view canonical correlation analysis (mCCA)\cite{Kettenring}.
+
+The $k$-means algorithm is perhaps the most well-known and used clustering
+algorithm. In order to apply the algorithm we first merge
+all the term-document matrices into a single matrix by stacking
+the individual term-document matrices and discarding nonaligned documents.
+\begin{equation}
+D_{\mbox{Total}} = \begin{bmatrix}D^T_1 ,D^T_2, \cdots,D^T_\ell\
+\end{bmatrix}
+^T
+\end{equation}
+such that the columns respect the alignment of the
+documents. Therefore, each document  is represented by a long
+vector indexed by the terms in all languages. These vectors
+determine the similarity on which the $k$-means is computed.
+%In the implementation we never form the matrix $D_{\mbox{Total}}$ explicitly but rather implement
+%implicit multiplication as
+%$D_{\mbox{Total}} x = \sum_{i=1}^\ell D_i x$ and multiplication
+%with transpose as
+%$D_{\mbox{Total}}^T y = \sum_{i=1}^\ell D_i^T y_i,$ where
+%$y$ is partitioned accordingly to $D_{\mbox{Total}}.$
+%That lowers memory requirement and compacts sparse indexing, leading to faster element access.
+The algorithm outputs a set of centroids that are then separated to form an aligned basis.
+As a final step the the projected documents are computed as the least squares solutions.
+
+The next method is CL-LSI which is a variant of LSI~\cite{lsi}
+for more than one language. The method is based on computing the singular value decomposition of $D_{Total}$. Since the matrix can be large we
+can use an iterative method like the Lanczos~\cite{matrix_comp}
+algorithm with reorthogonalization to find the left singular vectors corresponding to the
+largest singular values. It turns out that Lanczos method converges slowly as the ratio of leading singular eigenvalues
+is close to one. Moreover Lanczos method is hard to parallelize.
+Instead we use randomized version of the singular value decomposition (SVD) described in [1] than can be viewed as block
+Lanczos method.
+That enables us to use parallelization and can speed up the computation considerably when multiprocessing is available.
+
+At the end we obtain low rank approximation $D_{\mbox{Total}} \approx U_k \Sigma_k V_k^T,$
+where $U_k$ are basis vectors of interest and $\Sigma_k$ is truncated diagonal matrix of singular eigenvalues.
+Each column $u_i$ of $U_k$ consists of block vectors $u_i = \begin{bmatrix} u^{1^T}_i & \dots & u^{\ell^T}_i \end{bmatrix}^T.$
+We do not normalize each block $j$  as this would destroy the low rank approximation.
+%Each block $j$ is normalized $u^{j^1}_i = u^{j^1}_i/||u^{j^1}_i||$ to reduce the bias.
+We obtain the
+aligned reduced basis $U_{\textrm{aligned}} = \begin{bmatrix} {U^1}^T &\dots & {U^\ell}^T \end{bmatrix}^T,$
+where $D_j =  U^j \Sigma_k V_k.$
+The reduced language free representation for language $j$ and document $d$ is computed as the weighted least square solution $\Sigma_k^{-1} {U^j}^+ d,$
+where $+$ denotes the pseudo inverse of a matrix that is is used because columns of $U^j$ do not form an orthogonal basis.
+The numerical implementation of the least squares is done by QR algorithm.
+
+
+
+
+
+%Finally, we test mCCA is specifically designed to consider data
+%from multiple sources (in this case languages). Therefore, we do
+%not merge the individual term-document matrices into one as in
+%the other two methods. For each language (view), we estimate the
+%pairwise correlation coefficients, then we try to find vectors
+%which maximize the sum of all pairwise correlations over all
+%languages. This can be written as the following optimization
+%\begin{equation}
+%\label{eq:opt1}
+%\max_{w_1,\ldots, w_\ell} \sum_{i=1}^\ell\sum_{j=i+1}^\ell  \frac{w_i^T D_i D_j^T w_j}{\sqrt{ w_i^T D_i D_i^T w_i\vphantom{ D_j^T } }\sqrt{ w_j^T D_j D_j^T w_j}}
+%\end{equation}
+%However, this allows only for a 1-dimensional representation
+%(i.e. one vector per language). Since we would like to allow for
+%more vectors per language, we denote the double sum in
+%Equation~\ref{eq:opt1} by $\mbox{mCCA}(w_1,\ldots,w_\ell)$. If
+%$\mbox{corr}$ denotes the correlation, to find $M$ vectors, the
+%optimization objective function  becomes
+%\begin{equation}
+%\max_{\substack{w_i^{(j)}\;;\;i=1,\ldots,\ell\\j=1,\ldots,M }}\sum_{s=1}^{\mbox{M}} \mbox{mCCA}\left(w_1^{(s)},\ldots,w_\ell^{(s)}\right),
+%\qquad\mbox{s.t.} \qquad \mbox{corr} \left(w_i^{(s)},w_i^{(t)}\right) = 0
+%\quad \forall s\neq t
+%\end{equation}
+%We require that the set of $M$ vectors we return for each
+%language are uncorrelated (so that we do not get copies
+%of a vector) which together maximize the pairwise correlation
+%between languages.
+
+\section{Data Set}
+
+To investigate the empirical performance of the low rank
+approximations we will test the algorithms on a large-scale,
+real-world multilingual dataset that we extracted from Wikipedia by using inter-language links as an alignment. This  results in a large number of weakly comparable
+documents in more than $200$ languages.
+Wikipedia is a large source of multilingual data that is especially important for
+ the languages for which no translation tools, multilingual dictionaries as Eurovoc, or strongly aligned multilingual
+ corpora as Europarl are available. Documents in different languages are related with so called 'inter-language' links that can be found on the left of
+ the Wikipedia page. The Wikipedia is constantly growing. There are currently four Wikipedias with more than $10^6$ articles, $40$ with more than $10^5$ articles, $100$ with more than $10^4$ articles, and $216$ with more than $1000$ articles.
+ Wikipedia uses special user-friendly markup language that is very easy to write but very hard to parse. Simplicity of language can cause ambiguities and moreover it is
+ constantly changing. For example, separator | can be used in different contexts.
+
+ Wikipedia raw xml dumps of all currently $270$ active editions were downloaded from the Wikipedia dump page\href{http://dumps.wikimedia.org}.
+ The xml files are too large to be parsed with DOM like parser that needs to store the whole xml tree in the memory, instead we implemented Sax like parser
+ that tries to simulate behavior of Wikipedia official parser and is as simple, fast and error prone as possible.
+ We parse all Wikipedia markup but do not extend the templates.
+ Each Wikipedia page is embedded in the page tag. First we check if the title of the page consists of any special namespace and do not process such
+ pages. Then we check if this is a redirection page and we store the redirect link as inter-language links can point to redirection link also. If nothing of the above applies we extract the text and parse the Wikipedia markup. Currently all the markup is removed.
+
+ We get inter-language link matrix using previously stored redirection links and inter-language links.
+ If inter-language link points to the redirection we replace it with the redirection target link. It turns out that we obtain the matrix $M$ that is not symmetric, consequently the underlying graph is not symmetric.
+ That means that existence of the inter-language link in one way (i.e. English to German) does not guarantee that there is an inter-language link in the reverse direction (German to English).
+ To correct this we transform this matrix to symmetric by computing $M+M^T$ and obtaining an undirected graph. In the rare case that we have multiple links pointing from the document, we pick the first one that we encountered.
+ This matrix enables us to build an alignment across all Wikipedia languages.
+
+\section{Evaluation}
+We measure the performance of the low rank approximation using
+two metrics: mean average precision mate retrieval and
+correlation between monolingual similarity profiles between the
+query document and its nearest neighbour in the common
+representation space. For each evaluation, we randomly select a
+training set and test set from the data.
+
+The first evaluation criteria we is the \emph{mean average
+  precision mate retrieval score} (AMPMR). This measures the
+similarity between the documents and their translations in the
+common vector space induced by the latent model. Good models map
+the documents close to their translations - indicating that some
+language independent (semantic) information was captured.  We
+evaluate each latent model (given by projection operators $P_1$
+and $P_2$) by considering a pair of aligned test sets $T_1$ and
+$T_2$ in languages $L_1$ and $L_2$. We select a query document
+$q_1 \in T_1$ and denote the corresponding translated document
+$q_2\in T_2$.  We then compute the projections $P_1 q$ and $P_2
+T_2$ and rank the elements of $P_2 T_2$ by their similarity to
+$P_1 q$ in the projection space (measured by cosine similarity). The mean average precision mate retrieval score is the
+inverse of the rank of $P_2 q_2$.
+
+This score does not give us a complete picture. The low rank of a
+mate document does not necessarily indicate poor performance if
+the documents which outranked it share similar content to the
+query. Therefore, we compute an alternative performance measure:
+\emph{correlation between monolingual similarity profiles}
+(CMSP).
+ As before, we choose a query document, target test
+corpus, and project them to a common vector space. From the
+target corpus, we select the closest document $r \in L_2$ to the
+query in the projection space.  We then compute two similarity
+profile vectors: $v_1$ contains the monolingual cosine similarity
+between $q_1$ and all the documents in $T_1$ and similarly $v_2$
+contains the cosine similarities between $r$ and $T_2$. The score
+ is the correlation coefficient between $v_1$ and $v_2$.
+%Typically that leads to up to $0.05$ lower AMPMR.
+Due to space constraints we display only the first evaluation results.
+
+The results for each of the two measures for several fitting
+parameters are in Tables~\ref{tb:xlike}, \ref{tb:wiki}, and \ref{tb:wikiK}. We give the result for the pairwise
+bilingual retrieval
+over all queries in each test set, all pairs of languages and
+over ten repetitions of the choice of training and test data.
+The Wiki top $9$ experiment was done on $65000$ training documents and retrieval was tested on remaining
+$5288$ documents in the following languages: English, German, French, Dutch, Italian, Polish, Spanish, Russian and Japanese. The second set of languages considered was: English, German, Spanish, Chinese, Slovenian, Catalan and Croatian. The second set contains $13000$ aligned documents where $10.000$ were used for training. The second set contains the official languages of the X-LIKE European project and will be denoted by Xlike.  Figures \ref{figure:nbasis} and \ref{figure:ntrain} illustrate how the size of the basis and number of train documents
+influences the retrieval.
+% The
+%experiments are indexed by the number of training samples
+%(Ntrain), the number of languages we consider (NViews) and the
+%dimensionality of the latent space(Ndims).
+%The result is in the final row of Table~\ref{tb:mean}.
+\begin{table}
+\caption{\label{tb:xlike} {\bf {\sffamily \small{Pairwise retrieval CL-LSI (Xlike)}} }}
+\begin{center}
+\begin{tabular}{ccccccc}
+en & de & es & zh & sl & ca & hr\\
+ 0 & 0.89 & 0.87 & 0.7 & 0.75 & 0.79 & 0.71\\
+ 0.89 & 0 & 0.81 & 0.66 & 0.73 & 0.76 & 0.7\\
+ 0.88 & 0.84 & 0 & 0.65 & 0.7 & 0.79 & 0.69\\
+ 0.75 & 0.7 & 0.69 & 0 & 0.61 & 0.66 & 0.59\\
+ 0.76 & 0.75 & 0.72 & 0.59 & 0 & 0.69 & 0.68\\
+ 0.81 & 0.78 & 0.81 & 0.63 & 0.69 & 0 & 0.67\\
+ 0.75 & 0.72 & 0.71 & 0.58 & 0.67 & 0.68 & 0
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\begin{table}
+\caption{\label{tb:wiki} {\bf {\sffamily \small{Pairwise retrieval CL-LSI (Wiki)}} }}
+\begin{center}
+{\scriptsize
+%\renewcommand{\arraystretch}{1.8}
+\renewcommand\tabcolsep{4pt}
+\begin{tabular}{ccccccccc}
+en & de & fr & nl & it & pl & es  & ru &ja \\
+ 0 & 0.91 & 0.9 & 0.88 & 0.89 & 0.86 & 0.9 & 0.86 & 0.88\\
+ 0.92 & 0 & 0.89 & 0.88 & 0.87 & 0.86 & 0.88 & 0.86 & 0.85\\
+ 0.9 & 0.9 & 0 & 0.87 & 0.87 & 0.85 & 0.87 & 0.84 & 0.84\\
+ 0.9 & 0.88 & 0.86 & 0 & 0.84 & 0.84 & 0.86 & 0.82 & 0.83\\
+ 0.89 & 0.87 & 0.87 & 0.84 & 0 & 0.83 & 0.87 & 0.83 & 0.83\\
+ 0.87 & 0.87 & 0.85 & 0.84 & 0.83 & 0 & 0.85 & 0.83 & 0.83\\
+ 0.91 & 0.89 & 0.87 & 0.85 & 0.87 & 0.85 & 0 & 0.85 & 0.85\\
+ 0.88 & 0.87 & 0.84 & 0.82 & 0.84 & 0.84 & 0.85 & 0 & 0.83\\
+ 0.89 & 0.87 & 0.85 & 0.83 & 0.83 & 0.83 & 0.85 & 0.84 & 0
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+\begin{table}
+\caption{\label{tb:wikiK}  {\bf {\sffamily \small{Pairwise retrieval K-means (Wiki)}} }}
+\begin{center}
+{\scriptsize
+%\renewcommand{\arraystretch}{1.8}
+\renewcommand\tabcolsep{4pt}
+\begin{tabular}{ccccccccc}
+0 & 0.75 & 0.74 & 0.68 & 0.71 & 0.65 & 0.75 & 0.65 & 0.66\\
+0.73 & 0 & 0.69 & 0.68 & 0.67 & 0.63 & 0.67 & 0.63 & 0.62\\
+0.73 & 0.7 & 0 & 0.64 & 0.69 & 0.63 & 0.7 & 0.61 & 0.6\\
+0.68 & 0.69 & 0.63 & 0 & 0.61 & 0.59 & 0.63 & 0.58 & 0.57\\
+0.73 & 0.7 & 0.7 & 0.63 & 0 & 0.63 & 0.7 & 0.61 & 0.6\\
+0.65 & 0.65 & 0.62 & 0.61 & 0.61 & 0 & 0.62 & 0.6 & 0.56\\
+0.76 & 0.69 & 0.71 & 0.66 & 0.69 & 0.64 & 0 & 0.62 & 0.61\\
+0.65 & 0.65 & 0.62 & 0.6 & 0.59 & 0.61 & 0.61 & 0 & 0.55\\
+0.7 & 0.65 & 0.62 & 0.59 & 0.6 & 0.6 & 0.64 & 0.57 & 0
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+\begin{figure}
+\includegraphics[scale=0.5]{nbasis.png}
+\caption{\label{figure:nbasis}{\bf {\sffamily {\small AMPMR and number of base documents (Wiki)}}}}
+\end{figure}
+
+
+\begin{figure}
+\includegraphics[scale=0.5]{ntrain.png}
+\caption{\label{figure:ntrain}{\bf {\sffamily {\small AMPMR and number of train documents (Xlike)}}}}
+\end{figure}
+
+
+\section{Discussion}
+
+The results illustrate that LSI outperforms
+$k$-means in terms of our evaluation criteria. We believe that
+this is due to LSI capturing the word co-occurrence
+patterns. The performance of LSI increases with number of training documents and size of the basis.
+The weighting done with singular eigenvalues typically increases the performance up to $5\%$.
+%Normalization of the aligned basis documents decreases applys  additional weighting that destroys the fact that we obtained $k$-rank blockwise approximation and should not be done as it drastically decreases the performance.
+The AMPRM score rises with the number of available train documents and size of the basis as
+illustrated in Figures \ref{figure:nbasis} and \ref{figure:ntrain}. When forming an aligned corpus, the normalization of document language should be done. Otherwise we always get the rank $k$ approximation that is biased towards the language with documents that have larger number of words. This is undesirable and decreases the quality of the basis.
+
+We also tested CS-LSI on EuroParl corpus and obtained $0.99$ AMPMR score.
+That also indicates that performance of CS-LSI increases with the quality of the corpus.
+However, additional experimentation is required before we can draw conclusions.
+
+Finally, we note that the results show there is still room for an improvement.
+We get decent results for small Wikipedias that could be possibly improved by using hub languages.
+For example two Wikipedias can have almost empty intersection but nevertheless sufficiently large intersection
+with English Wikipedia. Another option is to allow only partially aligned corpus with empty documents.
+Preliminary experiments indicate that this leads to decreased performance.
+Future work includes comparing our method with bilingual dictionary based phrase translations for language pairs with such resources.
+%A further investigation into low-rank approximations should be done.
+
+
+%{\color{red}
+%Primerjava nacinov izracuna projecirane resitve, ...
+%Primerjava tvorbe korpusa,
+%je se ves kot za dve strani materiala.
+%Tole je samo draft. Posebna zadnja sekcija (Evaluation) se bo se precej spremenila,
+%posodobljeni rezultati.
+%Najbrz bom dodal se dodaten komentar izracuna projiciranih resitev.
+%Ce zrihtamo se MCCA, da dela primerjlivo hitro, lahko dodamo se tudi to.
+%Se kaksne dodatne grafe.
+%}
+
+
+%\ \\
+% \textbf{\large 1.\ Introduction}\\
+%
+% Wikipedia is a large source of multilingual data that is specially important for
+% the languages that have no good translation tools, multilingual dictionaries as Eurovoc, or strongly aligned multilingual
+% corpuses as Europarl available. Documents in different languages are related with so called 'interlanguage' links that can be found on the left of
+% the Wikipedia page.
+% Wikipedia uses special user-friendly markup language that is very easy to write but very hard to parse. Simplicity of language can cause disambiguation. For example, markup character can have completely meanings in different contexts. % |, [, {
+% Moreover parser is not well documented and it does not always obey Wikipedia standards to be able to handle some very common user typos and errors.
+% That leads to some unexpected outputs of syntactically incorrect text.%User written?
+%
+% Wikipedia raw Xml dumps of all currently $270$ active editions were downloaded from \href{http://dumps.wikimedia.org}{Wikipedia dump page}.
+% We used only pages-articles.xml files containing current version of all article pages, templates, and other pages, excluding discussion an user home pages.
+% Wikipedia articles lay in different namespaces, Main, Media, Special, Talk, File, ...
+% In the Xml schema of the dump, each namespace has its own unique key that is independent of the language. This keys are used to indentify links, categories and more across different languages.
+% We are interested only in the articles that lay in the main namespaces as they contain interlanguage links.
+% The Xml files are too large to be parsed with DOM like parser that needs to store the whole xml tree, instead we implemented Sax like parser
+% that tries to simulate behavior of Wikipedia official parser and is as simple, fast and error prone as possible.
+% We parse all Wikipedia markup but do not extend the templates.
+% Each Wikipedia page is embedded in the page tag. First we check if the title of the page consists of any special namespace and do not process such
+% pages, i.e. File:Sun.jng, regular page names do not include colon :. Then we check if this is a redirection page, subtag Redirect exists and we store the redirect link as interlanguage links can point to redirection link also. If nothing of the above applys we extract the text and parse the Wikipedia markup. Currently all the markup is removed and result is the raw text but there is a option to enrich the text with some html tags.
+% The largest challenges of parsing are links, tables, and html tags in Wikipedia markup language.
+%
+% When parsing nested tables we have to be careful about the seperator | that can be nested or non nested.
+% Example of nested seperator is
+% [[File:Sun.jpg|sun]].
+% The table starts with {| and ends with |}, table caption starts with \textbackslash n|+ and ends with newline, table row starts with \textbackslash n|-, table or row heading are seperated by !! and start with \textbackslash n! and scope (row or column) definition. The seperator | indicates the start of
+% the new cell, but if there is second non nested |, that indicates parameters, i.e.| bgcolor='red' | Test. Table cells are separated with ||.
+% In the code checking for nested | is implemented the cell data is parsed as a normal Wikipedia markup.
+% Some heuristic is also implemented to correct some more common user errors, i.e. using || instead of !!, missing closing brackets, prettytable quirks, ...
+%
+% Another parsing challenge are links. Normal http links are the easiest to parse. They are of the form [http ... ], where optional parameters are separated by | but users also use [[http  .... ]] that is undocumented.
+% Internal Wikipedia links are the main focus of our interest.
+%
+% All such links are of the form illustrated by next two examples, [[File:Sun.jpg| ... | This is the sun]], or [[en:Slovenia]].
+% First one is an example of linking to some Wikipedia namespace (File).
+% This links are parsed, the link is always before first vertical bar and possible description is after last vertical bar.
+% Links can be also nested and are parsed iteratively until there is no more nesting and we can just parse as a  normal text.
+% One very common user error is that they forget to close the links, then some heuristic is employed so that we lose as little text as possible.
+% For example we detect that we were in the line of the list and stop parsing after the end of the line. The safe assumption is that user forgets to close the first [[ with ending ]] most of the time. We also store this links but they are currently not used.
+% One immediate usage of that would be Category links to boost up when categorizing Wikipedia pages across different languages. Or we could use the multimedia links to enrich our structure.
+%
+%
+% The second on is an interlanguage Wikipedia link starting with language code and colon that is followed by the name of the Wikipedia page. The language codes can be found on
+% \href{http://meta.wikimedia.org/wiki/List\textunderscore of\textunderscore Wikipedias}{internet}.
+% The interlanguage links are stored and then used to build weakly aligned multi-lingual corpus.
+%
+% We also parse ordinary html tags and some Wikipedia tags in the Wikipedia markup,
+% where <, > are written as \&lt and \&gt. For this task we use simple hmtl parser available in glib with added tag checking.
+% Almost all valid tags can be found on \href{http://svn.wikimedia.org/viewvc/mediawiki/trunk/phase3/includes/Sanitizer.php?view=markup}{wikimedia.org
+% svn}. There are some special actions defined for tags  source, math, ref, gallery, nowiki, pre, the content of such tags is skipped or treated as ordinary text in
+% the case of source, nowiki, pre tags.  The Wikipedia markup is constantly changing, the recommended replacement for source tag is syntaxhighlight.
+%
+% The remaining markup of paragraphs, lines, lists, etc. is not important for us, therefore we skip it.
+%
+% We know have documents that will be presented as bag of words. We get interlanguage link matrix using previously stored redirection links and interlanguage links.
+% If interlanguage link points to the redirection we replace it with the redirection target link. It turns out that we obtain the matrix $M$ that is not symmetric, consequently the graph is not symmetric.
+% That means that existence of the interlanguage link in one way (i.e. English to German) does not guarantee that there is an interlanguage link other way around (German to English).
+% To correct this we transform this matrix to symmetric $M+M^T$ and obtain undirected graph. In the rare case that we have multiple link pointing to the document, we pick the first one that we encounter.
+% This matrix enables us to build an alignment across all Wikipedia languages.
+%
+% Bag of words processing
+% due to the parsing and not using any lemmatisers or multigram models, no list of stopwords, ...
+% bag of word matrics are to big to use LSI or K-means or any other projection method.
+% Therefore we apply preprocessing to reduce the number of words (features).
+%
+% Terms in the dictionary are generally not equally important in
+%determining similarity between documents, so we must preprocess
+%the documents. We compare two options
+%
+%
+%We first use term frequency ($TF$), to prune away
+%infrequent terms. Rather than take a fixed number of top terms in
+%each document we use an adaptive measure. Let $f(n)$ be a map
+%which returns numbers of terms appearing at least $n$ times.  We
+%find $n$ such that
+%\begin{equation}
+%\frac{|f(n+1) - f(n)|}{\mbox{original \# of terms}} < 0.001
+%\end{equation}
+%and used these as the terms for the document. Once this pruning
+%step is complete, we further re-weight the remaining. A term
+%weight should correspond to the importance of the term for the
+%given corpus.  The common weighting scheme is called Term
+%Frequency Inverse Document Frequency (TFIDF) weighting. A
+%Inverse Document Frequency (IDF) weight for dictionary term $j$
+%is defined as $w_j = \log( DF_j )$ where $DF_j$ is the number of
+%documents from the corpora which contain term $j$.  A document
+%TFIDF vector is its original vector multiplied element-wise by the
+%weights. The $j$-th element of a document vector is given by $
+%TF_j \log( DF_j )$. Finally, we re-normalize each vector to have
+%Euclidean norm equal to 1.
+%
+%
+% \ \\
+% \indent
+%
+%
+%\ \\
+% \textbf{\large 2.\ Preliminaries}\\
+% \ \\
+% \indent
+%
+
+
+%\ \\
+%\textbf{\large 6.\ Conclusion}\\
+% \ \\
+% \indent
+
+\section{Conclusion}
+
+Our work focuses on finding language independent representations of documents written in different languages.
+The representations are realized as sets of multi-lingual topics that can be used as proxies to compare documents. We experimented with two methods to compute the representations: CL-LSI and k-means. Our experiments indicate that CL-LSI outperforms $k$-means on information retrieval tasks based on the resulting similarity function. Future work includes incorporating bilingual dictionaries and experimenting with probabilistic approaches to topic modelling.
+
+\section{Learned Concept Vectors}
+For the illustrative purposes we include the top 20 vectors we learn, each dimension five most significant words for each of the multilingual topics. We only include 3 top Wikipedia languages here.\\\\
+\texttt{
+bar text fontsize:xs 8,5 till
+he his b film her
+cup league club season team
+album film band she award
+film album d b she
+calendar onlyinclude emperor julian year
+american b d actor player
+bar text fontsize:xs 8,5 till
+he his her she duke
+album band comune albums province
+bar text fontsize:xs 8,5 till
+county comune album band italy
+bar text fontsize:xs 8,5 till
+1r ret 2r she her
+1r bc 2r bar round
+flag species party she her
+flag ret species university calendar
+ret bc prix formula racing
+flag bc messier star stars
+asti turin piedmont alessandria bc
+}
+\\
+\\
+\texttt{
+bar gemeinde text km2 provinz
+er deutscher the us of
+fc saison nationalmannschaft er league
+the film album oder of
+deutscher the film amerikanischer us
+kalender jahreswechsel a¨ra zeitrechnung chr
+deutscher amerikanischer us politiker komponist
+deutscher bar amerikanischer kalender text
+er ko¨nig maria war prinzessin
+album band stadt single live
+county album bar band prozent
+county prozent album deutscher maria
+deutscher stadt insel fc ko¨nig
+open hartplatz atp turnier sand
+chr open hartplatz qualifiziert atp
+flagge arten weibchen partei ma¨nnchen
+bar the flagge text of
+formel chr dnf rennen v
+flagge chr v flaggen sterne
+bar text till shift from
+}
+\\
+\\
+\texttt{
+hameaux limitrophes administration communes province
+the les il a` des
+coupe club fc vainqueur buts
+the film tv of album
+the tv film of album
+roi pie´mont naissances julien ii
+franc¸ais pie´mont ame´ricain e´crivain pre´sident
+lombardie ou hameaux limitrophes italie
+roi duc marie prince fils
+album groupe l'album ville guitare
+comte´ album groupe l'album parti
+comte´ album duc roi groupe
+ville club roi l'ile fc
+tour open finale ext tournoi
+tour open finale tournoi ext
+drapeau parti espe`ces espe`ce famille
+tv the drapeau of e´toiles
+formule championnat ferrari gp racing
+drapeau e´toiles constellation e´toile jupiter
+d'asti monferrato pie´mont milan campanie
+}
+
+
+
+
+\section{Acknowledgements}
+The authors gratefully acknowledge that the funding for this work was provided by the projecs X-LIKE (ICT-257790-STREP)\cite{xlike},  MultilingualWeb (PSP-2009.5.2 Agr.\# 250500)\cite{mlweb}, PlanetData (ICT-257641-NoE)\cite{pdata} and META-NET (ICT-249119-NoE)\cite{metanet}.
+
+
+
+\ \\
+ \textbf{\large References} \vspace*{1.3ex} \newcounter{mycount} \begin{list}{[\arabic{mycount}]}
+  {\usecounter{mycount}\setlength{\leftmargin}{0.5cm}
+   \setlength{\parsep}{0pt}\setlength{\itemsep}{2pt}
+   \setlength{\labelsep}{0.1cm}}
+   \bibitem{SVDrand} Nathan H., Per-Gunnar M., Joel A.~ T,
+    Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions,
+    SIAM Rev. 53, 2 (May 2011), 217-288.
+\bibitem{xLDA}
+{\em ACL 2010, Proceedings of the 48th Annual Meeting of the Association for
+  Computational Linguistics, July 11-16, 2010, Uppsala, Sweden}. The
+  Association for Computer Linguistics, 2010.
+
+\bibitem{h-ca-75}
+J.~A. Hartigan.
+\newblock {\em Clustering Algorithms (Probability $\&$ Mathematical Statistics)}.
+\newblock John Wiley \& Sons Inc., 1975.
+
+\bibitem{cl_lsi}
+S.T. Dumais, T.A. Letsche, M.L. Littman, and T.K Landauer.
+\newblock Automatic cross-language retrieval using latent semantic indexing.
+\newblock In {\em AAAI'97 Spring Symposium Series: CrossLanguage Text and
+  Speech Retrieval}, pages 18--224, 1997.
+
+\bibitem{Kettenring}
+J.~R. Kettenring.
+\newblock Canonical analysis of several sets of variables.
+\newblock {\em Biometrika}, 58:433--45, 1971.
+
+\bibitem{lsi}
+S.~Deerwester, S.~T. Dumais, T.~K. Landauer, G.~W. Furnas, and R.~A. Harshman.
+\newblock Indexing by latent semantic analysis.
+\newblock {\em Journal of the Society for Information Science}, 41(6):391--407,
+  1990.
+
+\bibitem{matrix_comp}
+C.F Van~Loan G.H.~Golub.
+\newblock {\em Matrix Computations}.
+\newblock Johns Hopkins University Press, 1996.
+
+\bibitem{euro_parl_web}
+\url{http://www.statmt.org/europarl/index.html}.
+
+\bibitem{xlike}
+\url{http://www.xlike.org/}
+
+\bibitem{mlweb}
+\url{http://www.multilingualweb.eu/}
+
+\bibitem{pdata}
+\url{http://www.planet-data.eu/}
+
+\bibitem{metanet}
+\url{http://www.meta-net.eu/}
+
+\bibitem{full_version}
+Primoz~\v Skraba, Jan~Rupnik, Andrej~Muhi\v c.
+\newblock Low-rank approximations for large, multi-lingual data.
+\newblock Avaliable at
+  \url{http://ailab.ijs.si/primoz_skraba/papers/nips_full.pdf}.
+
+\end{list}
+\end{document}

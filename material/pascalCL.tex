@@ -1,0 +1,158 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{nips12submit_e,times,url,comment,amsmath,amsfonts}
+%\documentstyle[nips10submit_09,times,art10]{article} % For LaTeX 2.09
+
+
+%\usepackage{amsthm}
+\usepackage{amssymb}
+\newcommand{\RR}{\mathbb{R}}
+
+\usepackage{enumitem}
+\usepackage{sectsty}
+\usepackage{tikz,comment}
+\usepackage{stmaryrd}
+\usetikzlibrary{%
+  matrix,%
+  calc,%
+  arrows%
+}
+
+\title{Cross-Lingual Document Analysis}
+
+\begin{comment}
+\author{
+Jan Rupnik \\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{jan.rupnik@ijs.si} \\
+\And
+Andrej Muhi\v c\\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{andrej.muhic@ijs.si} \\
+\AND
+Primo\v z \v Skraba \\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{primoz.skraba@ijs.si} \\
+}
+\end{comment}
+\author{
+Jan Rupnik, Andrej Muhi\v c, Primo\v z \v Skraba \\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{(jan.rupnik),(andrej.muhic),(primoz.skraba)@ijs.si} \\
+}
+
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+\newcommand{\X}{\mathbb{X}}
+\newcommand{\Y}{\mathbb{Y}}
+
+
+\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+We present a summary of our work on cross-lingual (CL) document analysis. We focused on learning CL similarity functions and learning language independent document representations. Solutions to either of the two tasks enable us to solve CL text mining tasks (e.g. CL classification, CL retrieval, CL clustering) by using the tools of monolingual text mining. We approached the problems using non-probabilistic methods (typically based on numerical linear algebra) with a special emphasis on scalability. Special attention was devoted to language pairs for which direct training data (translation pairs or comparable documents) was scarce or nonexistent. We showed how to exploit indirect training data through a major (hub) language, such as English.
+
+
+\end{abstract}
+
+
+\section{Motivation}
+As the availability of multi-lingual content on the web has exploded in the last few years, the need for automatic cross-lingual processing tools has become apparent. The prime example is Wikipedia - in 2001 the majority of pages were written in English, while in 2012, the percentage of English articles has dropped to 14 \%. A standard approach to dealing with multilingual data is by using machine translation techniques. Building good machine translation systems depends on the availability of training data (aligned translations), which is scarce for certain language pairs. However, certain CL tasks admit simpler solutions. In the case of monolingual document retrieval and classification, the widely used vector space model for document representation performs well in practice, even though it discards word order information. Our work relies on the vector space models and is suitable for CL document retrieval, tracking, classification and clustering.
+
+An important aspect of a CL solution is how restrictive its assumptions about the data are. We focus on methods that rely on comparable data (such as the Wikipedia) as opposed to requiring perfect translation pairs and/or bilingual dictionaries. Another important aspect of a CL solution is the computational complexity of training and testing. We focus on methods that can be realized efficiently on a high-end desktop PC.
+
+%applications for a scalable similarity function: tracking information, recommendation
+\section{Data representation}
+
+To represent a corpus of documents written in the same language we use the vector space model with tf-idf weights \cite{Salton88term-weightingapproaches}. An aligned multilingual collection of documents is represented as a collection of matrices $X_i \in \RR^{n_i \times s}$ where $i$ ranges over languages, $n_i$ is the size of the vocabulary of the $i$-th language and $\ell$ is the number of documents. The data is aligned over columns ($k$-th column of $X_i$ and $k$-th column of $X_j$ represent comparable documents written in languages $i$ and $j$). Missing documents are represented as zero vectors.
+
+We interpret the collection of aligned documents $\left\{ \left( X_1\left(:,k\right), \ldots, X_m\left(:,k\right) \right) \right\}_{k=1}^{\ell}$ as iid samples obtained from an unknown multivariate distribution over $\RR^{\sum_i{n_i}}.$ Therefore our work is based on analyzing empirical covariance matrices $C_{i,j} = \frac{1}{a_{i,j}}X_i X_j^T$, where $a_{i,j}$ is the number of documents that are nonzero simultaneously in languages $i$ and $j$, where we assume that the data is centered to simplify the presentation.
+
+\section{Learning similarity}
+We will now present our formalism for learning a cross-lingual similarity function \cite{nips2}. Using the vector space model to represent two documents in languages $x\in \RR^{n_i}$ and $y \in \RR^{n_j}$, the goal is to define a similarity function for the language pair $(i,j)$: $$s_{i,j}: \RR^{n_i}\times \RR^{n_j} \rightarrow \RR.$$
+In our work we focus on finding bilinear similarity functions, i.e. $$s_{i,j}\left(x,y\right) = x^T B_{i,j} y,$$ where $B_{i,j} \in \RR^{n_i \times n_j}$. We considered two main approaches to finding $B$: a regression based approach and a latent space approach.
+
+The \textbf{latent space approach} is defined in terms of two linear operators $P_{i} \in \RR^{k \times n_i}$ and $P_{j} \in \RR^{k \times n_j}$ which together with the standard inner product on the \emph{latent space} $Z = \RR^k$ define the similarity as:
+$$s_{i,j}(x,y) := \langle P_i x, P_j y \rangle = x^T P_i^T P_j y.$$
+We considered three choices of latent spaces:
+\begin{itemize}
+\item baseline: $P_i = X_i^T$, $P_j = X_j^T$
+\item latent semantic analysis \cite{lsi}
+\item canonical correlation analysis \cite{HardoonCCA}
+\item in \cite{nips3} we included a generalization of CCA to more than two languages
+\item in \cite{iti},\cite{nips} we included $k$-means clustering
+\end{itemize}
+
+
+The \textbf{regression based approach} consists of two ingredients: a linear regression mapping $f : \RR^{n_i} \rightarrow \RR^{n_j}$,$$ f(x) := F\cdot x,$$ where $F \in \RR^{n_j \times n_j}$ and an inner product on the target space $\langle \cdot, \cdot \rangle_D$, which are used to define:
+$$s_{i,j}(x,y) := \langle f(x), y \rangle_D = f(x)^T D y = x^T F^T D y.$$ Choices of $D$ included the standard inner product $I$, Mahalanobis inner product $C_{j,j}^{-1}$, which corresponds to whitening, and the covariance matrix $C_{j,j}$ (related to a co-occurrence). We can consider two regression mappings:
+\begin{itemize}
+\item least squares regression (LSQ), where $F = C_{j,i}C_{i,i}^{-1}$
+\item canonical correlation regression\cite{ccar} (CCAR), where $F = C_{j,j}^{-1}C{j,i}$.
+\end{itemize}
+
+In \cite{nips2} we elucidated some relationships between the two approaches, for example, CCA is equivalent to the regression based approach with target inner product $D$ as the Mahalanobis inner product. We also conducted an experimental study that compared mono-lingual similarity measures with the proposed cross-lingual similarity measures.
+
+
+\section{Hub languages}
+
+Continuing the work started in \cite{nips},\cite{sikdd}, we looked at a specific aspect of learning CL similarity functions. The distribution of articles across languages in Wikipedia is not uniform. While the percentage English articles make up as a whole has fallen, in terms of absolute numbers, English is still the largest language. Indeed, there are a number of hub languages which have an order of magnitude more articles than other languages. A large collection (more than $500,000$ articles) of aligned Wikipedia articles is available for the German-English pair, making the learning problem well-posed. If however we consider learning a similarity function for the Slovenian-Hindi pair, there are only a couple of thousand Wikipedia pairs available for learning, which makes the learning problem much harder. However, almost all languages have a large intersection with certain well represented languages, such as English. We refer to English as the hub language. The question we asked in the papers cited is: Can we exploit hub languages to perform better document retrieval between non-hub languages?
+
+In \cite{sikdd} we focused on three languages: Slovenian, Hindi and English (hub). We explored both regression based approaches and common representation based on LSI under various choices of training document collections. We explored several regression scenarios: choosing between LSQ, CCAR and a regression induced by LSI as well as choosing regression sequences (target space and optionally an intermediate space). Here there are five essentially different choices:
+\begin{enumerate}
+\item $sl\mapsto {\bf hi},$
+\item $hi\mapsto {\bf sl}.$
+\item $sl\mapsto {\bf en = hub = en} \mapsfrom hi,$
+\item $sl\mapsto en \mapsto {\bf hi}$
+\item $hi\mapsto en \mapsto {\bf sl}.$
+\end{enumerate}
+Bold denotes the space where retrieval is done. The first two represent a direct mapping $sl \leftrightarrow hi$, while the remaining methods map to a common hub space (in this case English), with retrieval occurring either in the target language or the hub language. We showed that direct mappings (e.g. $sl\mapsto {\bf hi}$) are more suitable for retrieval when enough data is available, whereas hubs are necessary in the low direct alignment regime. We also noticed that regression based approaches introduced asymmetry in the quality of results as opposed to an approach based on a common representation.
+
+Building on results from \cite{sikdd} we tried incorporating our observations about hub languages in Wikipedia into our methods. We noticed that aligned document sets that do not include English are rare. Taking only cross-covariances that were related to the English language when building common representation models still retains all the vital information. This observation enabled us to formulate a generalization of canonical correlation analysis \cite{Kettenring}, namely the sum of squared correlations, as an eigenvalue problem which can be solved efficiently. We will now present an overview of the approach.
+
+The goal is to find a language independent representation of documents by finding a set of mappings $P_1 ,\ldots, P_m$ that map documents to a common $k$-dimensional vector space. The first step in our method is to project $X_1, \ldots, X_m$ to lower dimensional spaces without destroying the cross-lingual structure. Let $X_1$ denote the hub language. By using the hub language assumption we compute a singular value decomposition of the stacked cross-covariance matrices, related to the hub language, as:
+$$[C_{1,2} \cdots C_{1,m}] = U S V^T.$$
+We then split the matrix $V$ vertically in blocks with $n_2, \ldots, n_m$ rows to obtain a set of matrices $V_i$: $V = [V_2^T  \cdots  V_m^T]^T$. Note that columns of $U$ are orthogonal but columns in each $V_i$ are not (columns of V are orthogonal). Let $V_1 := U$. We proceed by reducing the dimensionality of each $X_i$ by setting: $Y_i = V_i^T \cdot X_i$, where $Y_i \in \RR^{k\times N}$. The step is similar to Cross-lingual Latent Semantic Indexing (CL-LSI) \cite{lsi},\cite{cl_lsi}, which is less suitable due to a large amount of missing documents. The second step involves solving a generalized version of canonical correlation analysis on the matrices $Y_i$ in order to find the mappings $P_i$. The approach is based on the sum of squares of correlations formulation by Kettenring \cite{Kettenring}, where we consider only correlations between pairs $(Y_1, Y_i), i >1$ due to the hub language problem characteristic.  Let $D_{i,i} \in \RR^{k \times k}$ denote the empirical covariance and $D_{i,j}$ denote the empirical cross-covariance computed based on $Y_i$ and $Y_j$. We solve the following optimization problem:
+\begin{equation*}
+\begin{aligned}
+& \underset{w_i \in \RR^{k}}{\text{maximize}}
+& & \sum_{i = 2}^m  \left(w_1^T D_{1,i} w_i \right)^2
+& \text{subject to}
+& & w_i^T D_{i,i} w_i = 1, \quad\forall i = 1,\ldots, m.
+\end{aligned}
+\end{equation*}
+By using Lagrangian multiplier techniques (we omit the derivation due to space constraints), the problem can be reformulated as an eigenvalue problem.
+
+To summarize, we first reduced the dimensionality of our data to $k$-dimensional features and then found a new representation (via linear transformation) that maximizes directions of linear dependence between the languages. To investigate the empirical performance of the proposed method we selected a subset of Wikipedia languages containing three major languages: English (hub language), Spanish, Russian, and five minority (in the sense of Wikipedia sizes) languages: Slovenian, Piedmontese, Waray-Waray, Creole, and Hindi. We evaluated the method on all pairwise retrieval tasks and found that the results were promising; for example, fair retrieval quality was observed for the Hindi-Piedmontesee pair that contained zero direct alignments.
+
+
+\textbf{Note on implementation}\\
+The preprocessing step requires us to calculate an SVD of a large dense cross-covariance matrix with special structure (fast matrix vector multiplication due to sparse factors). We could use an iterative method like the Lanczos algorithm\cite{golub} with reorthogonalization to find the left singular vectors corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the ratio of leading singular eigenvalues is close to one. Moreover the Lanczos method is hard to parallelize. Instead we use randomized version of the singular value decomposition (SVD) described in \cite{tropp} than can be viewed as a block Lanczos method. That enables us to use parallelization and can speed up the computation considerably when multiprocessing is available.
+
+\section{Conclusions}
+
+We presented our work \cite{nips},\cite{nips2},\cite{sikdd},\cite{nips3} on cross-lingual similarity measures and language independent embeddings. We presented two main approaches to learn document similarities and conducted several experiments on the task of CL information retrieval.
+
+Finding good embeddings in the presence of missing data presents a challenge - for a learning resource, such as the Wikipedia, the topic coverage may vary greatly across languages.  This means that certain topics might be difficult to represent in all languages. Our work indicates that learning is possible even for language pairs with no direct  alignment information, by leveraging their alignment information with a hub language, such as English.
+
+\section{Acknowledgements}
+The authors gratefully acknowledge that the funding for this work was provided by the projects X-LIKE (ICT-257790-STREP)\cite{xlike},  MultilingualWeb (PSP-2009.5.2 Agr.\# 250500)\cite{mlweb}, TransLectures (FP7-ICT-2011-7)\cite{translectures}, PlanetData (ICT-257641-NoE)\cite{pdata}, RENDER (ICT-257790-STREP)\cite{render}, and META-NET (ICT-249119-NoE)\cite{metanet}.
+
+\bibliographystyle{unsrt}
+\bibliography{pascalCL}
+
+
+\end{document}

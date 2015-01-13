@@ -1,0 +1,1015 @@
+\documentclass{article} % For LaTeX2e
+\usepackage{nips11submit_e,times,url,comment,amsmath}
+%\documentstyle[nips10submit_09,times,art10]{article} % For LaTeX 2.09
+
+
+
+\title{Low-Rank Approximations for Large, Multi-lingual Data}
+
+\begin{comment}
+\author{
+Jan Rupnik \\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{jan.rupnik@ijs.si} \\
+\And
+Andrej Muhi\v c\\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{andrej.muhic@ijs.si} \\
+\AND
+Primo\v z \v Skraba \\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{primoz.skraba@ijs.si} \\
+}
+\end{comment}
+\author{
+Jan Rupnik, Andrej Muhi\v c, Primo\v z \v Skraba \\
+A.I. Laboratory\\
+Jo\v zef Stefan Institute\\
+Ljubljana, Slovenia\\
+\texttt{(jan.rupnik,andrej.muhic,primoz.skraba@ijs.si} \\
+}
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\nipsfinalcopy % Uncomment for camera-ready version
+
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+In this paper we compare low rank approximation methods for data
+with a particular structure: documents in multiple
+languages. Rather than looking at only 2 languages in time, we
+examine the structure in up to 21 languages. The algorithms we
+choose to compare are $k$-means, cross-lingual latent semantic
+indexing(CL-LSI), and multi-view cannonical correlation analysis
+(mCCA). We test these methods on the European Parliament
+Proceedings Parallel Corpus.
+\end{abstract}
+
+
+
+\section{Introduction}
+When extracting topics from documents in multiple languages, we
+would like to find topics that are not only important within a
+language but have an corresponding and equivalent representation
+in the other languages. This could be considered a
+language-independent measure of importance. Further, by finding a
+low-rank approximation which is valid over multiple languages, we
+can use well-established machine learning tools designed for
+monolingual tasks.  Document collections are a typically
+represented as high dimensional data sets, making them a prime
+example for lower dimensional representations.
+
+
+Our work focuses on studying non-probabilistic approaches to
+multi-lingual dimensionality reduction. The methods we compare
+are described in section~\ref{sec:alg}. Recently a probabilistic
+approach based on latent Dirichlet allocation was proposed
+\cite{xLDA}, however no implementations were readily available. We plan to implement it and include it in subsequent studies.
+
+The paper is organized as follows: we first introduce the setting
+of multilingual data, then describe the algorithms and
+datasets. We conclude with the evaluation and discussion.
+\begin{comment}
+Concepts and... are important across countries. However, much of
+what we do is still determined by language. While the Internet
+originally had English content almost exclusively, now there is a
+diversity of different languages well beyond bi-lingual into
+truly multi-lingual territory.
+
+The goal when doing dimensionality reduction on data is to
+capture the ``important parts'' of an underlying dataset. These
+will preserve the properties of the original high dimensional
+data, but faster to deal with algorithmically and highlight the
+components (or mixtures thereof) which best explain the data
+making it useful for interpretation during analysis as well.
+
+metric analysis
+
+The most common representation of the
+
+metric space....
+
+multilingual is important....
+
+
+Initially distance of kernel similarity matrices are not only
+have an approximate low rank structure, but for this study we
+look at matrix with additional structure.
+
+We can view our
+
+
+ Special structure of multi-lingual data
+\end{comment}
+\section{Multilingual Data}
+
+Our data is a collection of documents in multiple languages along
+with an alignment with correspondences across
+languages. Individual documents are represented by a vector $d$
+indexed by the terms of a dictionary (the $i$-th element is the
+term frequency($TF$) in the document). For a corpus, we gather
+document vectors into the term-document matrix $D$.  We choose to
+index the columns by documents and the rows by terms $D = (d_1 ,
+\ldots , d_m )$. Each document is additionally identified by its
+corresponding language. Each language has its own dictionary
+independent of other languages.
+%The individual
+%term-document matrices are grouped according to language giving $
+%\{ D_1, D_2, \ldots, D_\ell\}$.
+
+Primarily, we deal with similarities between documents. Since
+each language has an independent dictionary, we only define
+similarity within a language. We note that given a
+transformation function between dictionaries, we could compute
+similarities between documents in different languages. However,
+as translations of individual words is not tailored to the corpus
+in question and is often not well defined (we often have
+synonyms, approximate equivalents, etc.), we will use document
+correspondences to compute document similarities across
+languages. Note that this implies a correspondence between
+columns in each $D_k$ for all $k$. Translations between
+dictionaries would give us row-based correspondences, but we will
+investigate this dimension in future work.
+
+Terms in the dictionary are generally not equally important in
+determining similarity between documents, so we must preprocess
+the documents. We first use term frequency ($TF$), to prune away
+infrequent terms. Rather than take a fixed number of top terms in
+each document we use an adaptive measure. Let $f(n)$ be a map
+which returns numbers of terms appearing at least $n$ times.  We
+find $n$ such that
+\begin{equation}
+\frac{|f(n+1) - f(n)|}{\mbox{original \# of terms}} < 0.001
+\end{equation}
+and used these as the terms for the document. Once this pruning
+step is complete, we further re-weight the remaining. A term
+weight should correspond to the importance of the term for the
+given corpus.  The common weighting scheme is called Term
+Frequency Inverse Document Frequency (TFIDF) weighting. A
+Inverse Document Frequency (IDF) weight for dictionary term $j$
+is defined as $w_j = \log( DF_j )$ where $DF_j$ is the number of
+documents from the corpora which contain term $j$.  A document
+TFIDF vector is its original vector multiplied element-wise by the
+weights. The $j$-th element of a document vector is given by $
+TF_j \log( DF_j )$. Finally, we re-normalize each vector to have
+Euclidean norm equal to 1.
+
+
+\begin{comment}
+We will consider linear combinations of terms as ``concepts.'' The
+magnitude of the coefficients of a term in a given combination
+could be interpreted as the level of membership of that given
+term to the concept. For the application point of view, these
+could be interpreted as generalized versions of sets of
+terms. Geometrically, we will interpret them as directions in the
+term-space.
+\end{comment}
+
+
+
+\section{Algorithms}
+\label{sec:alg}
+We compute the low rank approximation of the term-document
+matrix using three algorithms: $k$-means\cite{h-ca-75},
+cross-lingual latent semantic indexing(CL-LSI)\cite{cl_lsi}, and
+multi-view canonical correlation analysis (mCCA)\cite{Kettenring}.
+
+$k$-means is perhaps the most well-known and used clustering
+algorithm. The make the data compatible with $k$-means, we merge
+all the term-document matrices into a single matrix by stacking
+the individual term-document matrices.
+\begin{equation}
+D_{\mbox{Total}} = \begin{bmatrix}D^T_1 ,D^T_2, \cdots,D^T_\ell\
+\end{bmatrix}
+^T
+\end{equation}
+such that the columns respect the alignment of the
+documents. Therefore, each document is represented by a long
+vector indexed by the terms in all languages. It is these vectors
+which determine the similarity on which the $k$-means is computed.
+
+The next method is CL-LSI which is a variant of LSI~\cite{lsi}
+for more than one view. Each view in this context represents a
+language. It merges the individual term-document matrices in the
+same way as we did for $k$-means.  LSI computes a singular value
+decomposition of $D_{Total}$. Since the matrix can be large we
+can use an iterative method like the Lanczos~\cite{matrix_comp}
+algorithm to find the left singular vectors corresponding to the
+largest singular values.
+
+Finally, we test mCCA is specifically designed to consider data
+from multiple sources (in this case languages). Therefore, we do
+not merge the individual term-document matrices into one as in
+the other two methods. For each language (view), we estimate the
+pairwise correlation coefficients, then we try to find vectors
+which maximize the sum of all pairwise correlations over all
+languages. This can be written as the following optimization
+\begin{equation}
+\label{eq:opt1}
+\max_{w_1,\ldots, w_\ell} \sum_{i=1}^\ell\sum_{j=i+1}^\ell  \frac{w_i^T D_i D_j^T w_j}{\sqrt{ w_i^T D_i D_i^T w_i\vphantom{ D_j^T } }\sqrt{ w_j^T D_j D_j^T w_j}}
+\end{equation}
+However, this allows only for a 1-dimensional representation
+(i.e. one vector per language). Since we would like to allow for
+more vectors per language, we denote the double sum in
+Equation~\ref{eq:opt1} by $\mbox{mCCA}(w_1,\ldots,w_\ell)$. If
+$\mbox{corr}$ denotes the correlation, to find $M$ vectors, the
+optimization objective function  becomes
+\begin{equation}
+\max_{\substack{w_i^{(j)}\;;\;i=1,\ldots,\ell\\j=1,\ldots,M }}\sum_{s=1}^{\mbox{M}} \mbox{mCCA}\left(w_1^{(s)},\ldots,w_\ell^{(s)}\right),
+\qquad\mbox{s.t.} \qquad \mbox{corr} \left(w_i^{(s)},w_i^{(t)}\right) = 0
+\quad \forall s\neq t
+\end{equation}
+We require that the set of $M$ vectors we return for each
+language are uncorrelated (so that we do not get copies
+of a vector) which together maximize the pairwise correlation
+between languages.
+
+
+\section{Data Set}
+
+To investigate the empirical performance of the low rank
+approximations we will test the algorithms on a large-scale,
+real-world multilingual dataset: the European Parliament
+Proceedings Parallel Corpus v6
+(EuroParl)\cite{euro_parl_web}, a corpus released by the
+EU Parliament. This source offers a large number of comparable
+documents in multiple languages.  In particular, EuroParl
+(Release v6) provides transcripts of parliamentary session in
+almost all the EU languages. This can be considered a \emph{gold
+  standard} in terms of multi-lingual data: these documents are
+professional translations of each other.   In the
+corpus, each day is available as a separate file, although newer
+data is available in smaller units. To create the document,
+within each file, we create a document for each speech
+ID\footnote{In the corpus, this is referred to as the speaker
+  ID.}(so each speech is a document). In the end, the document
+contains a document ID, a speech ID, and paragraph markup. The
+documents were aligned in two ways: by speaker id and by
+paragraphs.  The number of paragraphs was used only if the number
+was the same for different languages.  In total, it contains
+approximately 21000 documents in the 21 languages of the EU
+taking up around 2GB od storage.
+
+\begin{comment}
+To investigate the empirical performance of the low rank
+approximations we will test the algorithms on two large-scale,
+real-world multilingual datasets: European Parliament Proceedings
+Parallel Corpus v6 (EuroParl)\cite{europarl,euro_parl_web} and
+Wikipedia~\cite{wikipedia}. Both sources offer a large number of
+comparable documents in multiple languages.
+
+EuroParl provides documents on legislation, regulations,
+parliamentary sessions, etc.  in 21 of the EU languages and is a
+\emph{gold standard} in terms of multi-lingual data: these
+documents are professional translations of each other.  In the
+corpus, each day is available as a separate file, although newer
+data is available in smaller units. To create the document,
+within each file, we create a document for each speech
+ID\footnote{In the corpus, this is referred to as the speaker
+  ID.}(so each speech is a document). In the end, the document
+contains a document ID, a speech ID, and paragraph markup. The
+documents were aligned in two ways: by speaker id and by
+paragraphs.  The number of paragraphs was used only if the number
+was the same for different languages.  In total, it contains
+approximately 21000 documents in the 21 languages of the EU
+taking up around 2GB od storage.
+
+Wikipedia is the de-facto encyclopedia on the Internet and can be
+downloaded freely. It contains 15 million articles in around 200
+languages.The distribution of these articles is not uniform but
+heavily biased towards a few languages. The top 3 languages
+(English, German, French) contain more than 1 million articles;
+the next 6 (Spanish, Italian, Dutch, Japanese, Polish, Portuguese
+and Russian) contain more than 650,000 articles; down to Karuni
+with 1 article. To make the two dataset comparable, we select the
+same languages as above with a similar number of
+documents\footnote{Of the chosen languages, Latvian had the
+  fewest articles with 37,000 articles}.
+
+
+\end{comment}
+
+\section{Evaluation}
+We measure the performance of the low rank approximation using
+two metrics: mean average precision mate retrieval and
+correlation between monolingual similarity profiles between the
+query document and its nearest neighbour in the joint
+representation. For each evaluation, we randomly select a
+training set and test set from the data.
+
+
+The first evaluation criteria we is the \emph{mean average
+  precision mate retrieval score} (AMPMR). This measures the
+similarity between the documents and their translations in the
+common vector space induced by the latent model. Good models map
+the documents close to their translations - indicating that some
+language independent (semantic) information was captured.  We
+evaluate each latent model (given by projection operators $P_1$
+and $P_2$) by considering a pair of aligned test sets $T_1$ and
+$T_2$ in languages $L_1$ and $L_2$. We select a query document
+$q_1 \in T_1$ and denote the corresponding translated document
+$q_2\in T_2$.  We then compute the projections $P_1 q$ and $P_2
+T_2$ and rank the elements of $P_2 T_2$ by their similarity to
+$P_1 q$ in the projection space (measured by Euclidean
+distance). The mean average precision mate retrieval score is the
+inverse of the rank of $P_2 q_2$.
+
+This score does not give us a complete picture. The low rank of a
+mate document does not necessarily indicate poor performance if
+the documents which outranked it share similar content to the
+query. Therefore, we compute an alternative performance measure:
+\emph{correlation between monolingual similarity profiles}
+(CMSP). As before, we choose a query document, target test
+corpus, and project them to a common vector space. From the
+target corpus, we select the closest document $r \in L_2$ to the
+query in the projection space.  We then compute two similarity
+profile vectors: $v_1$ contains the monolingual cosine similarity
+between $q_1$ and all the documents in $T_1$ and similarly $v_2$
+contains the cosine similarities between $r$ and $T_2$. The score
+ is the correlation coefficient between $v_1$ and $v_2$.
+
+The results for each of the two measures for several fitting
+parameters are in Tables~\ref{tb:mean}\footnote{Updated results
+  can be found in the full version of this
+  paper~\cite{full_version}}. We obtain the results by averaging
+over all queries in each test set, all pairs of languages and
+over ten repetitions of the choice of training and test data. The
+experiments are indexed by the number of training samples
+(Ntrain), the number of languages we consider (NViews) and the
+dimensionality of the latent space(Ndims). We also ran a
+preliminary experiment on a data set based on
+Wikipedia\footnote{\url{http://www.wikipedia.org}} for the same
+languages.  The result is in the final row of
+Table~\ref{tb:mean}.
+
+
+
+
+\begin{table}
+\caption{\label{tb:mean} Mean Values for Experiments}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+Parameters&\multicolumn{3}{|c|}{AMPMR} &  \multicolumn{3}{|c|}{CMSP}\\
+\cline{2-7}
+(Ntrain,NViews,Ndims)& $k$-means & LSI & mCCA &$k$-means & LSI & mCCA \\
+\hline
+\hline
+(100,   3,    5) & 0.1096 & 0.2306 &0.2184& 0.1135& 0.2007 &0.1889 \\
+\hline
+(100,   3,   20) & 0.3906 & 0.5292 &0.5151& 0.3308& 0.4466 &0.4329 \\
+\hline
+(100,   10,   5) & 0.08166& 0.1870 &0.2006& 0.0833& 0.1685 &0.1725\\
+\hline
+(100,   10,  20) & 0.3204 & 0.4546 &0.4623& 0.2686& 0.3901 &0.3911\\
+\hline
+(100,   21,   5) & 0.09468& 0.2040 &0.1868& 0.1006& 0.1789 &0.1657\\
+\hline
+(100,  21,  20) & 0.3255 & 0.4773 &0.4577& 0.2730& 0.4076 &0.3878\\
+\hline
+(1000,  3,    5) & 0.1090 & 0.4059 &0.3572& 0.1162& 0.3268 &0.2837\\
+\hline
+(1000,  3,   20) & 0.4180 & 0.8518 &0.8748& 0.3465& 0.7725 &0.7967\\
+\hline
+(1000,  10,   5) & 0.08320& 0.3126 &0.3801& 0.0894& 0.2533 &0.2965\\
+\hline
+(1000,  10,  20) & 0.3416 & 0.7695 &0.7954& 0.2880& 0.6921 &0.7148\\
+\hline
+(1000,  21,   5) & 0.08427& 0.3276 &0.3187& 0.0783& 0.2618 &0.2494\\
+\hline
+(1000,  21,  20) & 0.3702 & 0.8002 &0.8075& 0.3110& 0.7228 &0.7240\\
+\hline
+\hline
+(1000, 10, 10) &0.2155 & 0.2335 & 0.3169& 0.2612 & 0.2779 & 0.3362\\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+\section{Discussion}
+
+The results illustrate that both LSI and mCCA outperform
+$k$-means in terms of our evaluation criteria. We believe that
+this is due to mCCA and LSI capturing the word co-occurrence
+patterns, a well-established fact for the LSI method, which also
+holds for mCCA (The decomposition is based on the inter-lingual
+covariance matrix). The performance of LSI and mCCA is comparable
+in all the tested cases. This is unexpected, since LSI discards
+the correspondence information between feature (word) and
+language. Note that the above tables are coarse measures, as we
+average over all pairs of languages. The two algorithms may have
+different fail cases which may explain why this correspondence
+information is does not seem important. Furthermore, in our
+preliminary experiment, mCCA performed significantly better on
+the Wikipedia data set. However, additional experimentation is
+required before we can draw conclusions. Finally, we note that
+the results show there is still room to improve the methods which
+leads us to believe that a further investigation into low-rank
+approximations of multilingual structure is warranted.
+
+\bibliographystyle{unsrt} \bibliography{nips}
+
+
+\pagebreak
+\appendix
+
+\section{Learned Concept Vectors}
+We include the top 20 vectors we learn, each dimension 5 for
+illustrative purposes. We only include 4 languages here, see
+~\cite{full_version} for more examples.
+
+\scriptsize
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+closed written statements rule 149
+women item report voted resolution
+you your barroso he mr
+women gender equality violence men
+you young economic crisis strategy
+vote you minutes details item
+vote minutes details results see
+you acp trade agreement european
+euro countries greece acp commission
+young budget treaty parliament council
+acp agricultural budget agreement farmers
+turkey women market accession policy
+presidency trafficking violence council turkey
+trafficking vote agricultural policy farmers
+turkey trafficking balkans accession montenegro
+item israel strategy internal trafficking
+2020 strategy committee eib small
+turkey acp presidency market internal
+arctic products greece treaty cosmetic
+arctic russia next item young
+\end{verbatim}
+&
+\begin{verbatim}
+písemná článek rozprava ukončena prohlášení
+žen bodem dalším písemně usnesení
+jste barroso vám vás můžete
+žen násilí ženy pohlaví ženách
+jste krize strategie 2020 barroso
+hlasování zápis viz bodem jste
+hlasování zápis viz údajů pokračujeme
+dohody akt jste partnerství komise
+akt komise eurozóny země řecko
+parlamentu předsednictví evropského rozpočtu 20
+akt dohody zemědělské klimatu zemědělství
+žen turecko přistoupení turecka trhu
+předsednictví násilí obchodování lidmi rady
+obchodování hlasování lidmi písemně soudržnosti
+makedonie obchodování turecko lidmi přistoupení
+bodem strategie obchodování izrael dalším
+2020 eib bodem podniky demokratů
+akt turecko předsednictví turecka trh
+kosmetických strategie eurozóny arktidy smlouvy
+rusko bodem dalším zdraví arktidy
+\end{verbatim}
+\end{tabular}
+
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+clos article écrites 149 débat
+femmes appelle voté rapport l'ordre
+vous avez barroso votre pouvez
+femmes hommes l'égalité violence vous
+vous jeunes crise stratégie économique
+votes vote vous verbal commission
+votes verbal vote procès résultats
+vous acp turquie européen l'accord
+euro grèce commission acp zone
+jeunes budget traité parlement lisbonne
+acp budget agricole pac l'accord
+turquie femmes marché intérieur politique
+présidence violence turquie conseil êtres
+traite vote pac êtres agricole
+turquie balkans occidentaux monténégro kosovo
+stratégie intérieur l'ordre appelle israël
+2020 stratégie entreprises bei pme
+turquie acp jeunes intérieur présidence
+produits cosmétiques traité zone grèce
+russie arctique l'arctique jeunes santé
+\end{verbatim}&
+\begin{verbatim}
+schriftliche geschlossen erklärungen aussprache artikel
+frauen gestimmt bericht schriftlich erkläre
+sie barroso herr antwort selbstverständlich
+frauen gleichstellung gewalt männern geschlechter
+strategie sie 2020 barroso krise
+abstimmung kommission the nächster punkt
+abstimmung the protokoll siehe abstimmungsstunde
+akp türkei abkommen kommission staaten
+eurozone griechenland akp kommission länder
+lissabon parlaments parlament arbeitsmarkt vertrag
+akp agrarpolitik abkommen versammlung gap
+türkei frauen binnenmarkt agrarpolitik gap
+gewalt menschenhandel türkei ratsvorsitz präsidentschaft
+menschenhandel agrarpolitik abstimmung gap landwirte
+türkei menschenhandel mazedonien montenegro kosovo
+israel binnenmarkt strategie punkt menschenhandel
+2020 strategie eib unternehmen kopenhagen
+türkei akp binnenmarkt gewalt versammlung
+arktis nanomaterialien eurozone griechenland vertrag
+russland arktis arktischen punkt frau
+\end{verbatim}
+\end{tabular}
+
+
+\end{document}
+
+\pagebreak
+\appendix
+
+\section{Learned Concept Vectors}
+We include the top 20 vectors we learn, each dimension 5 for%five most significant words for each of the multilingual topics 
+illustrative purposes. We only include 4 languages here.
+
+\scriptsize
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+closed written statements rule 149
+women item report voted resolution
+you your barroso he mr
+women gender equality violence men
+you young economic crisis strategy
+vote you minutes details item
+vote minutes details results see
+you acp trade agreement european
+euro countries greece acp commission
+young budget treaty parliament council
+acp agricultural budget agreement farmers
+turkey women market accession policy
+presidency trafficking violence council turkey
+trafficking vote agricultural policy farmers
+turkey trafficking balkans accession montenegro
+item israel strategy internal trafficking
+2020 strategy committee eib small
+turkey acp presidency market internal
+arctic products greece treaty cosmetic
+arctic russia next item young
+\end{verbatim}
+&
+\begin{verbatim}
+písemná článek rozprava ukončena prohlášení
+žen bodem dalším písemně usnesení
+jste barroso vám vás můžete
+žen násilí ženy pohlaví ženách
+jste krize strategie 2020 barroso
+hlasování zápis viz bodem jste
+hlasování zápis viz údajů pokračujeme
+dohody akt jste partnerství komise
+akt komise eurozóny země řecko
+parlamentu předsednictví evropského rozpočtu 20
+akt dohody zemědělské klimatu zemědělství
+žen turecko přistoupení turecka trhu
+předsednictví násilí obchodování lidmi rady
+obchodování hlasování lidmi písemně soudržnosti
+makedonie obchodování turecko lidmi přistoupení
+bodem strategie obchodování izrael dalším
+2020 eib bodem podniky demokratů
+akt turecko předsednictví turecka trh
+kosmetických strategie eurozóny arktidy smlouvy
+rusko bodem dalším zdraví arktidy
+\end{verbatim}
+\end{tabular}
+
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+clos article écrites 149 débat
+femmes appelle voté rapport l'ordre
+vous avez barroso votre pouvez
+femmes hommes l'égalité violence vous
+vous jeunes crise stratégie économique
+votes vote vous verbal commission
+votes verbal vote procès résultats
+vous acp turquie européen l'accord
+euro grèce commission acp zone
+jeunes budget traité parlement lisbonne
+acp budget agricole pac l'accord
+turquie femmes marché intérieur politique
+présidence violence turquie conseil êtres
+traite vote pac êtres agricole
+turquie balkans occidentaux monténégro kosovo
+stratégie intérieur l'ordre appelle israël
+2020 stratégie entreprises bei pme
+turquie acp jeunes intérieur présidence
+produits cosmétiques traité zone grèce
+russie arctique l'arctique jeunes santé
+\end{verbatim}&
+\begin{verbatim}
+schriftliche geschlossen erklärungen aussprache artikel
+frauen gestimmt bericht schriftlich erkläre
+sie barroso herr antwort selbstverständlich
+frauen gleichstellung gewalt männern geschlechter
+strategie sie 2020 barroso krise
+abstimmung kommission the nächster punkt
+abstimmung the protokoll siehe abstimmungsstunde
+akp türkei abkommen kommission staaten
+eurozone griechenland akp kommission länder
+lissabon parlaments parlament arbeitsmarkt vertrag
+akp agrarpolitik abkommen versammlung gap
+türkei frauen binnenmarkt agrarpolitik gap
+gewalt menschenhandel türkei ratsvorsitz präsidentschaft
+menschenhandel agrarpolitik abstimmung gap landwirte
+türkei menschenhandel mazedonien montenegro kosovo
+israel binnenmarkt strategie punkt menschenhandel
+2020 strategie eib unternehmen kopenhagen
+türkei akp binnenmarkt gewalt versammlung
+arktis nanomaterialien eurozone griechenland vertrag
+russland arktis arktischen punkt frau
+\end{verbatim}
+\end{tabular}
+
+\begin{verbatim}
+afsluttet forhandlingen skriftlige artikel erklæringer
+kvinder punkt stemte vold betænkning
+barroso han hr dem davies
+kvinder ligestilling mænd vold kvinders
+unge økonomiske 2020 barroso euroområdet
+afstemningen protokollen oplysninger afstemning resultater
+afstemningen protokollen resultater afstemning oplysninger
+avs økonomiske tyrkiet politiske rettigheder
+euroområdet grækenland lande avs forslag
+unge parlamentet lissabontraktaten parlamentets budget
+avs landbrugspolitik fælles aftalen ændringsforslag
+tyrkiet landbrugspolitik kvinder marked fælles
+formandskab menneskehandel vold tyrkiet spanske
+menneskehandel landbrugspolitik afstemningen fælles områder
+tyrkiet menneskehandel montenegro kosovo serbien
+punkt israel menneskehandel indre marked
+2020 eib små virksomheder var
+tyrkiet avs unge marked indre
+arktis euroområdet grækenland kosmetiske oplysninger
+rusland arktis næste arktiske unge
+\end{verbatim}&
+
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+cierra artículo declaraciones 142 149
+mujeres votado informe siguiente resolución
+usted barroso le señor qué
+mujeres género igualdad violencia hombres
+usted crisis estrategia jóvenes barroso
+votación acta véase comisión usted
+votación véase acta continuamos resultados
+acp acuerdo usted turquía comisión
+euro países grecia comisión acp
+jóvenes presupuesto parlamento tratado lisboa
+acp presupuesto agrícola acuerdo pac
+turquía mujeres mercado política adhesión
+presidencia violencia seres turquía consejo
+votación agrícola seres barroso tráfico
+turquía balcanes montenegro occidentales kosovo
+israel estrategia siguiente interior gaza
+2020 estrategia bei pyme nombre
+turquía acp mercado presidencia jóvenes
+productos ártico cosméticos tratado grecia
+rusia ártico ártica gas salud
+\end{verbatim}&
+\begin{verbatim}
+kirjalikud lõppenud avaldused artikkel kodukorra
+naiste päevakorrapunkt järgmine kirjalikult hääletasin
+te teie olete barroso teil
+naiste soolise võrdõiguslikkuse vägivalla naised
+te 2020 strateegia noorte barroso
+vt protokoll üksikasjad päevakorrapunkt järgmine
+vt üksikasjad protokoll tulemused muud
+akv türgi lepingu komisjoni te
+euroala kreeka akv riikide komisjon
+parlamendi lissaboni noorte eelarve oli
+akv põllumajanduspoliitika eelarve ühisassamblee parlamentaarse
+türgi naiste põllumajanduspoliitika soolise siseturu
+nõukogu türgi inimkaubanduse vägivalla eesistujariik
+põllumajanduspoliitika inimkaubanduse lissaboni barroso ühtekuuluvuspoliitika
+türgi makedoonia jugoslaavia inimkaubanduse montenegro
+iisraeli järgmine päevakorrapunkt palestiina inimkaubanduse
+2020 eip strateegia suurusega naiste
+türgi akv hispaania siseturu lepingu
+arktika euroala kosmeetikatoodete lepingu kreeka
+arktika venemaa päevakorrapunkt järgmine toiduohutuse
+\end{verbatim}
+\end{tabular}
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+päättynyt työjärjestyksen artikla kirjalliset lausumat
+naisten seuraavana esityslistalla kirjallinen laatima
+te barroso puheenjohtaja olette teidän
+naisten tasa naisiin sukupuolten miesten
+2020 te barroso talouden talous
+pöytäkirja kulkua äänestysten ks yksityiskohdat
+kulkua äänestysten ks yksityiskohdat pöytäkirja
+akt sopimuksen turkin euroopan valtioiden
+akt kreikan valtioiden komissio kreikka
+lissabonin parlamentin talousarvion nuoret neuvosto
+akt yhteisen edustajakokouksen cotonoun talousarvion
+turkin naisten turkki tasa 2020
+puheenjohtajavaltio ihmiskaupan neuvoston väkivallan turkin
+ihmiskaupan lissabonin kirjallinen alueiden viljelijöille
+ihmiskaupan turkin länsi jugoslavian balkanin
+israelin esityslistalla seuraavana laatima ihmiskaupan
+2020 venäjän seuraavana naisten laatima
+turkin akt turkki puheenjohtajavaltio sisämarkkinoita
+tietojen aineiden lissabonin kreikan tärkeää
+venäjän arktisen seuraavana esityslistalla venäjä
+\end{verbatim}
+\end{tabular}
+\begin{verbatim}
+rásbeli nyilatkozatok lezárom vitát szabályzat
+nők rásban szavaztam napirendi pont
+ön barroso úr kapni köszönöm
+nők nemek férfiak erőszak egyenlőség
+gazdasági ön fiatalok 2020 barroso
+szavazás lásd bizottság napirendi szavazásra
+lásd szavazás szavazásra jegyzőkönyvet jegyzőkönyvben
+akcs európai ön közös politikai
+országok akcs görögország bizottság fejlődő
+fiatalok parlament lisszaboni szerződés tanács
+akcs mezőgazdasági közgyűlés közös költségvetés
+törökország nők közös piac belső
+emberkereskedelem tanács elnökség erőszak spanyol
+emberkereskedelem mezőgazdasági barroso nemzeti szavazásra
+emberkereskedelem macedónia jugoszláv törökország nyugat
+következő emberkereskedelem palesztin napirendi pont
+2020 ebb stratégia kis következő
+akcs törökország török fiatalok spanyol
+kozmetikai sarkvidék szerződés északi termékek
+oroszország sarkvidék északi sarkvidéki napirendi
+\end{verbatim}
+\end{tabular}
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+chiusa scritte articolo dichiarazioni svolgerà
+donne reca l'ordine votato relazione
+lei barroso riceverà avete onorevole
+donne violenza uomini genere parità
+lei giovani crisi strategia barroso
+votazione verbale commissione dettagliati votazioni
+votazione dettagliati verbale vedasi votazioni
+acp turchia lei sviluppo commissione
+paesi grecia commissione donne acp
+giovani bilancio trattato parlamento lisbona
+acp agricola bilancio paritetica revisione
+turchia donne mercato politica interno
+presidenza violenza consiglio turchia esseri
+votazione esseri barroso agricoltori agricola
+turchia balcani macedonia iugoslava occidentali
+strategia israele interno reca l'ordine
+2020 strategia pmi imprese piccole
+turchia acp interno presidenza giovani
+prodotti cosmetici trattato grecia artica
+russia artica giovani gas reca
+\end{verbatim}&
+\begin{verbatim}
+raštiški pareiškimai straipsnis tvarkos 142
+moterų balsavau moteris pranešimas raštu
+jūs jūsų barroso j galite
+moterų moteris lyčių vyrų lygybės
+jūs euro 2020 ekonomikos darbo
+protokolą balsavimo žr jūs rezultatai
+žr protokolą balsavimo rezultatai išsamūs
+akr europos susitarimo turkijos prekybos
+euro akr komisija zonos šalių
+biudžeto parlamento lisabonos jaunimo užimtumo
+akr žemės ūkio klimato energijos
+turkijos moterų turkija ūkio stojimo
+žmonėmis tarybai moteris pirmininkaujanti turkijos
+žmonėmis žemės ūkio jūs sanglaudos
+žmonėmis turkijos jugoslavijos vakarų kosovo
+žmonėmis miškų vidaus 2020 izraelio
+2020 eib klausimas demokratų vardu
+akr turkijos turkija jaunimo vidaus
+kosmetikos arkties euro produktų lisabonos
+arkties rusijos rusija klausimas saugos
+\end{verbatim}
+\end{tabular}
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+slēgtas pants reglamenta rakstiskas deklarācijas
+nākamais sieviešu balsoju punkts rakstiski
+jūs jums jūsu barroso esat
+sieviešu sievietēm dzimumu sievietes vīriešu
+jūs 2020 eiro jauniešu darba
+balsošanas jūs nākamais balsošanu protokolu
+balsošanas protokolu balsošanu detalizēta sk
+ākk jūs tirdzniecības eiropas nolīguma
+eiro ākk jaunattīstības komisija zonas
+budžeta parlamenta jauniešu lisabonas jauniešiem
+ākk lauksaimniecības nolīguma klp klimata
+sieviešu turcijas lauksaimniecības tirgus turcija
+prezidentūras prezidentūra spānijas gada čehijas
+lauksaimniecības klp jūs barroso kohēzijas
+dienvidslāvijas maķedonijas turcijas rietumbalkānu melnkalne
+nākamais tirgus punkts mums palestīnas
+2020 eib gadam mvu budžeta
+ākk turcijas turcija spānijas turciju
+kosmētikas arktikas lisabonas eiro datu
+arktikas krievijas nākamais gāzes arktiku
+\end{verbatim}&
+\begin{verbatim}
+schriftelijke verklaringen gesloten artikel 149
+vrouwen verslag schriftelijk gestemd verklaar
+u uw bent barroso zult
+vrouwen geweld mannen gendergelijkheid u
+u jongeren crisis strategie economische
+stemmingen u notulen commissie stemming
+stemmingen notulen stemming uitslagen bijzonderheden
+acs overeenkomst u turkije handel
+eurozone griekenland landen commissie acs
+jongeren verdrag parlement begroting raad
+acs overeenkomst begroting landbouwbeleid landbouw
+turkije vrouwen markt landbouwbeleid interne
+voorzitterschap mensenhandel geweld raad turkije
+mensenhandel landbouwbeleid landbouwers barroso gemeenschappelijk
+turkije mensenhandel westelijke montenegro kosovo
+israël strategie interne mensenhandel markt
+2020 kleine strategie middelgrote ondernemingen
+turkije acs jongeren voorzitterschap interne
+eurozone arctische producten griekenland verdrag
+arctische rusland orde jongeren regio
+\end{verbatim}
+\end{tabular}
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+zamykam pisemne regulaminu oświadczenia art
+kobiet punktem sprawozdania piśmie przemocy
+pan barroso pani pana otrzyma
+kobiet płci przemocy mężczyzn pan
+pan 2020 euro strategii pracy
+głosowanie patrz pan protokół głosowania
+głosowanie patrz protokół głosowania wyniki
+umowy akp komisji pan europejskiej
+euro akp kraje komisja kobiet
+parlamentu budżetu młodych traktatu euro
+akp umowy budżetu rolnej wpr
+kobiet turcji turcja rynku wpr
+ludźmi prezydencji przemocy prezydencja turcji
+ludźmi głosowanie barroso obszarów pan
+ludźmi turcji macedonii turcja bałkanów
+ludźmi punktem strategii 2020 gazy
+2020 ebi kobiet małych punktem
+akp turcji turcja rynku prezydencja
+produktów traktatu informacji strefy danych
+pani rosji gazu rosja kolejnym
+\end{verbatim}&
+\begin{verbatim}
+encerrado escritas artigo declarações 149
+mulheres segue votei relatório reaberta
+barroso senhor deputado presidente presidência
+mulheres igualdade violência homens género
+jovens crise estratégia barroso económica
+votação acta pormenorizados comissão segue
+votação pormenorizados acta votações resultados
+acp acordo turquia comissão comércio
+euro países grécia comissão acp
+jovens orçamento parlamento tratado lisboa
+acp orçamento agrícola alterações paritária
+turquia mulheres mercado adesão igualdade
+presidência violência turquia tráfico conselho
+tráfico agrícola votação seres barroso
+turquia balcãs ocidentais tráfico kosovo
+israel estratégia segue interno ordem
+2020 estratégia pequenas bei empresas
+turquia acp jovens interno mercado
+árctico produtos cosméticos tratado grécia
+árctico rússia jovens segue gás
+\end{verbatim}
+\end{tabular}
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+închisă scrise declaraţii dezbaterea articolul
+femeilor votat următorul femei scris
+aţi dumneavoastră veţi barroso vă
+femeilor femei bărbaţi gen egalitatea
+aţi veţi muncă 2020 barroso
+the comisiei ordinea următorul zi
+the votarea votul vot detalii
+acp aţi european turcia comisiei
+euro acp ţările grecia comisia
+tinerii lisabona tinerilor 20 parlamentului
+acp agricolă pac bugetul acordului
+turcia femeilor internă aderare piaţa
+preşedinţia turcia consiliului preşedinţiei traficul
+barroso traficul traficului the pac
+turcia kosovo vest balcanii fosta
+următorul gaza internă israelul traficul
+2020 strategia 2010 bei mijlocii
+turcia acp piaţa preşedinţia internă
+arctică cosmetice produsele grecia lisabona
+arctică rusia regiunea următorul naturale
+\end{verbatim}&
+\begin{verbatim}
+skončila písomné článok vyhlásenia rozprava
+žien alším bodom hlasoval písomne
+ste barroso vám pán predseda
+žien ženy násilia ženách rovnosti
+ste 2020 mladých barroso krízy
+ste podrobnostiach zápisnicu hlasovanie hlasovania
+podrobnostiach zápisnicu pozri hlasovania hlasovanie
+akt dohody ste európskej komisie
+eurozóny akt krajiny komisia grécko
+parlamentu mladých rozpočet zmluvy lisabonskej
+akt dohody klímy spp rozpočet
+žien turecko turecka trh spp
+predsedníctvo ľuďmi rady predsedníctva násilia
+ľuďmi hlasovanie spp barroso ste
+ľuďmi balkánu macedónsko turecko pokroku
+alším bodom ľuďmi izrael potrebujeme
+2020 malých eib stredných podnikov
+akt turecko turecka predsedníctvo trhu
+kozmetických arktídu výrobkov údajov eurozóny
+arktídu rusko pani bodom alším
+\end{verbatim}
+\end{tabular}
+\begin{tabular}{p{0.5\textwidth}p{0.5\textwidth}}
+\begin{verbatim}
+pisne člen zaključena izjave razprava
+naslednja žensk pisni obliki poročilo
+ste boste barroso gospod vas
+žensk ženskami spolov ženske nasilja
+ste boste 2020 barroso mlade
+glasovanje izide zapisnik glej ste
+izide glasovanje zapisnik glej podrobnosti
+akp sporazuma ste komisije evropski
+akp komisija grčija gozdov države
+mlade parlamenta proračun pogodbe proračuna
+akp sporazuma proračun proračuna kmetijske
+žensk turčija turčije trg politika
+predsedstvo ljudmi sveta nasilja proračun
+ljudmi glasovanje skp barroso ravni
+ljudmi turčija napredku turčije jugoslovanska
+točka ljudmi naslednja izrael 2020
+2020 srednje eib podjetja žensk
+akp turčija turčije predsedstvo mlade
+kozmetičnih podatkov izdelkov pogodbe pomembno
+naslednja rusija rusijo točka seveda
+\end{verbatim}&
+\begin{verbatim}
+avslutad härmed förklaringar skriftliga debatten
+kvinnor punkt röstade män våld
+ni er barroso han ert
+kvinnor män våld jämställdhet ni
+ni ungdomar krisen ekonomiska 2020
+omröstningen ni protokollet omröstningsresultat punkt
+omröstningen omröstningsresultat protokollet uppgifter rör
+avs ni handel avtalet europeiska
+euroområdet länderna avs kommissionen grekland
+ungdomar lissabonfördraget ungdomarna budget förslaget
+avs gemensamma jordbrukspolitiken avtalet församlingen
+turkiet kvinnor gemensamma marknaden jordbrukspolitiken
+ordförandeskapet våld människohandel turkiet spanska
+omröstningen jordbrukspolitiken ni människohandel gemensamma
+turkiet republiken balkan f västra
+punkt inre israel marknaden åtgärder
+2020 små företag medelstora strategin
+turkiet avs inre ordförandeskapet ungdomar
+arktis produkter euroområdet nanomaterial grekland
+arktis ryssland nästa ungdomar ni
+\end{verbatim}
+\end{tabular}
+
+\begin{table}
+\begin{center}
+\caption{Standard Deviation}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+Parameters&\multicolumn{3}{|c|}{AMPMR} &  \multicolumn{3}{|c|}{CMSP}\\
+\cline{2-7}
+(NViews,Ndims,Ntrain)& $k$-means & LSI & mCCA &$k$-means & LSI & mCCA \\
+\hline
+\hline
+ &    0.0058  &   0.0100  &   0.0087  &   0.0089  &   0.0118  &   0.0098 \\
+  \hline
+ &    0.0046  &   0.0424  &   0.0338  &   0.0071  &   0.0341  &   0.0300 \\
+  \hline
+ &    0.0061  &   0.0097  &   0.0147  &   0.0081  &   0.0125  &   0.0187 \\
+  \hline
+ &   0.0068  &   0.0416  &   0.0381  &   0.0135  &   0.0332  &   0.0285 \\
+  \hline
+ &   0.0151  &   0.0093  &   0.0101  &   0.0176  &   0.0122  &   0.0137 \\
+  \hline
+ &    0.0045  &   0.0530  &   0.0463  &   0.0046  &   0.0458  &   0.0397 \\
+\hline\hline
+\end{tabular}
+\end{center}
+\end{table}

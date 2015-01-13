@@ -107,6 +107,21 @@ At the end we obtain low rank approximation $D_{\mbox{Total}} \approx U_k \Sigma
 
 \subsubsection{Refinement of LSI similar to MCCA}
 
+Finally, we test mCCA is specifically designed to consider data from multiple sources (in this case languages). Therefore, we do not merge the individual term-document matrices into one as in
+the other two methods. For each language (view), we estimate the pairwise correlation coefficients, then we try to find vectors which maximize the sum of all pairwise correlations over all languages. This can be written as the following optimization 
+\begin{equation}
+\label{eq:opt1}
+\max_{w_1,\ldots, w_\ell} \sum_{i=1}^\ell\sum_{j=i+1}^\ell  \frac{w_i^T D_i D_j^T w_j}{\sqrt{ w_i^T D_i D_i^T w_i\vphantom{ D_j^T } }\sqrt{ w_j^T D_j D_j^T w_j}}
+\end{equation}
+However, this allows only for a 1-dimensional representation (i.e. one vector per language). Since we would like to allow for more vectors per language, we denote the double sum in Equation~\ref{eq:opt1} by $\mbox{mCCA}(w_1,\ldots,w_\ell)$. If $\mbox{corr}$ denotes the correlation, to find $M$ vectors, the optimization objective function  becomes
+\begin{equation}
+\max_{\substack{w_i^{(j)}\;;\;i=1,\ldots,\ell\\j=1,\ldots,M }}\sum_{s=1}^{\mbox{M}} \mbox{mCCA}\left(w_1^{(s)},\ldots,w_\ell^{(s)}\right),
+\qquad\mbox{s.t.} \qquad \mbox{corr} \left(w_i^{(s)},w_i^{(t)}\right) = 0
+\quad \forall s\neq t
+\end{equation}
+We require that the set of $M$ vectors we return for each language are uncorrelated (so that we do not get copies of a vector) which together maximize the pairwise correlation between languages.
+
+
 \subsubsection{Regression}
 
 % Taken from Similarity paper

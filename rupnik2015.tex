@@ -3,6 +3,7 @@
 
 \usepackage{color}
 \newcommand{\todo}[1]{\textcolor{red}{TODO: #1}}
+\newcommand{\oldText}[1]{\textcolor{red}{#1:}\color{blue}}
 
 \usepackage{hyperref}
 
@@ -15,7 +16,7 @@
 \newcommand{\Y}{\mathbb{Y}}
 
 \jairheading{x}{xxxx}{x-xx}{x/xx}{x/xx}
-\ShortHeadings{Cross-lingual Document Similarity and Event Detection}
+\ShortHeadings{Cross-lingeringual Document Similarity and Event Detection}
 {Rupnik, Muhi\v{c}, Leban, Fortuna, \v{S}kraba \& Grobelnik}
 \firstpageno{1}
 
@@ -40,50 +41,50 @@
 
 \section{Introduction}
 
-% taken from XLite paper
+
+{\oldText{Taken from XLite paper}
 Document retrieval is a well-established problem in data mining. There have been a large number of different approaches put forward in the literature. In this paper we concentrate on a specific setting: multi-lingual corpora. As the availability of multi-lingual documents has exploded in the last few years, there is a pressing need for automatic cross-lingual processing tools.
 
 The prime example is Wikipedia - in 2001 the majority of pages were written in English, while in 2012, the percentage of English articles has dropped to 14\%. In this context, we look at how to find similar documents across languages. In particular, we do not assume the availability of machine translators, but rather try to frame the problem such that we can use well-established machine learning tools designed for monolingual text-mining tasks. This work represents the continuation of previous work \cite{nips, iti, nips2, sikdd} where we explored representations of documents which were valid over multiple languages.  The representations could be interpreted as multi-lingual topics, which were then used as proxies to compute cross-lingual similarities between documents. We look at a specific aspect of this problem: the distribution of articles across languages in Wikipedia is not uniform. While the percentage of English articles has fallen, English is still the largest language and one of \emph{hub} languages which not only have an order of magnitude more articles than other languages, but also many comparable articles with most of the other languages.
 
 When doing document retrieval, we encounter two quite different situations. If for example, we are looking for a German article comparable to an English article, there is a large alignment between the document corpora (given by the intersection in articles in the two languages) making the problem well-posed. If, however, we look for a relevant Slovenian article given a Hindi article, the intersection is small, making the problem much harder. Since almost all languages have a large intersection in articles with \emph{hub} languages, the question we ask in this paper is: can we exploit hub languages to perform better document retrieval between non-hub languages? A positive answer would vastly improve cross-lingual analysis between less represented languages. In the following section, we introduce our representation followed by our experiments, which also shed light on the structural properties of the multilingual Wikipedia corpus.
-
+}
 
 \section{Cross-lingual Document Similarity}
 
+Document similarity is an important component in techniques from text mining and natural language processing. Many techniques use the similarity as a black box, i.e., a kernel in Support Vector Machines. Comparison of documents (or other types of text snippets) is a well studied problem \todo{some references to prove that}. In this section we define document similarity in a cross-lingual setting, where the similarity function receives documents in different languages. We conclude the section by an introduction of two datasets which we used in this paper to learn cross-lingual similarity functions.
 
 \subsection{Problem definition}
 
-%Rough structure:
-% - Document Representation}
-% - Multi-language representation}
-% - Document Similarity
+% Document representation
 
+Standard vector space model \cite{xxx} represents documents as vectors, where each team corresponds to word or phrase in a fixed vocabulary. More formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_j$ correspond to the number of times term $j$ occurred in the document (also called \emph{term frequency} or $TF$). A common way of computing similarity between documents is \emph{cosine similarity}, 
+$$sim_{cos}(d_1, d_2) = \frac{<x_1, x_2>}{\|x_1\| \|x_2\|},$$
+where $x_1$ and $x_2$ correspond to the vector representations of $d_1$ and $d_2$ respectively. Cosine similarity, and other related approaches, assumes that the similarity is reflected in the overlap of words, and as such works only when the documents $d_1$ and $d_2$ are written in the same language.
 
+Terms in the vocabulary are generally not equally important in determining similarity between documents, and this can be addressed by preprocessing the documents. First, term frequency can be used to prune away infrequent terms. Rather than take a fixed number of top terms in each document we use an adaptive measure, to identify a threshold for a given monolingual corpus of $N$ documents. Let $f(n)$ be a map which returns numbers of terms appearing at least $n$ times in the corpus. We select the threshold as the maximal $n$ such that $f(n) \leq 6 \cdot 10^5$. The reason for this is that we wanted to support the maximal number of languages given available data, for many of which there are no available tools for stemming lemmatization. Using adaptive measure ensures that we get well balanced corpus and retain maximal number of words for languages with rather small available corpus but potentially rich vocabularies.
 
-% taken from ITI paper
-Our data is a collection of documents in multiple languages along with an alignment with correspondences across languages. Individual documents are represented as vectors by using the standard vector space model where each term corresponds to a word or a phrase in a fixed vocabulary. An aligned corpus is represented by a set of matrices $D^J$ defined as $D^J := [d_1^J , \ldots , d_{m_j}^J ] \in \RR^{n_J \times m_J}$ where $m_J$ is the number of documents in language $J$ and $n_J$ is the dictionary size. Let $N = \sum_{J=1}^M n_J$, where $M$ is the number of languages. Each multi-lingual document of the aligned corpus is formed as a block vector $d_k = [ d_k^1; \dots; d_k^M] \in \RR^{N}$, and documents are indexed so that $d_k^{J_1}$ and $d_k^{J_2}$ is an aligned document pair for all $k, J_1, J_2$.
+Once this pruning step is complete, we further re-weight the remaining terms. A term weight should correspond to the importance of the term for the given corpus. The common weighting scheme is called \emph{Term Frequency Inverse Document Frequency} ($TFIDF$) weighting. An \emph{Inverse Document Frequency} ($IDF$) weight for the dictionary term $j$ is defined as $\log( \frac{N}{DF_j} )$, where $DF_j$ is the number of documents in the corpus which contain term $j$.  A document $TFIDF$ vector is its original vector multiplied element-wise by the weights. The $j$-th element of a document vector is given by $x_j = TF_j \log( \frac{N}{DF_j} )$. Finally, we re-normalize each vector to have Euclidean norm equal to 1.
 
-Our main interest are similarities between documents. We can measure the similarities between documents of the same language by using the cosine similarity. We note that given a transformation function between dictionaries, we could compute similarities between documents in different languages. However, bilingual-dictionaries are not available for many language pairs in the Wikipedia corpus and we will rely on document correspondences to compute document similarities across languages in the present paper. Note that this implies a correspondence between columns in each $D^K$ for all $K$.
+% Multi-language dataset
 
-Terms in the dictionary are generally not equally important in determining similarity between documents, so we must preprocess the documents. We first use term frequency ($TF$), to prune away infrequent terms. Rather than take a fixed number of top terms in each document we use an adaptive measure.
+The cross-lingual similarity model presented in this paper is based on comparable corpora. That is, a corpus of documents in multiple languages, with alignment between documents that are of the same topic, or even a rough translation of each other. Examples of comparable corpora include Wikipedia, where a specific entry can be described in multiple languages (e.g. "Berlin" is currently described in 222 languages), or news articles, where the same event can be described by newspapers in several languages.
 
-Let $f(n)$ be a map which returns numbers of terms appearing at least $n$ times.  For each language $k$ we find maximal $n$ such that $\max(10^5, N_k)\leq f(n) \leq 6\cdot 10^5,$ where $N_k$ is number of documents in complete dictionary of language $k.$ As we do not apply any stemming and lemmatization this ensures that we get well balanced corpus and retain at least of $10^5$ words for languages with rather small Wikipedias but potentially rich vocabularies. Once this pruning step is complete, we further re-weight the remaining terms. A term weight should correspond to the importance of the term for the given corpus.  The common weighting scheme is called Term Frequency Inverse Document Frequency (TFIDF) weighting. An Inverse Document Frequency (IDF) weight for the dictionary term $j$ is defined as $w_j = \log( DF_j )$, where $DF_j$ is the number of documents in the corpus which contain term $j$.  A document TFIDF vector is its original vector multiplied element-wise by the weights. The $j$-th element of a document vector is given by $ TF_j \log( DF_j )$. Finally, we re-normalize each vector to have Euclidean norm equal to 1.
+More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least two nonempty documents. A comparable corpus $D = {d_1, \ldots, d_N}$ is a collection of multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times N}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$, let $a(i,j)$ denote the index set of all multilingual documents $d$ that contain non-empty documents $u_i$ and $u_j$, and let $a(i)$ denote the index set of all multilingual documents that contain $u_i$.
 
-% taken from XLite paper
-We begin by introducing some notation. A \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a collection of $m$ documents on the same topic (comparable), where $u_i$ is the document in language $i$ which can be an empty document (missing resource) and $d$ must contain at least two nonempty documents. A comparable corpus $D = {d_1, \ldots, d_N}$ is a collection of multilingual documents. By using the standard vector space model (bag of words) we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times N}$ is the corpus matrix corresponding to the $i$-th language, where $n_i$ is the vocabulary size. Let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$. A \emph{hub language} is a language with a high proportion of non-empty documents in $D$, which in case of Wikipedia is English. Let $a(i,j)$ denote the index set of multilingual documents $d$ that contain non-empty $u_i$ and $u_j$ and $a(i)$ denote the index set of multilingual documents that contain $u_i$.
+% Document similarity
 
-
-
+\todo{Describe document similarity in cross-lingual setting} 
 
 \subsection{Datasets}
 
-% Taken from ITI paper
+{\oldText{Taken from ITI paper}
 To investigate the empirical performance of the low rank approximations we will test the algorithms on a large-scale, real-world multilingual dataset that we extracted from Wikipedia by using inter-language links as an alignment. This  results in a large number of weakly comparable documents in more than $200$ languages. Wikipedia is a large source of multilingual data that is especially important for the languages for which no translation tools, multilingual dictionaries as Eurovoc, or strongly aligned multilingual corpora as Europarl are available. Documents in different languages are related with so called 'inter-language' links that can be found on the left of the Wikipedia page. The Wikipedia is constantly growing. There are currently four Wikipedias with more than $10^6$ articles, $40$ with more than $10^5$ articles, $100$ with more than $10^4$ articles, and $216$ with more than $1000$ articles. Wikipedia uses special user-friendly markup language that is very easy to write but very hard to parse. Simplicity of language can cause ambiguities and moreover it is constantly changing. For example, separator | can be used in different contexts.
 
 Wikipedia raw xml dumps of all currently $270$ active editions were downloaded from the Wikipedia dump page\href{http://dumps.wikimedia.org}. The xml files are too large to be parsed with DOM like parser that needs to store the whole xml tree in the memory, instead we implemented Sax like parser that tries to simulate behavior of Wikipedia official parser and is as simple, fast and error prone as possible. We parse all Wikipedia markup but do not extend the templates. Each Wikipedia page is embedded in the page tag. First we check if the title of the page consists of any special namespace and do not process such pages. Then we check if this is a redirection page and we store the redirect link as inter-language links can point to redirection link also. If nothing of the above applies we extract the text and parse the Wikipedia markup. Currently all the markup is removed.
 
 We get inter-language link matrix using previously stored redirection links and inter-language links. If inter-language link points to the redirection we replace it with the redirection target link. It turns out that we obtain the matrix $M$ that is not symmetric, consequently the underlying graph is not symmetric. That means that existence of the inter-language link in one way (i.e. English to German) does not guarantee that there is an inter-language link in the reverse direction (German to English). To correct this we transform this matrix to symmetric by computing $M+M^T$ and obtaining an undirected graph. In the rare case that we have multiple links pointing from the document, we pick the first one that we encountered. This matrix enables us to build an alignment across all Wikipedia languages.
-
+}
 
 \section{Multilingual Latent Factor Models}
 
@@ -91,22 +92,25 @@ We get inter-language link matrix using previously stored redirection links and 
 
 \subsubsection{$k$-means}
 
-% Taken from ITI paper
+{\oldText{Taken from ITI paper}
 The $k$-means algorithm is perhaps the most well-known and used clustering algorithm. In order to apply the algorithm we first merge all the term-document matrices into a single matrix by stacking the individual term-document matrices and discarding nonaligned documents.
 $$D_{\mbox{Total}} = \begin{bmatrix}D^T_1 ,D^T_2, \cdots,D^T_\ell\ \end{bmatrix}^T$$
 such that the columns respect the alignment of the documents. Therefore, each document  is represented by a long vector indexed by the terms in all languages. These vectors determine the similarity on which the $k$-means is computed. The algorithm outputs a set of centroids that are then separated to form an aligned basis. As a final step the the projected documents are computed as the least squares solutions.
 
 In the implementation we never form the matrix $D_{\mbox{Total}}$ explicitly but rather implement implicit multiplication as $D_{\mbox{Total}} x = \sum_{i=1}^\ell D_i x$ and multiplication with transpose as $D_{\mbox{Total}}^T y = \sum_{i=1}^\ell D_i^T y_i,$ where $y$ is partitioned accordingly to $D_{\mbox{Total}}.$ That lowers memory requirement and compacts sparse indexing, leading to faster element access. 
+}
 
 \subsubsection{LSI}
 
-% Taken from ITI paper
+{\oldText{Taken from ITI paper}
 The next method is CL-LSI which is a variant of LSI~\cite{lsi} for more than one language. The method is based on computing the singular value decomposition of $D_{Total}$. Since the matrix can be large we can use an iterative method like the Lanczos~\cite{matrix_comp} algorithm with reorthogonalization to find the left singular vectors corresponding to the largest singular values. It turns out that Lanczos method converges slowly as the ratio of leading singular eigenvalues is close to one. Moreover Lanczos method is hard to parallelize. Instead we use randomized version of the singular value decomposition (SVD) described in [1] than can be viewed as block Lanczos method. That enables us to use parallelization and can speed up the computation considerably when multiprocessing is available.
 
 At the end we obtain low rank approximation $D_{\mbox{Total}} \approx U_k \Sigma_k V_k^T,$ where $U_k$ are basis vectors of interest and $\Sigma_k$ is truncated diagonal matrix of singular eigenvalues. Each column $u_i$ of $U_k$ consists of block vectors $u_i = \begin{bmatrix} u^{1^T}_i & \dots & u^{\ell^T}_i \end{bmatrix}^T.$ We do not normalize each block $j$  as this would destroy the low rank approximation. Each block $j$ is normalized $u^{j^1}_i = u^{j^1}_i/||u^{j^1}_i||$ to reduce the bias. We obtain the aligned reduced basis $U_{\textrm{aligned}} = \begin{bmatrix} {U^1}^T &\dots & {U^\ell}^T \end{bmatrix}^T,$ where $D_j =  U^j \Sigma_k V_k.$ The reduced language free representation for language $j$ and document $d$ is computed as the weighted least square solution $\Sigma_k^{-1} {U^j}^+ d,$ where $+$ denotes the pseudo inverse of a matrix that is is used because columns of $U^j$ do not form an orthogonal basis. The numerical implementation of the least squares is done by QR algorithm.
+}
 
 \subsubsection{Refinement of LSI similar to MCCA}
 
+{\oldText{Taken from Low-rank paper}
 Finally, we test mCCA is specifically designed to consider data from multiple sources (in this case languages). Therefore, we do not merge the individual term-document matrices into one as in
 the other two methods. For each language (view), we estimate the pairwise correlation coefficients, then we try to find vectors which maximize the sum of all pairwise correlations over all languages. This can be written as the following optimization 
 \begin{equation}
@@ -120,11 +124,11 @@ However, this allows only for a 1-dimensional representation (i.e. one vector pe
 \quad \forall s\neq t
 \end{equation}
 We require that the set of $M$ vectors we return for each language are uncorrelated (so that we do not get copies of a vector) which together maximize the pairwise correlation between languages.
-
+}
 
 \subsubsection{Regression}
 
-% Taken from Similarity paper
+{\oldText{Taken from Similarity paper}
 We begin with a collection of documents in two languages\footnote{The extension to multiple language is  discussed in the Discussion section.}. The documents are represented via bag-of-words as vector spaces $\X$ and $\Y$. There are several possible choices of monolingual similarity functions. We consider functions of the form: $x'C_{\X\X}^i x$ for $i\in \mathbb{Z}$. For $i=0$, we recover the squared Euclidean distance and for $i=-1$, we get the Mahalanobis distance.
 
 As input, we take a choice of $i$ (choice of inner product) along with an alignment of $\X$ and $\Y$. The problem is to find a mapping which respects both monolingual similarity and measures cross-lingual similarity.  In the first we reduce the problem to monolingual similarity. We find some mapping $f: \X \rightarrow \Y$. For a pair of elements $x\in\X$ and $y\in\Y$, we compute their similarity as the similarity of $f(x)$ and $y$ in $\Y$.
@@ -134,8 +138,9 @@ The output of all the algorithms is a linear map (a matrix) denoted $B$, which c
 To find $B$ using regression, we compute the optimal regression matrix as $ C_{\Y \X} (C_{\X \X})^{-1}$. This corresponds to the mapping $f$ mentioned above.  The inner product on the space $\Y$ induces $B$ for computing the similarities between elements in $\X$ and $\Y$: for $B$ it holds that $x^T B y = \langle f (x), y \rangle$. Therefore $B$ depends on the metric on $\Y$. For the inner product corresponding to $C_{\Y\Y}$, $B$ can be derived as $C_{\X \X}^{-1}C_{\X \Y}C_{\Y \Y}$.
 
 Note that in the case of regression, we have a choice of which direction we map: $\X\rightarrow\Y$ or $\Y\rightarrow\X$ except for Mahalanobis metric where the formula for $B$ is symmetric. Due to space constraints we only note here that CCA approximates the least-squares regression for this metric just as LSI approximates the cross-covariance matrix.
+}
 
-% Taken from Pascal CL paper
+{\oldText{Taken from Pascal CL paper}
 he \textbf{regression based approach} consists of two ingredients: a linear regression mapping $f : \RR^{n_i} \rightarrow \RR^{n_j}$,$$ f(x) := F\cdot x,$$ where $F \in \RR^{n_j \times n_j}$ and an inner product on the target space $\langle \cdot, \cdot \rangle_D$, which are used to define: 
 $$s_{i,j}(x,y) := \langle f(x), y \rangle_D = f(x)^T D y = x^T F^T D y.$$
 Choices of $D$ included the standard inner product $I$, Mahalanobis inner product $C_{j,j}^{-1}$, which corresponds to whitening, and the covariance matrix $C_{j,j}$ (related to a co-occurrence). We can consider two regression mappings:
@@ -143,11 +148,13 @@ Choices of $D$ included the standard inner product $I$, Mahalanobis inner produc
 \item least squares regression (LSQ), where $F = C_{j,i}C_{i,i}^{-1}$
 \item canonical correlation regression\cite{ccar} (CCAR), where $F = C_{j,j}^{-1}C{j,i}$.
 \end{itemize}
-
+}
 
 \subsection{Hub languages}
 
-% Taken from XLite
+A \emph{hub language} is a language with a high proportion of non-empty documents in $D$, which in case of Wikipedia is English.
+
+{\oldText{Taken from XLite}
 The first step in our method is to project $X_1, \ldots, X_m$ to lower dimensional spaces without destroying the cross-lingual structure. Treating the columns of $X_i$ as observation vectors sampled from an underlying distribution $\mathcal{X}_i \in V_i = \RR^{n_i}$, we can analyze the empirical cross-covariance matrices: $C_{i,j} = \frac{1}{|a(i,j)|-1 }\sum_{\ell \in a(i,j)} (X_i^{\ell} - c_i)\cdot (X_j^{\ell} - c_j)^T$, where $c_i = \frac{1}{a_i} \sum_{\ell \in a(i)}X_i^{\ell}$. By finding low rank approximations of $C_{i,j}$ we can identify the subspaces of $V_i$ and $V_j$ that are relevant for extracting linear patterns between $\mathcal{X}_i$ and $\mathcal{X}_j$. Let $X_1$ represent the hub language corpus matrix. The standard approach to finding the subspaces is to perform the singular value decomposition on the full $N \times N$ covariance matrix composed of blocks $C_{i,j}$. If $|a(i,j)|$ is small for many language pairs (as it is in the case of Wikipedia), then many empirical estimates $C_{i,j}$ are unreliable, which can result in overfitting. For this reason we perform the truncated singular value decomposition on the matrix $C = [C_{1,2}  \cdots  C_{1,m}] \approx U S V^T$, where where $U \in \RR^{n_1 \times k}, S \in \RR^{k \times k}, V \in \RR^{(\sum_{i=2}^m n_i) \times k}$. We split the matrix $V$ vertically in blocks with $n_2, \ldots, n_M$ rows to obtain a set of matrices $V_i$: $V = [V_2^T  \cdots  V_m^T]^T$. Note that columns of $U$ are orthogonal but columns in each $V_i$ are not (columns of V are orthogonal). Let $V_1 := U$. We proceed by reducing the dimensionality of each $X_i$ by setting: $Y_i = V_i^T \cdot X_i$, where $Y_i \in \RR^{k\times N}$. The step is similar to Cross-lingual Latent Semantic Indexing (CL-LSI) \cite{lsi}\cite{cl_lsi} which is less suitable due to a large amount of missing documents. Since singular value decomposition with missing values is a challenging problem and the alternative of replacing missing documents with zero vectors can result in degradation of performance.
 
 The second step involves solving a generalized version of canonical correlation analysis on the matrices $Y_i$ in order to find the mappings $P_i$. The approach is based on the sum of squares of correlations formulation by Kettenring \cite{Kettenring}, where we consider only correlations between pairs $(Y_1, Y_i), i >1$ due to the hub language problem characteristic. Let $D_{i,i} \in \RR^{k \times k}$ denote the empirical covariance and $D_{i,j}$ denote the empirical cross-covariance computed based on $Y_i$ and $Y_j$. We solve the following optimization problem:
@@ -162,7 +169,7 @@ The second step involves solving a generalized version of canonical correlation 
 By using Lagrangian multiplier techniques (we omit the derivation due to space constraints \todo{Add what was omitted}), the problem can be reformulated as the eigenvalue problem:$\left(\sum_{i=2}^m G_i G_i^T\right) \cdot V = \Lambda \cdot V,$ where $G_i = H_1^T D_{1,i} H_i$ and $H_i = Chol(D_{i,i})^{-1}$ where $Chol(\cdot)$ is the Cholesky decomposition: $X = Chol(X)^T Chol(X)$. The vectors $w_i$ can be reconstructed from the dominant eigenvector $v$, as: $w_1 = H_1 v$  and $w_i \propto H_i  G_i^T  v$ for $i >1$ ($w_i$ need to be appropriately normalized). Higher dimensional mappings $W_i$ are obtained in a similar way by setting the constraint $W_i^T D_{i,i} W_i = I$, where $I$ is the identity matrix. The constraint forces the columns of $W_i$ to be uncorrelated (orthogonal with respect to covariance matrix). $W_i$ can be extracted from a set of dominant eigenvectors of matrix $V$ according to eigenvalues $\Lambda$. The technique is related to a generalization of canonical correlation analysis (GCCA) by Carroll\cite{Carroll}, where an unknown group configuration variable is defined and objective is to maximize the sum of squared correlation between the group variable and the others. The problem can be reformulated as an eigenvalue problem. The difference lies in the fact that we set the unknown group configuration variable as the hub language, which simplifies the solution. The complexity of our method is $O(k^3)$, whereas solving the GCCA method scales as $O(N^3)$ where $N$ is the number of samples (see \cite{gifi}). Another issue with GCCA is that it cannot be directly applied to the case of missing documents.
 
 To summarize, we first reduced the dimensionality of our data to $k$-dimensional features and then found a new representation (via linear transformation) that maximizes directions of linear dependence between the languages. The final projections that enable mappings to a common space are defined as: $P_i(x) = W_i^T V_i^T x.$
-
+}
 
 \subsection{Scaling}
 
@@ -175,8 +182,7 @@ To summarize, we first reduced the dimensionality of our data to $k$-dimensional
 
 \subsubsection{Hub language}
 
-% Taken from XLite paper
-
+{\oldText{Taken from XLite paper}
 To investigate the empirical performance of our algorithm we will test it on a large-scale, real-world multilingual dataset that we extracted from Wikipedia  by  using so called 'inter-language' links as an alignment. We select a subset of Wikipedia languages containing three major languages, English--\emph{en} (hub language), Spanish--\emph{es}, Russian--\emph{ru}, and five minority (in the sense of Wikipedia sizes) languages, Slovenian--\emph{sl}, Piedmontese--\emph{pms}, Waray-Waray--\emph{war} (all with about 2 million native speakers), Creole--\emph{ht} (8 million native speakers), and Hindi--\emph{hi} (180 million native speakers). For preprocessing we remove the documents that contain less than 20 different words (stubs) and remove words occur in less than 50 documents as well as the top 100 most frequent words (in each language separately). We represent the documents as normalized TFIDF\cite{Salton88term-weightingapproaches} weighted vectors. These are languages with Wikipedia article sizes comparable to the minority languages.  (since the number of speakers does not directly correlate with the number of Wikipedia articles). The prime hub candidate is the English language which is well aligned with all other Wikipedia languages, although the alignment quality varies quite a bit. Furthermore, we remove the documents that contain less than 20 different words and remove words that are too infrequent as well as the top 100 most frequent words in the vocabularies. Furthermore, we call the document consisting of less than 20 different words, a stub. This documents are typically garbage, the titles of the columns in the table, remains of the parsing process, or Wikipedia articles with very little or no information contained in one or two sentences.
 
 The evaluation is based on splitting the data into training and test sets (described later). On the training set, we perform the two step procedure to obtain the common document representation as a set of mappings $P_i$. A test set for each language pair, $test_{i,j} = \{(x_\ell,y_\ell) | \ell = 1:n(i,j)\} $, consists of comparable document pairs (linked Wikipedia pages), where $n(i,j)$ is the test set size. We evaluate the representation by measuring mate retrieval quality on the test sets: for each $\ell$, we rank the projected documents $P_j(y_1),\ldots, P_j(y_{n(i,j)})$ according to their similarity with $P_i(x_\ell)$ and compute the rank of the mate document $r(\ell) = rank(P_j(y_\ell))$. The final retrieval score (between -100 and 100) is computed as: $\frac{100}{n(i,j)} \cdot \sum_{\ell = 1}^{n(i,j)} \left( \frac{n(i,j) - r(\ell)}{n(i,j) -1} -0.5\right)$. A score that is less than 0 means that the method performs worse than random retrieval and a score of 100 indicates perfect mate retrieval. The mate retrieval results are included in Table \ref{table:retrieval}.
@@ -260,7 +266,7 @@ We further inspect the properties of the training sets by roughly estimating the
 It is clear that in the case of Creole language only at most $22\%$ documents are unique and suitable for the training. Though we removed the stub documents, many of remaining documents are almost the same, as the quality of some minor Wikipedias is low. This was confirmed for Creole, Waray-Waray, and Piedmontese language by manual inspection. The low quality documents correspond to templates about the year, person, town, etc. and contain very few unique words.
 
 We also have a problem with the quality of the test data. For example, if we look at test pair (\emph{war}, \emph{ht}) only 386/534 Waray-Waray test documents are unique but on other side almost all Creole test documents (523/534) are unique. This indicates a poor alignment which leads to poor performance.
-
+}
 
 \section{Cross-lingual Event Linking}
 

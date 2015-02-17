@@ -56,25 +56,26 @@ Document similarity is an important component in techniques from text mining and
 
 \subsection{Problem definition}
 
-% Document representation
+\textbf{Document representation.}
 
-Standard vector space model \cite{xxx} represents documents as vectors, where each team corresponds to word or phrase in a fixed vocabulary. More formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_j$ correspond to the number of times term $j$ occurred in the document (also called \emph{term frequency} or $TF$). A common way of computing similarity between documents is \emph{cosine similarity}, 
-$$sim_{cos}(d_1, d_2) = \frac{<x_1, x_2>}{\|x_1\| \|x_2\|},$$
-where $x_1$ and $x_2$ correspond to the vector representations of $d_1$ and $d_2$ respectively. Cosine similarity, and other related approaches, assumes that the similarity is reflected in the overlap of words, and as such works only when the documents $d_1$ and $d_2$ are written in the same language.
+Standard vector space model \cite{xxx} represents documents as vectors, where each term corresponds to word or phrase in a fixed vocabulary. More formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_k$ correspond to the number of times term $k$ occurred in the document, also called \emph{term frequency} or $TF_k(d)$.
 
-Terms in the vocabulary are generally not equally important in determining similarity between documents, and this can be addressed by preprocessing the documents. First, term frequency can be used to prune away infrequent terms. Rather than take a fixed number of top terms in each document we use an adaptive measure, to identify a threshold for a given monolingual corpus of $N$ documents. Let $f(n)$ be a map which returns numbers of terms appearing at least $n$ times in the corpus. We select the threshold as the maximal $n$ such that $f(n) \leq 6 \cdot 10^5$. The reason for this is that we wanted to support the maximal number of languages given available data, for many of which there are no available tools for stemming lemmatization. Using adaptive measure ensures that we get well balanced corpus and retain maximal number of words for languages with rather small available corpus but potentially rich vocabularies.
+We also used a term re-weighting scheme that adjusts for the fact that some words occur more frequently in general. A term weight should correspond to the importance of the term for the given corpus. The common weighting scheme is called \emph{Term Frequency Inverse Document Frequency} ($TFIDF$) weighting. An \emph{Inverse Document Frequency} ($IDF$) weight for the dictionary term $k$ is defined as $\log( \frac{N}{DF_k} )$, where $DF_k$ is the number of documents in the corpus which contain term $k$.  A document $TFIDF$ vector is its original vector multiplied element-wise by the weights.
 
-Once this pruning step is complete, we further re-weight the remaining terms. A term weight should correspond to the importance of the term for the given corpus. The common weighting scheme is called \emph{Term Frequency Inverse Document Frequency} ($TFIDF$) weighting. An \emph{Inverse Document Frequency} ($IDF$) weight for the dictionary term $j$ is defined as $\log( \frac{N}{DF_j} )$, where $DF_j$ is the number of documents in the corpus which contain term $j$.  A document $TFIDF$ vector is its original vector multiplied element-wise by the weights. The $j$-th element of a document vector is given by $x_j = TF_j \log( \frac{N}{DF_j} )$. Finally, we re-normalize each vector to have Euclidean norm equal to 1.
+The $TFIDF$ weighted vector space model document representation corresponds to a map $\phi : \text{text} \rightarrow \RR^n$ defined by:
+$$\phi(d)_k = {TF}_k(d) \log( \frac{N}{{DF}_k}).$$
 
-% Multi-language dataset
+\textbf {Mono-lingual similarity.}
+A common way of computing similarity between documents is \emph{cosine similarity},
+$$sim(d_1, d_2) = \frac{\langle \phi(d_1), \phi(d_2)\rangle}{\|\phi(d_1)\| \|\phi(d_2)\|},$$
+where $\langle \cdot,\cdot \rangle$ and $\|\cdot\|$ are standard inner product and Euclidean norm. Cosine similarity, and other related approaches, assumes that the similarity is reflected in the overlap of words, and as such works only when the documents $d_1$ and $d_2$ are written in the same language.
 
-The cross-lingual similarity model presented in this paper is based on comparable corpora. That is, a corpus of documents in multiple languages, with alignment between documents that are of the same topic, or even a rough translation of each other. Examples of comparable corpora include Wikipedia, where a specific entry can be described in multiple languages (e.g. "Berlin" is currently described in 222 languages), or news articles, where the same event can be described by newspapers in several languages.
+\textbf {Cross-lingual similarity.}
+Processing a multilingual dataset results in several vector spaces with varying dimensionality, one for each language. The dimensionality of the vector space corresponding to the $i$-th language is denoted by $n_i$ and and the vector space model mapping is denoted by $\phi_i : \text{text} \rightarrow \RR^{n_i}$.
+The similarity between documents in language $i$ and language $j$ is defined as a bilinear operator represented as a matrix $S_{i,j} \in \RR^{n_i \times n_j}$:
+$$sim_{i,j}(d_1, d_2) = \frac{ \langle \phi_i (d_1), S_{i,j} \phi_j (d_2) \rangle }{\|\phi_i(d_1)\| \|\phi_j(d_2)\|},$$
+where $d_1$ and $d_2$ are documents written in the $i$-th and $j$-th language respectively. If the the maximal singular value of $S_{i,j}$ is bounded by $1$, then the similarity scores will lie on the interval $[-1, 1]$. In section \ref{sec:models} we will describe some approaches to computing $S_{i,j}$ given training data.
 
-More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least two nonempty documents. A comparable corpus $D = {d_1, \ldots, d_N}$ is a collection of multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times N}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$, let $a(i,j)$ denote the index set of all multilingual documents $d$ that contain non-empty documents $u_i$ and $u_j$, and let $a(i)$ denote the index set of all multilingual documents that contain $u_i$.
-
-% Document similarity
-
-\todo{Describe document similarity in cross-lingual setting} 
 
 \subsection{Datasets}
 
@@ -86,7 +87,14 @@ Wikipedia raw xml dumps of all currently $270$ active editions were downloaded f
 We get inter-language link matrix using previously stored redirection links and inter-language links. If inter-language link points to the redirection we replace it with the redirection target link. It turns out that we obtain the matrix $M$ that is not symmetric, consequently the underlying graph is not symmetric. That means that existence of the inter-language link in one way (i.e. English to German) does not guarantee that there is an inter-language link in the reverse direction (German to English). To correct this we transform this matrix to symmetric by computing $M+M^T$ and obtaining an undirected graph. In the rare case that we have multiple links pointing from the document, we pick the first one that we encountered. This matrix enables us to build an alignment across all Wikipedia languages.
 }
 
-\section{Multilingual Latent Factor Models}
+\section{Multilingual Latent Factor Models}\label{sec:models}
+
+\subsection{Multilingual dataset}
+
+The cross-lingual similarity models presented in this paper are based on comparable corpora. That is, a corpus of documents in multiple languages, with alignment between documents that are of the same topic, or even a rough translation of each other. Wikipedia is an example of a comparable corpus, where a specific entry can be described in multiple languages (e.g. "Berlin" is currently described in 222 languages). News articles represent another example, where the same event can be described by newspapers in several languages.
+
+More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least two nonempty documents. A comparable corpus $D = {d_1, \ldots, d_N}$ is a collection of multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times N}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$.
+
 
 \subsection{Algorithms}
 
@@ -97,7 +105,7 @@ The $k$-means algorithm is perhaps the most well-known and used clustering algor
 $$D_{\mbox{Total}} = \begin{bmatrix}D^T_1 ,D^T_2, \cdots,D^T_\ell\ \end{bmatrix}^T$$
 such that the columns respect the alignment of the documents. Therefore, each document  is represented by a long vector indexed by the terms in all languages. These vectors determine the similarity on which the $k$-means is computed. The algorithm outputs a set of centroids that are then separated to form an aligned basis. As a final step the the projected documents are computed as the least squares solutions.
 
-In the implementation we never form the matrix $D_{\mbox{Total}}$ explicitly but rather implement implicit multiplication as $D_{\mbox{Total}} x = \sum_{i=1}^\ell D_i x$ and multiplication with transpose as $D_{\mbox{Total}}^T y = \sum_{i=1}^\ell D_i^T y_i,$ where $y$ is partitioned accordingly to $D_{\mbox{Total}}.$ That lowers memory requirement and compacts sparse indexing, leading to faster element access. 
+In the implementation we never form the matrix $D_{\mbox{Total}}$ explicitly but rather implement implicit multiplication as $D_{\mbox{Total}} x = \sum_{i=1}^\ell D_i x$ and multiplication with transpose as $D_{\mbox{Total}}^T y = \sum_{i=1}^\ell D_i^T y_i,$ where $y$ is partitioned accordingly to $D_{\mbox{Total}}.$ That lowers memory requirement and compacts sparse indexing, leading to faster element access.
 }
 
 \subsubsection{LSI}
@@ -112,7 +120,7 @@ At the end we obtain low rank approximation $D_{\mbox{Total}} \approx U_k \Sigma
 
 {\oldText{Taken from Low-rank paper}
 Finally, we test mCCA is specifically designed to consider data from multiple sources (in this case languages). Therefore, we do not merge the individual term-document matrices into one as in
-the other two methods. For each language (view), we estimate the pairwise correlation coefficients, then we try to find vectors which maximize the sum of all pairwise correlations over all languages. This can be written as the following optimization 
+the other two methods. For each language (view), we estimate the pairwise correlation coefficients, then we try to find vectors which maximize the sum of all pairwise correlations over all languages. This can be written as the following optimization
 \begin{equation}
 \label{eq:opt1}
 \max_{w_1,\ldots, w_\ell} \sum_{i=1}^\ell\sum_{j=i+1}^\ell  \frac{w_i^T D_i D_j^T w_j}{\sqrt{ w_i^T D_i D_i^T w_i\vphantom{ D_j^T } }\sqrt{ w_j^T D_j D_j^T w_j}}
@@ -141,7 +149,7 @@ Note that in the case of regression, we have a choice of which direction we map:
 }
 
 {\oldText{Taken from Pascal CL paper}
-he \textbf{regression based approach} consists of two ingredients: a linear regression mapping $f : \RR^{n_i} \rightarrow \RR^{n_j}$,$$ f(x) := F\cdot x,$$ where $F \in \RR^{n_j \times n_j}$ and an inner product on the target space $\langle \cdot, \cdot \rangle_D$, which are used to define: 
+he \textbf{regression based approach} consists of two ingredients: a linear regression mapping $f : \RR^{n_i} \rightarrow \RR^{n_j}$,$$ f(x) := F\cdot x,$$ where $F \in \RR^{n_j \times n_j}$ and an inner product on the target space $\langle \cdot, \cdot \rangle_D$, which are used to define:
 $$s_{i,j}(x,y) := \langle f(x), y \rangle_D = f(x)^T D y = x^T F^T D y.$$
 Choices of $D$ included the standard inner product $I$, Mahalanobis inner product $C_{j,j}^{-1}$, which corresponds to whitening, and the covariance matrix $C_{j,j}$ (related to a co-occurrence). We can consider two regression mappings:
 \begin{itemize}
@@ -152,9 +160,11 @@ Choices of $D$ included the standard inner product $I$, Mahalanobis inner produc
 
 \subsection{Hub languages}
 
-A \emph{hub language} is a language with a high proportion of non-empty documents in $D$, which in case of Wikipedia is English.
+A \emph{hub language} is a language with a high proportion of non-empty documents in $D$, which in case of Wikipedia is English. We use the following notation to define subsets
+of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $a(i,j) = \left\{ d = (u_1,...,u_m) | u_i \neq \emptyset, u_j \neq \emptyset \right\}$ , and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
 
 {\oldText{Taken from XLite}
+
 The first step in our method is to project $X_1, \ldots, X_m$ to lower dimensional spaces without destroying the cross-lingual structure. Treating the columns of $X_i$ as observation vectors sampled from an underlying distribution $\mathcal{X}_i \in V_i = \RR^{n_i}$, we can analyze the empirical cross-covariance matrices: $C_{i,j} = \frac{1}{|a(i,j)|-1 }\sum_{\ell \in a(i,j)} (X_i^{\ell} - c_i)\cdot (X_j^{\ell} - c_j)^T$, where $c_i = \frac{1}{a_i} \sum_{\ell \in a(i)}X_i^{\ell}$. By finding low rank approximations of $C_{i,j}$ we can identify the subspaces of $V_i$ and $V_j$ that are relevant for extracting linear patterns between $\mathcal{X}_i$ and $\mathcal{X}_j$. Let $X_1$ represent the hub language corpus matrix. The standard approach to finding the subspaces is to perform the singular value decomposition on the full $N \times N$ covariance matrix composed of blocks $C_{i,j}$. If $|a(i,j)|$ is small for many language pairs (as it is in the case of Wikipedia), then many empirical estimates $C_{i,j}$ are unreliable, which can result in overfitting. For this reason we perform the truncated singular value decomposition on the matrix $C = [C_{1,2}  \cdots  C_{1,m}] \approx U S V^T$, where where $U \in \RR^{n_1 \times k}, S \in \RR^{k \times k}, V \in \RR^{(\sum_{i=2}^m n_i) \times k}$. We split the matrix $V$ vertically in blocks with $n_2, \ldots, n_M$ rows to obtain a set of matrices $V_i$: $V = [V_2^T  \cdots  V_m^T]^T$. Note that columns of $U$ are orthogonal but columns in each $V_i$ are not (columns of V are orthogonal). Let $V_1 := U$. We proceed by reducing the dimensionality of each $X_i$ by setting: $Y_i = V_i^T \cdot X_i$, where $Y_i \in \RR^{k\times N}$. The step is similar to Cross-lingual Latent Semantic Indexing (CL-LSI) \cite{lsi}\cite{cl_lsi} which is less suitable due to a large amount of missing documents. Since singular value decomposition with missing values is a challenging problem and the alternative of replacing missing documents with zero vectors can result in degradation of performance.
 
 The second step involves solving a generalized version of canonical correlation analysis on the matrices $Y_i$ in order to find the mappings $P_i$. The approach is based on the sum of squares of correlations formulation by Kettenring \cite{Kettenring}, where we consider only correlations between pairs $(Y_1, Y_i), i >1$ due to the hub language problem characteristic. Let $D_{i,i} \in \RR^{k \times k}$ denote the empirical covariance and $D_{i,j}$ denote the empirical cross-covariance computed based on $Y_i$ and $Y_j$. We solve the following optimization problem:
@@ -177,7 +187,7 @@ To summarize, we first reduced the dimensionality of our data to $k$-dimensional
 
 
 \subsection{Evaluation}
- 
+
 \subsubsection{Link prediction}
 
 \subsubsection{Hub language}
@@ -297,7 +307,7 @@ Ask Wray
 \acks{The authors wish to thank blah blah blah.}
 
 \vskip 0.2in
-\bibliography{rupnik2015}
+%\bibliography{rupnik2015}
 \bibliographystyle{theapa}
 
 \end{document}

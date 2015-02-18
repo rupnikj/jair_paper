@@ -58,7 +58,7 @@ Document similarity is an important component in techniques from text mining and
 
 % Document representation
 
-Standard vector space model \cite{xxx} represents documents as vectors, where each team corresponds to word or phrase in a fixed vocabulary. More formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_j$ correspond to the number of times term $j$ occurred in the document (also called \emph{term frequency} or $TF$). A common way of computing similarity between documents is \emph{cosine similarity}, 
+Standard vector space model \cite{xxx} represents documents as vectors, where each team corresponds to word or phrase in a fixed vocabulary. More formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_j$ correspond to the number of times term $j$ occurred in the document (also called \emph{term frequency} or $TF$). A common way of computing similarity between documents is \emph{cosine similarity},
 $$sim_{cos}(d_1, d_2) = \frac{<x_1, x_2>}{\|x_1\| \|x_2\|},$$
 where $x_1$ and $x_2$ correspond to the vector representations of $d_1$ and $d_2$ respectively. Cosine similarity, and other related approaches, assumes that the similarity is reflected in the overlap of words, and as such works only when the documents $d_1$ and $d_2$ are written in the same language.
 
@@ -74,7 +74,7 @@ More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of
 
 % Document similarity
 
-\todo{Describe document similarity in cross-lingual setting} 
+\todo{Describe document similarity in cross-lingual setting}
 
 \subsection{Datasets}
 
@@ -97,7 +97,7 @@ The $k$-means algorithm is perhaps the most well-known and used clustering algor
 $$D_{\mbox{Total}} = \begin{bmatrix}D^T_1 ,D^T_2, \cdots,D^T_\ell\ \end{bmatrix}^T$$
 such that the columns respect the alignment of the documents. Therefore, each document  is represented by a long vector indexed by the terms in all languages. These vectors determine the similarity on which the $k$-means is computed. The algorithm outputs a set of centroids that are then separated to form an aligned basis. As a final step the the projected documents are computed as the least squares solutions.
 
-In the implementation we never form the matrix $D_{\mbox{Total}}$ explicitly but rather implement implicit multiplication as $D_{\mbox{Total}} x = \sum_{i=1}^\ell D_i x$ and multiplication with transpose as $D_{\mbox{Total}}^T y = \sum_{i=1}^\ell D_i^T y_i,$ where $y$ is partitioned accordingly to $D_{\mbox{Total}}.$ That lowers memory requirement and compacts sparse indexing, leading to faster element access. 
+In the implementation we never form the matrix $D_{\mbox{Total}}$ explicitly but rather implement implicit multiplication as $D_{\mbox{Total}} x = \sum_{i=1}^\ell D_i x$ and multiplication with transpose as $D_{\mbox{Total}}^T y = \sum_{i=1}^\ell D_i^T y_i,$ where $y$ is partitioned accordingly to $D_{\mbox{Total}}.$ That lowers memory requirement and compacts sparse indexing, leading to faster element access.
 }
 
 \subsubsection{LSI}
@@ -112,7 +112,7 @@ At the end we obtain low rank approximation $D_{\mbox{Total}} \approx U_k \Sigma
 
 {\oldText{Taken from Low-rank paper}
 Finally, we test mCCA is specifically designed to consider data from multiple sources (in this case languages). Therefore, we do not merge the individual term-document matrices into one as in
-the other two methods. For each language (view), we estimate the pairwise correlation coefficients, then we try to find vectors which maximize the sum of all pairwise correlations over all languages. This can be written as the following optimization 
+the other two methods. For each language (view), we estimate the pairwise correlation coefficients, then we try to find vectors which maximize the sum of all pairwise correlations over all languages. This can be written as the following optimization
 \begin{equation}
 \label{eq:opt1}
 \max_{w_1,\ldots, w_\ell} \sum_{i=1}^\ell\sum_{j=i+1}^\ell  \frac{w_i^T D_i D_j^T w_j}{\sqrt{ w_i^T D_i D_i^T w_i\vphantom{ D_j^T } }\sqrt{ w_j^T D_j D_j^T w_j}}
@@ -141,7 +141,7 @@ Note that in the case of regression, we have a choice of which direction we map:
 }
 
 {\oldText{Taken from Pascal CL paper}
-he \textbf{regression based approach} consists of two ingredients: a linear regression mapping $f : \RR^{n_i} \rightarrow \RR^{n_j}$,$$ f(x) := F\cdot x,$$ where $F \in \RR^{n_j \times n_j}$ and an inner product on the target space $\langle \cdot, \cdot \rangle_D$, which are used to define: 
+he \textbf{regression based approach} consists of two ingredients: a linear regression mapping $f : \RR^{n_i} \rightarrow \RR^{n_j}$,$$ f(x) := F\cdot x,$$ where $F \in \RR^{n_j \times n_j}$ and an inner product on the target space $\langle \cdot, \cdot \rangle_D$, which are used to define:
 $$s_{i,j}(x,y) := \langle f(x), y \rangle_D = f(x)^T D y = x^T F^T D y.$$
 Choices of $D$ included the standard inner product $I$, Mahalanobis inner product $C_{j,j}^{-1}$, which corresponds to whitening, and the covariance matrix $C_{j,j}$ (related to a co-occurrence). We can consider two regression mappings:
 \begin{itemize}
@@ -177,7 +177,7 @@ To summarize, we first reduced the dimensionality of our data to $k$-dimensional
 
 
 \subsection{Evaluation}
- 
+
 \subsubsection{Link prediction}
 
 \subsubsection{Hub language}
@@ -196,7 +196,7 @@ We observe that the method performs well on all pairs between languages: \emph{e
 \begin{tabular}{|c|c|c|c|c|c|c|c|c|}
 \cline{1-9}
 &	en&	es&	ru&	sl&	hi&	war&	ht&	pms\\\cline{1-9}
-en&	    &	98~-~98&	95~-~97&	97~-~98&	82~-~84&	76~-~74&	53~-~55&	96~-~97\\
+en&	    &	98~-~98&	95~-~97&	97~-~98&	82~-~84&	76~-~74&	53~-~55&	 96~-~97\\
 \cline{1-9}
 es&	97~-~98&	&	94~-~96&	97~-~98&	85~-~84&	76~-~77&	56~-~57&	96~-~96\\
 \cline{1-9}
@@ -206,11 +206,11 @@ sl&	96~-~97&	95~-~95&	95~-~95&	&	91~-~91&	68~-~68&	59~-~69&	93~-~93\\
 \cline{1-9}
 hi&	81~-~82&	82~-~81&	80~-~80&	91~-~91&	&	68~-~67&	50~-~55&	87~-~86\\
 \cline{1-9}
-war&	68~-~63&	71~-~68&	72~-~71&	68~-~68&	66~-~62&	&	28~-~48&	24~-~21\\
+war&	68~-~63&	71~-~68&	72~-~71&	68~-~68&	66~-~62&	&	28~-~48&	 24~-~21\\
 \cline{1-9}
 ht&	52~-~58&	63~-~66&	66~-~62&	61~-~71&	44~-~55&	16~-~50&	&	62~-~49\\
 \cline{1-9}
-pms&	95~-~96&	96~-~96&	94~-~94&	93~-~93&	85~-~85&	23~-~26&	66~-~54&	\\
+pms&	95~-~96&	96~-~96&	94~-~94&	93~-~93&	85~-~85&	23~-~26&	66~-~54&	 \\
 \cline{1-9}
 \end{tabular}
 \end{center}
@@ -228,13 +228,13 @@ We now describe the selection of train and test sets. We select the test set doc
 \small
 \begin{tabular}{c|c|c|c|c|c|c|c|c|}
 &	en&	es&	ru&	sl&	hi&	war&	ht&	pms\\\cline{1-9}
-en&	671~-~4.64&	463~-~4.29&	369~-~3.19&	50.3~-~2&	14.4~-~2.76&	8.58~-~2.41&	17~-~2.32&	16.6~-~2.67\\
+en&	671~-~4.64&	463~-~4.29&	369~-~3.19&	50.3~-~2&	14.4~-~2.76&	8.58~-~2.41&	 17~-~2.32&	16.6~-~2.67\\
 \cline{2-9}
-es&	\multicolumn{1}{c|}{}	&	463~-~4.29&	187~-~2.94&	28.2~-~1.96&	8.72~-~2.48&	6.88~-~2.4&	13.2~-~2&	 13.8~-~2.58\\
+es&	\multicolumn{1}{c|}{}	&	463~-~4.29&	187~-~2.94&	28.2~-~1.96&	8.72~-~2.48&	 6.88~-~2.4&	13.2~-~2&	 13.8~-~2.58\\
 \cline{3-9}
-ru&	\multicolumn{2}{c|}{}	&	369~-~3.19&	29.6~-~1.92&	9.16~-~2.68&	2.92~-~1.1&	3.23~-~2.2&	10.2~-~1.29\\
+ru&	\multicolumn{2}{c|}{}	&	369~-~3.19&	29.6~-~1.92&	9.16~-~2.68&	2.92~-~1.1&	 3.23~-~2.2&	10.2~-~1.29\\
 \cline{4-9}
-sl&	\multicolumn{3}{c|}{}	&	50.3~-~2&	3.83~-~1.65&	1.23~-~0.986&	0.949~-~1.23&	1.85~-~0.988\\
+sl&	\multicolumn{3}{c|}{}	&	50.3~-~2&	3.83~-~1.65&	1.23~-~0.986&	0.949~-~1.23&	 1.85~-~0.988\\
 \cline{5-9}
 hi&	\multicolumn{4}{c|}{}	&	14.4~-~2.76&	0.579~-~0.76&	0.0~-~2.08&	0.0~-~0.796\\
 \cline{6-9}
@@ -270,11 +270,27 @@ We also have a problem with the quality of the test data. For example, if we loo
 
 \section{Cross-lingual Event Linking}
 
+One of the use cases where article linking information can be applied is also in an online system for detection of world events, called Event Registry\cite{}. Event Registry is a repository of events, where events are automatically identified by analyzing news articles. The term event is vague and ambiguous, but for the practical purposes we define it as "any significant happening that is being reported about in the media". Examples of events would include shooting down of the Malaysia Airlines plane over Ukraine on July 18th, 2014 and HSBC's admittance of aiding their clients in tax evasion on February 9th, 2015. Events such as these are covered by many articles and the question is how to find all the articles in different languages that are describing a single event.
+
+Event Registry works by collecting and analyzing news articles that are published by news outlets in different languages all over the world. Collected articles are first semantically annotated by identifying in them mentions of relevant concepts -- either entities or important keywords. The disambiguated and entity linking of the concepts is done using Wikipedia as the main knowledge base. The key step in Event Registry is then to apply an online clustering algorithm on the articles in order to identify groups of articles that are discussing the same event. For each new article, the clustering algorithm determines if the article should be assigned to some existing cluster or into a new cluster. The underlying assumption is that articles that are describing the same event are similar enough and will therefore be put into the same cluster.
+
+In short, the article clustering works as follows (details are available in \cite{}). First we create a new document by joining the title and the body of the article. We then tokenize the document, remove the stop words and stem the words. The remaining words are represented as a vector in the vector-space model. Each value in the vector is normalized using the TF-IDF approach, defined as $TFIDF(t,d) = TF(t,d) * IDF(t)$. $TF(t,d)$ represents the \emph{term frequency} (number of times the term $t$ appears in the document $d$), and $IDF(t) = log(N / DF(t))$ is the \emph{inverse document frequency} of term $t$. $IDF(t)$ is computed by comparing the number of documents mentioning the term $t$ ($DF(t)$) with the total number of documents $N$. After normalizing the vector, we use it to find the most similar existing cluster. To be able to compare the vector with a cluster we first need a vector representation for each of the clusters. This is done by computing a centroid vector of the cluster by simply averaging the vectors of the articles in the cluster. By computing the cosine similarity of the article vector with each of the centroid vectors we then find the cluster with the highest similarity. If the highest similarity is above the selected threshold (0.4 in our experiments), the article is assigned to the corresponding cluster, otherwise a new cluster is created, initially containing only the single article.
+
+Since articles about an event are commonly written only for a short period of time, we remove clusters once the oldest article in the cluster becomes more than 4 days old. This housekeeping mechanism prevents the clustering from becoming slow and also ensures that articles are not assigned to obsolete clusters.
+
+In order to treat the cluster as describing an event in Event Registry, the cluster has to grow above a certain number of articles (the number depends on the language). This condition ensures that only content that receives a sufficient coverage in the media is treated as an event. Once a new event is identified, a new unique ID is assigned to it and the main information about the event is automatically extracted by analyzing the articles assigned to it. The extracted information includes properties such as the date of the event, the location, who is involved in it, what the event is about, etc.
+
+The clustering of articles is done for each language separately -- English articles are, for example, clustered separately from Spanish articles. When events are identified, they will therefore be identified from clusters in each language separately. This has an undesirable consequence for Event Registry where the same actual event will be represented with two or more event IDs, and each event will only contain coverage in a single language. To avoid this problem we want to exploit the available information about the similarity of the articles in a cluster with articles in other languages. Using this information we hope to be able to connect clusters in different languages and represent them using a single event ID.
+
 \subsection{Problem definition}
+
+Formally, the problem of identifying the clusters describing the same event can be stated as follows. Given the 
 
 \subsection{Algorithm}
 
 \subsection{Evaluation}
+
+evaluate accuracy on different language pairs only. compute accuracies using the CCA features only, using concept features only, or using all features.
 
 \subsubsection{Compare different feature subsets}
 

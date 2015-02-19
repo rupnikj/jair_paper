@@ -93,27 +93,38 @@ We get inter-language link matrix using previously stored redirection links and 
 
 The cross-lingual similarity models presented in this paper are based on comparable corpora. That is, a corpus of documents in multiple languages, with alignment between documents that are of the same topic, or even a rough translation of each other. Wikipedia is an example of a comparable corpus, where a specific entry can be described in multiple languages (e.g. "Berlin" is currently described in 222 languages). News articles represent another example, where the same event can be described by newspapers in several languages.
 
-More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least two nonempty documents. A comparable corpus $D = {d_1, \ldots, d_N}$ is a collection of multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times N}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$.
+More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least two nonempty documents. A comparable corpus $D = {d_1, \ldots, d_N}$ is a collection of multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times N}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$ and the matrices respect the document alignment - the vector $X_i^\ell$ corresponds to the TFIDF vector of the $i$-th component of multilingual document $d_\ell$. We use $N$ to denote the total row dimension of $X$, i.e. $N:= \sum_{i=1}^m n_i$.
 
 
 \subsection{Algorithms}
 
 \subsubsection{$k$-means}
 
-{\oldText{Taken from ITI paper}
-The $k$-means algorithm is perhaps the most well-known and used clustering algorithm. In order to apply the algorithm we first merge all the term-document matrices into a single matrix by stacking the individual term-document matrices and discarding nonaligned documents.
-$$D_{\mbox{Total}} = \begin{bmatrix}D^T_1 ,D^T_2, \cdots,D^T_\ell\ \end{bmatrix}^T$$
-such that the columns respect the alignment of the documents. Therefore, each document  is represented by a long vector indexed by the terms in all languages. These vectors determine the similarity on which the $k$-means is computed. The algorithm outputs a set of centroids that are then separated to form an aligned basis. As a final step the the projected documents are computed as the least squares solutions.
+The $k$-means algorithm is perhaps the most well-known and used clustering algorithm. In order to apply the algorithm we first merge all the term-document matrices into a single matrix $X$ by stacking the individual term-document matrices:
+$$X := \begin{bmatrix}X_1^T ,X_2^T, \cdots, X_m^T \end{bmatrix}^T,$$
+such that the columns respect the alignment of the documents (here MATLAB notation for concatenating matrices is used). Therefore, each document  is represented by a long vector indexed by the terms in all languages.
 
-In the implementation we never form the matrix $D_{\mbox{Total}}$ explicitly but rather implement implicit multiplication as $D_{\mbox{Total}} x = \sum_{i=1}^\ell D_i x$ and multiplication with transpose as $D_{\mbox{Total}}^T y = \sum_{i=1}^\ell D_i^T y_i,$ where $y$ is partitioned accordingly to $D_{\mbox{Total}}.$ That lowers memory requirement and compacts sparse indexing, leading to faster element access.
-}
+We then run the $k$-means algorithm \cite{kmeans} and obtain a set of $k$ centroid vectors, which form a matrix: $C := \begin{bmatrix}C^1, \ldots, C^k \end{bmatrix}$. The centroid matrix can be split vertically into $m$ blocks: $$C = [C_1^T \cdots C_m^T]^T.$$
+
+Each matrix $C_i$ represents a vector space basis and can be used to map points in $\RR^{n_i}$ into a $k$-dimensional space, where the coordinates of a vector $x \in \RR^{n_i}$ are expressed as: $$(C_i^T C_i)^{-1} C_i^T x_i.$$
+
+The resulting matrix (when appropriately scaled to have unit norm) for similarity computation between language $i$ and language $j$ is defined as:
+$$C_i(C_i^T C_i)^{-1} (C_j^T C_j)^{-1} C_j.$$ 
+ 
+%% We could skip this par
+In the implementation of $k$-means clustering we never form the matrix $X$ explicitly but rather implement implicit multiplication as $X x = \sum_{i=1}^\ell X_i x$ and multiplication with transpose as $X^T y = \sum_{i=1}^\ell X_i^T y_i,$ where $y$ is partitioned accordingly to $X$. That lowers memory requirement and compacts sparse indexing, leading to faster element access.
 
 \subsubsection{LSI}
 
-{\oldText{Taken from ITI paper}
-The next method is CL-LSI which is a variant of LSI~\cite{lsi} for more than one language. The method is based on computing the singular value decomposition of $D_{Total}$. Since the matrix can be large we can use an iterative method like the Lanczos~\cite{matrix_comp} algorithm with reorthogonalization to find the left singular vectors corresponding to the largest singular values. It turns out that Lanczos method converges slowly as the ratio of leading singular eigenvalues is close to one. Moreover Lanczos method is hard to parallelize. Instead we use randomized version of the singular value decomposition (SVD) described in [1] than can be viewed as block Lanczos method. That enables us to use parallelization and can speed up the computation considerably when multiprocessing is available.
+The next method is CL-LSI which is a variant of LSI~\cite{lsi} for more than one language. The method is based on computing a truncated singular value decomposition of $X \approx U S V^T$. Since the matrix can be large we can use an iterative method like the Lanczos~\cite{matrix_comp} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead we use a randomized version of the singular value decomposition (SVD) described in \ref{randomizedSVD} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
 
-At the end we obtain low rank approximation $D_{\mbox{Total}} \approx U_k \Sigma_k V_k^T,$ where $U_k$ are basis vectors of interest and $\Sigma_k$ is truncated diagonal matrix of singular eigenvalues. Each column $u_i$ of $U_k$ consists of block vectors $u_i = \begin{bmatrix} u^{1^T}_i & \dots & u^{\ell^T}_i \end{bmatrix}^T.$ We do not normalize each block $j$  as this would destroy the low rank approximation. Each block $j$ is normalized $u^{j^1}_i = u^{j^1}_i/||u^{j^1}_i||$ to reduce the bias. We obtain the aligned reduced basis $U_{\textrm{aligned}} = \begin{bmatrix} {U^1}^T &\dots & {U^\ell}^T \end{bmatrix}^T,$ where $D_j =  U^j \Sigma_k V_k.$ The reduced language free representation for language $j$ and document $d$ is computed as the weighted least square solution $\Sigma_k^{-1} {U^j}^+ d,$ where $+$ denotes the pseudo inverse of a matrix that is is used because columns of $U^j$ do not form an orthogonal basis. The numerical implementation of the least squares is done by QR algorithm.
+The cross-lingual similarity functions are based on a rank-$k$ truncated SVD: $X \approx U \Sigma V^T,$ where $U \in \RR^{N \times k}$ are basis vectors of interest and $\Sigma \in \RR^{k \times k}$ is truncated diagonal matrix of singular eigenvalues.
+ 
+ 
+{\color{red}
+ Each column $u_i$ of $U_k$ consists of block vectors $u_i = \begin{bmatrix} u^{1^T}_i & \dots & u^{\ell^T}_i \end{bmatrix}^T.$ We do not normalize each block $j$  as this would destroy the low rank approximation. Each block $j$ is normalized $u^{j^1}_i = u^{j^1}_i/||u^{j^1}_i||$ to reduce the bias.
+
+We obtain the aligned reduced basis $U_{\textrm{aligned}} = \begin{bmatrix} {U^1}^T &\dots & {U^\ell}^T \end{bmatrix}^T,$ where $D_j =  U^j \Sigma_k V_k.$ The reduced language free representation for language $j$ and document $d$ is computed as the weighted least square solution $\Sigma_k^{-1} {U^j}^+ d,$ where $+$ denotes the pseudo inverse of a matrix that is is used because columns of $U^j$ do not form an orthogonal basis. The numerical implementation of the least squares is done by QR algorithm.
 }
 
 \subsubsection{Refinement of LSI similar to MCCA}

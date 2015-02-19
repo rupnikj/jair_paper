@@ -11,6 +11,8 @@
 \usepackage{amsfonts}
 \usepackage{amssymb}
 
+\usepackage[]{algorithm2e}
+
 \newcommand{\RR}{\mathbb{R}}
 \newcommand{\X}{\mathbb{X}}
 \newcommand{\Y}{\mathbb{Y}}
@@ -284,9 +286,63 @@ The clustering of articles is done for each language separately -- English artic
 
 \subsection{Problem definition}
 
-Formally, the problem of identifying the clusters describing the same event can be stated as follows. Given the 
+Formally, the problem of identifying the clusters describing the same event can be formalized as follows. Each article $a_i$ is written in a language $l$, where $l \in \{A,B,...,H\}$. For each language $l$, a set of clusters $C_l$ is generated and maintained that only contains articles in language $l$. For any cluster $c_i \in C_{l1}$, the task is then to identify other clusters $c_j \in C_{l2}$ (where $l1 \neq l2$) that are describing the same event as $c_i$. We will refer to cluster pairs $c_i$ and $c_j$ that are describing the same event as equivalent clusters. An additional requirement of the task is that identification of the equivalent clusters should not be done exhaustively -- for a cluster $c_i$ we wish to avoid testing all other clusters $c_j$. Performing exhaustive comparison for each cluster $c_i$ would result in $O(N^2)$ tests, where $N$ is the number of all clusters, which is not feasible when the number of clusters is in tens of thousands.
 
 \subsection{Algorithm}
+
+In order to identify clusters $c_j$ that are equivalent to cluster $c_i$ we have developed a procedure that consists of two main tasks. The first task is to efficiently identify a limited set of clusters that are potential candidates for being equivalent to $c_i$. The second task is then about performing a detailed analysis of the candidates and finding the ones that are equivalent to $c_i$.
+
+The details of the first task are described in Algorithm~\ref{cluster_merge_algo1}. The algorithms starts by individually inspecting each article $a_i$ in the cluster $c_i$. Using the CCA it then identifies 10 most similar articles to $a_i$ in each language $l \in L$. For each identified similar article $a_j$ we then identify cluster $c_j$ to which the article belongs to and add the cluster to the set of candidates that should be more closely inspected. The assumption made by this algorithm is that if two articles in different languages are describing the same event, the CCA similarity between the documents will be higher than when comparing two articles about different events. Since the CCA similarity is only an estimate, the assumption does not always hold. Due to data redundancy, however, we do not consider this to be an issue. Since we are testing each article in the cluster and compute 10 most similar articles for each article, we are very likely to identify among the candidates also the clusters that are equivalent to cluster $c_i$.
+
+\begin{algorithm}[t!]
+\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+\Input{test cluster $c_i$,\\a set of clusters $C_l$ for each language $l \in L$}
+\Output{a set of clusters $C$ that are potentially equivalent to $c_i$}
+$C = \{\}$\;
+\For{article $a_i \in c_i$} {
+    \For{language $l \in L$} {
+        \tcc{use CCA to find 10 most similar articles to article $a_i$ in language $l$}
+        $SimArt = getCCASimArts(a_i, l)$\;
+        \For{article $a_j \in SimArt$} {
+            \tcc{find cluster $c_j$ to which article $a_j$ is assigned to}
+            $c_j := c ; c \in C_l, a_j \in c$\;
+            \tcc{add cluster $c_j$ to the set of candidates $C$}
+            $C \leftarrow c_j$\;
+        }
+    }
+}
+\caption{Algorithm for identifying candidate clusters $C$ that are potentially equivalent to $c_i$}
+\label{cluster_merge_algo1}
+\end{algorithm}
+
+The second part of the procedure is described in the Algorithm~\ref{cluster_merge_algo2}. The goal of this task is to determine which (if any) of the candidate clusters are equivalent to $c_i$. To solve the task we represent it as a supervised learning problem. For each candidate cluster $c_j \in C'$ we compute a vector of learning features that should be indicative of whether the $c_i$ and $c_j$ are equivalent or not. The details about these features will be described in the next section. Once the features are computed, we classify the example with a classification model that was trained using a training dataset of hand-labeled examples. If the model predicts that tested clusters are equivalent, the $c_j$ is added to the set $C'$.
+
+The learning dataset used to train a classification model consists of cluster pairs $c_i$ and $c_j$ for which a human annotator provided feedback whether the clusters are equivalent or not. The dataset contains XYZ examples, of which XYZ are equivalent clusters pairs and XYZ are not. To train a model, the vector of features was first extracted for each learning example in the same way as described in Algorithm~\ref{cluster_merge_algo2}. A linear SVM method was then used to train the classifier $M$.
+
+\begin{algorithm}[tb!]
+\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+\Input{test cluster $c_i$,\\
+a set of candidate clusters $C$ that are potentially equivalent to $c_i$\\
+classification model $M$ trained on the hand-labeled examples}
+\Output{a set of clusters $C'$ that are equivalent to $c_i$}
+
+$C' = \{\}$\;
+\For{cluster $c_j \in C$} {
+    \tcc{extract a vector of features for cluster pair $c_i$ and $c_j$}
+    $\vec{v} = f(c_i, c_j)$\;
+    \tcc{classify the feature vector $\vec{v}$ using the model $M$}
+    $pred = M(\vec{v})$\;
+    \If{$pred$ = true} {
+        $C' \leftarrow c_j$
+    }
+}
+\caption{Algorithm for identifying clusters $C'$ that are equivalent to cluster $c_i$}
+\label{cluster_merge_algo2}
+\end{algorithm}
+
+\subsubsection{Learning features}
+
+
 
 \subsection{Evaluation}
 

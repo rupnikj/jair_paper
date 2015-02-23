@@ -14,9 +14,9 @@
 X = doctransform(X, widx{i}, invdoc{i});
 Y = doctransform(Y, widx{j}, invdoc{j});
 
-%2: project, normalize
-pX = normalizeSparseColumns(projectors{i}*X);
-pY = normalizeSparseColumns(projectors{j}*Y);
+%2: project, center, normalize
+pX = normalizeSparseColumns(projectors{i}*X - centers{i}*ones(1,size(X,2)));
+pY = normalizeSparseColumns(projectors{j}*Y - centers{j}*ones(1,size(Y,2)));
 
 %3: similarity
 S = pX'*pY;

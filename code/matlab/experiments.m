@@ -2,13 +2,11 @@ if ~exist('datadir')
     datadir = 'd:\work\data\jair\';
 end
 
-%%
-cd(mfilename('fullpath'));
 loadit = false;
 if ~loadit
     clear
     disp('computing');
-    [mats, wrds, docs, invdoc, didx, widx, langnames] = alignProcessDocs({'en','es','de'},datadir);
+    [mats, wrds, docs, invdoc, didx, widx, langnames] = alignProcessDocs({'en','es','de'}, datadir);
     disp('saving');
     quicksave;
 else

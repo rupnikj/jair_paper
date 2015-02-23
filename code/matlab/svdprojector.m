@@ -4,8 +4,7 @@ m = length(langs);
 centers = cell(1,m);
 
 ndim = zeros(m,1);
-for i = 1:m
-    centers{i} = zeros(nrp,1);
+for i = 1:m    
     ndim(i) = size(langs{i},1);
 end
 
@@ -20,6 +19,6 @@ projectors = mat2cell(U, ndim, nrp);
 
 for i = 1:m
    [Q,R] = qr(projectors{i}, 0);   
-   projectors{i} = R \ Q'; %inv(R) * Q'   
+   projectors{i} = R \ Q'; %inv(R) * Q'    
 end
 projectors = projectors';

@@ -7,7 +7,6 @@ centers = cell(1,m);
 
 ndim = zeros(m,1);
 for i = 1:m
-    centers{i} = zeros(nrp,1);
     ndim(i) = size(langs{i},1);
 end
 

@@ -10,5 +10,5 @@ nrp = 500;
 niter = 100;
 disp('data loaded');
 [projectors, centers] = kmeansprojector(mats, nrp, niter);
-disp('kmeans saved');
-save kmeansprojectors;
+disp('kmeans computed');
+save kmeansprojectors -v7.3;

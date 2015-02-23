@@ -4,8 +4,6 @@ if nargin == 1
     datadir = 'd:\work\data\jair\';
 end
 
-%%
-cd(mfilename('fullpath'));
 alangs = cell(size(langnames));
 adocnames = cell(size(langnames));
 indices = cell(size(langnames));

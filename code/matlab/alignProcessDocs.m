@@ -1,4 +1,4 @@
-function [mats, wrds, docs, invdoc, didx, widx, langnames] = alignProcessDocs(langnames, datafolder)
+function [mats, wrds, docs, invdoc, didx, widx, langnames] = alignProcessDocs(langnames, datadir)
 %example: alignProcessDocs({'en','es','de'});
 if nargin == 1
     datadir = 'd:\work\data\jair\';

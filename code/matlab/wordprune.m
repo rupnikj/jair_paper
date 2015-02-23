@@ -1,4 +1,4 @@
-function [Y, idx] = wordprune(X, frac, skipfrac)
+function [Y, idx] = wordprune(X, frac, skipfrac, maxWords)
 
 Z = sign(X); x = sum(Z, 2);
 
@@ -11,10 +11,13 @@ M = c >= frac;
 cutidx = find(circshift(m,1) & M);
 
 cutidxstart = 1;
-if nargin == 3
-    ms = c < skipfrac;
-    Ms = c >= skipfrac;
-    cutidxstart = find(circshift(ms,1) & Ms);
+% if nargin >= 3
+%     ms = c < skipfrac;
+%     Ms = c >= skipfrac;
+%     cutidxstart = find(circshift(ms,1) & Ms);
+% end
+if nargin == 5
+    cutidx = min(cutidx, maxWords);
 end
 idx = i2(cutidxstart:cutidx);
 Y = X(idx, :);

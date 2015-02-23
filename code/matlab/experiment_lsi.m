@@ -11,4 +11,4 @@ nrp = 500;
 disp('data loaded');
 [projectors, centers] = svdprojector(mats, nrp);
 disp('kmeans saved');
-save svdprojectors;
+save svdprojectors -v7.3;

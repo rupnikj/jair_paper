@@ -130,8 +130,8 @@ The numerical implementation of the least squares is done by QR algorithm, by co
 
 \subsection{Hub languages}
 
-A \emph{hub language} is a language with a high proportion of non-empty documents in $D$, which in case of Wikipedia is English. We use the following notation to define subsets
-of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $a(i,j) = \left\{ d = (u_1,...,u_m) | u_i \neq \emptyset, u_j \neq \emptyset \right\}$ , and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
+A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$, which in case of Wikipedia is English. We use the following notation to define subsets
+of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $a(i,j) = \left\{k | d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
 
 {\oldText{Taken from XLite}
 

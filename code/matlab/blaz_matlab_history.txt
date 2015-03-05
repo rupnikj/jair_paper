@@ -1,0 +1,214 @@
+%-- 2/25/2015 10:39 AM --%
+load('kmeansprojectors.mat')
+x
+var X_en = load('en.spmat');
+help load
+var X_en = load('en.spmat', '-ascii');
+X_en = load('en.spmat', '-ascii');
+size(X_en)
+for i = 1:size(X_en,1)
+X_en(i,2) = X_en(i,2) + 1;
+end
+X_en = spconvert(load('en.spmat','-ascii'));
+X_es = spconvert(load('es.spmat','-ascii'));
+X_de = spconvert(load('de.spmat','-ascii'));
+XX_en = doctransform(X_en, widx{1}, invdoc{1});
+XX_en = doctransform(X_en', widx{1}, invdoc{1});
+XX_en = doctransform(X_en, widx{1}, invdoc{1});
+size(invdoc{1})
+invodoc
+invdoc
+X_en = spconvert(load('en.spmat','-ascii'));
+X_es = spconvert(load('es.spmat','-ascii'));
+X_de = spconvert(load('de.spmat','-ascii'));
+XX_en = doctransform(X_en, widx{1}, invdoc{1});
+XX_en = doctransform(X_en', widx{1}, invdoc{1});
+widx
+widx{1}(1)
+widx{1}(345580)
+X_enT = X_en;
+max(widx{1})
+max(widx{2})
+max(widx{3})
+X_es = spconvert(load('es.spmat','-ascii'));
+XX_es = doctransform(X_es', widx{2}, invdoc{2});
+X_en = spconvert(load('en.spmat','-ascii'));
+X_de = spconvert(load('de.spmat','-ascii'));
+XX_en = doctransform(X_en', widx{1}, invdoc{1});
+XX_de = doctransform(X_de', widx{3}, invdoc{3});
+pX = normalizeSparseColumns(projectors{i}*X - centers{i}*ones(1,size(X,2)));
+pX_en = normalizeSparseColumns(projectors{i}*XX_en - centers{1}*ones(1,size(XX_en,2)));
+pX_en = normalizeSparseColumns(projectors{1}*XX_en - centers{1}*ones(1,size(XX_en,2)));
+size(projectors{1})
+size(XX_en, 2)
+size(centres{1})
+size(centers{1})
+size(centers{2})
+size(centers{3})
+load('svdprojectors.mat')
+XX_es = doctransform(X_es', widx{2}, invdoc{2});
+XX_en = doctransform(X_en', widx{1}, invdoc{1});
+XX_de = doctransform(X_de', widx{3}, invdoc{3});
+size(centers{2})
+pX_en = normalizeSparseColumns(projectors{1}*XX_en - centers{1}*ones(1,size(XX_en,2)));a
+size(projectors{1})
+pX_en = normalizeSparseColumns(projectors{1}*XX_en);
+size (pX_en)
+pX_es = normalizeSparseColumns(projectors{2}*XX_es);
+pX_de = normalizeSparseColumns(projectors{3}*XX_de);
+pX_en = normalizeSparseColumns(projectors{1}*XX_en);
+pX_es = normalizeSparseColumns(projectors{2}*XX_es);
+pX_de = normalizeSparseColumns(projectors{3}*XX_de);
+pX = [pX_en; pX_es; pX_de];
+pX = [pX_en, pX_es, pX_de];
+id_en = load('en.idmat');
+id_es = load('es.idmat');
+id_de = load('de.idmat');
+id = [id_en, id_es, id_de];
+id = [id_en; id_es; id_de];
+id(1,1)
+id(1,2)
+id(2,:)
+id(3,:)
+id([1:10],:)
+id([500000:500010],:)
+for i = 1:size(id,1)
+for j = 1:size(id,1)
+end
+end
+for j = 1:size(id,1)
+end
+calc_sim
+600 * 31
+600 * 31 / 3600
+for i = 1:size(id,1)
+id(i,1) = i;
+end
+id([500000:500010],:)
+help sort
+id = sort(id, 2);
+id([1:10],:)
+id([500000:500010],:)
+id = [id_en; id_es; id_de];
+id([500000:500010],:)
+for i = 1:size(id,1)
+id(i,1) = i;
+end
+x = rand(10, 2)
+sort(x,2)
+sort(x,1)
+x = rand(10, 2)
+[a, b] = sort(id(2,:));
+size(id(2,:))
+[a, b] = sort(id(:,2));
+size(id(:,2))
+b(1:10)
+id = id(b,:);
+id([1:10],:)
+id([500000:500010],:)
+id([1:10],:)
+# a
+id(1,1)
+id(1,2)
+help and
+calc_sim
+size (sim)
+sim_mat = spconvert(sim)
+c
+sim_mat = spconvert(sim);
+spy(sim_mat)
+sim(1:10,:)
+sim(10:110,:)
+sim(1000:1010,:)
+size(id,1)
+id(id(10,1)
+id(10,1)
+id(11,1)
+id(10:20,1)
+id(10:20,2)
+calc_sim
+F
+calc_sim
+count
+printf('%d', count)
+sprintf('%d', count)
+help fprintf
+size(pX(1,:))
+size(pX(:,1))
+size(pX(:,1) * pX(:,2)')
+size(pX(:,1)' * pX(:,2))
+pX(:,1)' * pX(:,2)
+pX(:,1)' * pX(:,3)
+pX(:,1)' * pX(:,4)
+pX(:,1)' * pX(:,5)
+pX(:,1)' * pX(:,1:100)
+tic; pX(:,1)' * pX(:,1:1000); tac
+tic; pX(:,1)' * pX(:,1:1000); toc
+tic; pX(:,1)' * pX(:,1:6000); toc
+tic; pX(:,1)' * pX(:,2:2); toc
+tic; pX(:,1)' * pX(:,2:2) toc
+tic; pX(:,1)' * pX(:,2:2), toc
+tic; pX(:,1)' * pX(:,3:2), toc
+tic; pX(:,10)' * pX(:,1:9), toc
+max(ans)
+pX(:,10)' * pX(:,1:9)
+[a,b] = max( pX(:,10)' * pX(:,1:9))
+help max
+help sort
+[a,b] = sort(pX(:,10)' * pX(:,1:9))
+help sort
+[a,b] = sort(pX(:,10)' * pX(:,1:9),1,'descend'))
+[a,b] = sort(pX(:,10)' * pX(:,1:9),1,'descend')
+[a,b] = sort(pX(:,10)' * pX(:,1:9), 2,'descend')
+b(1:2)
+ans +. 1
+ans .+ 1
+ans +1
+ans +3
+calc_sim
+calc_sim+
+calc_sim
+calc_sim+
+calc_sim
+edit save_fltvv.m
+edit save_fltv.m
+save_fltvv(pX_en, 'glib_lsi.dat', true)
+save_fltvv(id_en, 'glib_lsi.dat', true, true)
+save_fltvv(pX_es, 'glib_lsi.dat', true)
+save_fltvv(id_es, 'glib_lsi.dat', true, true)
+save_fltvv(pX_de, 'glib_lsi.dat', true)
+save_fltvv(id_de, 'glib_lsi.dat', true, true)
+load('kmeansprojectors.mat')
+save_fltvv(pX_en, 'glib_lsi.dat', true)
+save_fltvv(id_en, 'glib_lsi.dat', true, true)
+save_fltvv(pX_es, 'glib_lsi.dat', true, true)
+save_fltvv(id_es, 'glib_lsi.dat', true, true)
+save_fltvv(pX_de, 'glib_lsi.dat', true, true)
+save_fltvv(id_de, 'glib_lsi.dat', true, true)
+%a
+XX_en = doctransform(X_en', widx{1}, invdoc{1});
+XX_es = doctransform(X_es', widx{2}, invdoc{2});
+XX_de = doctransform(X_de', widx{3}, invdoc{3});
+% project data (kmeans and lsi)
+pX_en = normalizeSparseColumns(projectors{1}*XX_en);
+pX_es = normalizeSparseColumns(projectors{2}*XX_es);
+pX_de = normalizeSparseColumns(projectors{3}*XX_de);
+save_fltvv(pX_en, 'glib_kmeans.dat', true)
+save_fltvv(id_en, 'glib_kmeans.dat', true, true)
+save_fltvv(pX_es, 'glib_kmeans.dat', true, true)
+save_fltvv(id_es, 'glib_kmeans.dat', true, true)
+save_fltvv(pX_de, 'glib_kmeans.dat', true, true)
+save_fltvv(id_de, 'glib_kmeans.dat', true, true)
+load('ccaprojectors.mat')
+XX_en = doctransform(X_en', widx{1}, invdoc{1});
+XX_es = doctransform(X_es', widx{2}, invdoc{2});
+XX_de = doctransform(X_de', widx{3}, invdoc{3});
+pX_en = normalizeSparseColumns(projectors{1}*XX_en - centers{1}*ones(1,size(XX_en,2)));
+pX_es = normalizeSparseColumns(projectors{2}*XX_es - centers{2}*ones(1,size(XX_es,2)));
+pX_de = normalizeSparseColumns(projectors{3}*XX_de - centers{3}*ones(1,size(XX_de,2)));
+save_fltvv(pX_en, 'glib_cca.dat', true)
+save_fltvv(id_en, 'glib_cca.dat', true, true)
+save_fltvv(pX_es, 'glib_cca.dat', true, true)
+save_fltvv(id_es, 'glib_cca.dat', true, true)
+save_fltvv(pX_de, 'glib_cca.dat', true, true)
+save_fltvv(id_de, 'glib_cca.dat', true, true)

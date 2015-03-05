@@ -40,6 +40,22 @@
 \begin{abstract}
 \todo{tralala hopsasa.}
 \end{abstract}
+\section{Overview}
+Structure
+\begin{itemize}
+\item Introduction
+\item Cross lingual document similarity (model)
+\item  Event Detection
+\item  Combing the approaches
+\item Experiments
+\item Conclusions
+\end{itemize}
+The story:
+\begin{itemize}
+\item Description of the problem - we would liek to understand events ans sequences of events, but our observables (e.g. news stories) occur in a variety of languages
+\item We present an approach to tackle this problem using a combination of techniques....
+\item Ultimately we present a tool showing the feasibility of our approach
+\end{itemize}
 
 \section{Introduction}
 
@@ -106,7 +122,7 @@ The $k$-means algorithm is perhaps the most well-known and used clustering algor
 $$X := \begin{bmatrix}X_1^T ,X_2^T, \cdots, X_m^T \end{bmatrix}^T,$$
 such that the columns respect the alignment of the documents (here MATLAB notation for concatenating matrices is used). Therefore, each document  is represented by a long vector indexed by the terms in all languages.
 
-We then run the $k$-means algorithm \cite{kmeans} and obtain a set of $k$ centroid vectors, which form a matrix: $C := \begin{bmatrix}C^1, \ldots, C^k \end{bmatrix}$. The centroid matrix can be split vertically into $m$ blocks: $$C = [C_1^T \cdots C_m^T]^T.$$
+We then run the $k$-means algorithm \cite{kmeans} and obtain a set of $k$ centroid vectors, which form a matrix: $C := \begin{bmatrix}C^1, \ldots, C^k \end{bmatrix}$. The centroid matrix can be split vertically into $m$ blocks: $$C = [C_1^T \cdots C_m^T]^T,$$ according to the number of dimensions of each language, i.e. $C_i \in \RR^{n_i}$.
 
 Each matrix $C_i$ represents a vector space basis and can be used to map points in $\RR^{n_i}$ into a $k$-dimensional space, where the coordinates of a vector $x \in \RR^{n_i}$ are expressed as: $$(C_i^T C_i)^{-1} C_i^T x_i.$$
 
@@ -122,59 +138,16 @@ The next method is CL-LSI which is a variant of LSI~\cite{lsi} for more than one
 
 The cross-lingual similarity functions are based on a rank-$k$ truncated SVD: $X \approx U \Sigma V^T,$ where $U \in \RR^{N \times k}$ are basis vectors of interest and $\Sigma \in \RR^{k \times k}$ is truncated diagonal matrix of singular eigenvalues.
 
+An aligned basis is obtained by first splitting $U$ vertically according to the number of dimensions of each language: $U = [U_1^T \cdots U_m^T]^T$. Then, the same as with $k$-means clustering, we compute the pseudoinverses$P_i = (U_i^T U_i)^{-1} U_i^T$. The matrices $P_i$ are used to change the basis from the standard basis in $\RR^{n_i}$ to the basis of columns of $U_i$.
 
-{\color{red}
- Each column $u_i$ of $U_k$ consists of block vectors $u_i = \begin{bmatrix} u^{1^T}_i & \dots & u^{\ell^T}_i \end{bmatrix}^T.$ We do not normalize each block $j$  as this would destroy the low rank approximation. Each block $j$ is normalized $u^{j^1}_i = u^{j^1}_i/||u^{j^1}_i||$ to reduce the bias.
+The numerical implementation of the least squares is done by QR algorithm, by computing factorizing $U_i = Q R$, where $Q^TQ = I$ and $R$ is triangular matrix. $P_i$ is then obtained by solving $R P_i = Q$.
 
-We obtain the aligned reduced basis $U_{\textrm{aligned}} = \begin{bmatrix} {U^1}^T &\dots & {U^\ell}^T \end{bmatrix}^T,$ where $D_j =  U^j \Sigma_k V_k.$ The reduced language free representation for language $j$ and document $d$ is computed as the weighted least square solution $\Sigma_k^{-1} {U^j}^+ d,$ where $+$ denotes the pseudo inverse of a matrix that is is used because columns of $U^j$ do not form an orthogonal basis. The numerical implementation of the least squares is done by QR algorithm.
-}
 
-\subsubsection{Refinement of LSI similar to MCCA}
-
-{\oldText{Taken from Low-rank paper}
-Finally, we test mCCA is specifically designed to consider data from multiple sources (in this case languages). Therefore, we do not merge the individual term-document matrices into one as in
-the other two methods. For each language (view), we estimate the pairwise correlation coefficients, then we try to find vectors which maximize the sum of all pairwise correlations over all languages. This can be written as the following optimization
-\begin{equation}
-\label{eq:opt1}
-\max_{w_1,\ldots, w_\ell} \sum_{i=1}^\ell\sum_{j=i+1}^\ell  \frac{w_i^T D_i D_j^T w_j}{\sqrt{ w_i^T D_i D_i^T w_i\vphantom{ D_j^T } }\sqrt{ w_j^T D_j D_j^T w_j}}
-\end{equation}
-However, this allows only for a 1-dimensional representation (i.e. one vector per language). Since we would like to allow for more vectors per language, we denote the double sum in Equation~\ref{eq:opt1} by $\mbox{mCCA}(w_1,\ldots,w_\ell)$. If $\mbox{corr}$ denotes the correlation, to find $M$ vectors, the optimization objective function  becomes
-\begin{equation}
-\max_{\substack{w_i^{(j)}\;;\;i=1,\ldots,\ell\\j=1,\ldots,M }}\sum_{s=1}^{\mbox{M}} \mbox{mCCA}\left(w_1^{(s)},\ldots,w_\ell^{(s)}\right),
-\qquad\mbox{s.t.} \qquad \mbox{corr} \left(w_i^{(s)},w_i^{(t)}\right) = 0
-\quad \forall s\neq t
-\end{equation}
-We require that the set of $M$ vectors we return for each language are uncorrelated (so that we do not get copies of a vector) which together maximize the pairwise correlation between languages.
-}
-
-\subsubsection{Regression}
-
-{\oldText{Taken from Similarity paper}
-We begin with a collection of documents in two languages\footnote{The extension to multiple language is  discussed in the Discussion section.}. The documents are represented via bag-of-words as vector spaces $\X$ and $\Y$. There are several possible choices of monolingual similarity functions. We consider functions of the form: $x'C_{\X\X}^i x$ for $i\in \mathbb{Z}$. For $i=0$, we recover the squared Euclidean distance and for $i=-1$, we get the Mahalanobis distance.
-
-As input, we take a choice of $i$ (choice of inner product) along with an alignment of $\X$ and $\Y$. The problem is to find a mapping which respects both monolingual similarity and measures cross-lingual similarity.  In the first we reduce the problem to monolingual similarity. We find some mapping $f: \X \rightarrow \Y$. For a pair of elements $x\in\X$ and $y\in\Y$, we compute their similarity as the similarity of $f(x)$ and $y$ in $\Y$.
-
-The output of all the algorithms is a linear map (a matrix) denoted $B$, which computes the cross-lingual similarity as $x^T B y$ for $x\in\X$ and $y \in \Y$. The simplest choice for $B$ is $C_{\X\Y}$, the cross-covariance matrix.
-
-To find $B$ using regression, we compute the optimal regression matrix as $ C_{\Y \X} (C_{\X \X})^{-1}$. This corresponds to the mapping $f$ mentioned above.  The inner product on the space $\Y$ induces $B$ for computing the similarities between elements in $\X$ and $\Y$: for $B$ it holds that $x^T B y = \langle f (x), y \rangle$. Therefore $B$ depends on the metric on $\Y$. For the inner product corresponding to $C_{\Y\Y}$, $B$ can be derived as $C_{\X \X}^{-1}C_{\X \Y}C_{\Y \Y}$.
-
-Note that in the case of regression, we have a choice of which direction we map: $\X\rightarrow\Y$ or $\Y\rightarrow\X$ except for Mahalanobis metric where the formula for $B$ is symmetric. Due to space constraints we only note here that CCA approximates the least-squares regression for this metric just as LSI approximates the cross-covariance matrix.
-}
-
-{\oldText{Taken from Pascal CL paper}
-he \textbf{regression based approach} consists of two ingredients: a linear regression mapping $f : \RR^{n_i} \rightarrow \RR^{n_j}$,$$ f(x) := F\cdot x,$$ where $F \in \RR^{n_j \times n_j}$ and an inner product on the target space $\langle \cdot, \cdot \rangle_D$, which are used to define:
-$$s_{i,j}(x,y) := \langle f(x), y \rangle_D = f(x)^T D y = x^T F^T D y.$$
-Choices of $D$ included the standard inner product $I$, Mahalanobis inner product $C_{j,j}^{-1}$, which corresponds to whitening, and the covariance matrix $C_{j,j}$ (related to a co-occurrence). We can consider two regression mappings:
-\begin{itemize}
-\item least squares regression (LSQ), where $F = C_{j,i}C_{i,i}^{-1}$
-\item canonical correlation regression\cite{ccar} (CCAR), where $F = C_{j,j}^{-1}C{j,i}$.
-\end{itemize}
-}
 
 \subsection{Hub languages}
 
-A \emph{hub language} is a language with a high proportion of non-empty documents in $D$, which in case of Wikipedia is English. We use the following notation to define subsets
-of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $a(i,j) = \left\{ d = (u_1,...,u_m) | u_i \neq \emptyset, u_j \neq \emptyset \right\}$ , and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
+A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$, which in case of Wikipedia is English. We use the following notation to define subsets
+of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $a(i,j) = \left\{k | d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
 
 {\oldText{Taken from XLite}
 

@@ -1,6 +1,6 @@
 %cd('D:\Users\rupnik\work\latex\jair_paper\code\matlab')
-datadir = 'D:\Users\rupnik\work\data\cross-ling-event-registry\'
-load 'D:\Users\rupnik\jair\svdprojectors.mat'
+%datadir = 'D:\Users\rupnik\work\data\cross-ling-event-registry\'
+%load 'D:\Users\rupnik\jair\svdprojectors.mat'
 %%
 %nrp = 5;
 %[projectors, centers] = svdprojector(mats, nrp);

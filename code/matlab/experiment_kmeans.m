@@ -1,5 +1,4 @@
-cd('D:\work\latex\jair_paper\code\matlab')
-datadir = 'E:\cross-ling-event-registry\'
+datadir = 'D:\Users\rupnik\work\data\cross-ling-event-registry\'
 
 selectedLangs = {'en','es','de'};
 [mats, wrds, docs, invdoc, didx, widx, langnames] = alignProcessDocs(selectedLangs, datadir);

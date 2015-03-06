@@ -37,7 +37,7 @@ plangs = cell(size(alangs));
 pwords = cell(size(alangs));
 pwordsIdx = cell(size(alangs));
 for i = 1:length(alangs)
-    [plangs{i}, idx] = wordprune(alangs{i}, 0.975, [], 500000);
+    [plangs{i}, idx] = wordprune(alangs{i}, 0.975, [], 1000000);
     pwordsIdx{i} = idx;
     pwords{i} = words{i}(idx);
 end

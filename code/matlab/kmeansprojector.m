@@ -8,6 +8,7 @@ centers = cell(1,m);
 ndim = zeros(m,1);
 for i = 1:m
     ndim(i) = size(langs{i},1);
+    centers{i} = zeros(nrp,1);
 end
 
 if size(langs,2) > size(langs,1)

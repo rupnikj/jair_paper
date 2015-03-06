@@ -16,7 +16,7 @@ cutidxstart = 1;
 %     Ms = c >= skipfrac;
 %     cutidxstart = find(circshift(ms,1) & Ms);
 % end
-if nargin == 5
+if nargin == 4
     cutidx = min(cutidx, maxWords);
 end
 idx = i2(cutidxstart:cutidx);

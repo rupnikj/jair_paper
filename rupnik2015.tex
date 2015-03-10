@@ -354,6 +354,22 @@ In order to evaluate the quality of individual features and the overall model we
 evaluate accuracy on different language pairs only. compute accuracies using the CCA features only, using concept features only, or using all features.
 
 \begin{table}[h]
+\caption{Accuracy of story linking with features obtained from different cross-lingual similarity models}
+\label{table:linkingEvalModels}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+  \hline
+  \cline{1-4}
+  Models & CA & Precision & Recall \\ \cline{1-4}
+  CCA & 77.6\% & 0.783 & 0.811 \\ \cline{1-4}
+  $k$-means & 73.9\% & 0.695 & 0.846 \\ \cline{1-4}
+  LSI & 76.1\% & 0.755 & 0.769 \\ \cline{1-4}
+  \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[h]
 \caption{Accuracy of story linking with different sets of features}
 \label{table:linkingEval}
 \begin{center}
@@ -361,11 +377,11 @@ evaluate accuracy on different language pairs only. compute accuracies using the
   \hline
   \cline{1-4}
   Features & CA & Precision & Recall \\ \cline{1-4}
-  CCA & 73.2\% & 0.717 & 0.763 \\ \cline{1-4}
-  Concepts & 88.5\% & 0.888 & 0.882 \\ \cline{1-4}
-  Misc & 62.7\% & 0.583 & 0.904 \\ \cline{1-4}
-  CCA + concepts & 89.0\% & 0.893 & 0.887 \\ \cline{1-4}
-  All & 88.9\% & 0.893 & 0.884 \\ \cline{1-4}
+  CCA & 77.6\% & 0.783 & 0.811 \\ \cline{1-4}
+  Concepts & 88.8\% & 0.884 & 0.891 \\ \cline{1-4}
+  Misc & 65.3\% & 0.718 & 0.500 \\ \cline{1-4}
+  CCA + concepts & 89.2\% & 0.891 & 0.893 \\ \cline{1-4}
+  All & 89.6\% & 0.895 & 0.895 \\ \cline{1-4}
   \hline
 \end{tabular}
 \end{center}

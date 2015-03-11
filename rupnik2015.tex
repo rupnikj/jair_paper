@@ -115,6 +115,7 @@ More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of
 
 
 \subsection{Algorithms}
+\label{sec:algorithms}
 
 \subsubsection{$k$-means}
 
@@ -311,8 +312,6 @@ $C = \{\}$\;
 
 The second part of the procedure is described in the Algorithm~\ref{cluster_merge_algo2}. The goal of this task is to determine which (if any) of the candidate clusters are equivalent to $c_i$. To solve the task we represent it as a supervised learning problem. For each candidate cluster $c_j \in C'$ we compute a vector of learning features that should be indicative of whether the $c_i$ and $c_j$ are equivalent or not. The details about these features will be described in the next section. Once the features are computed, we classify the example with a classification model that was trained using a training dataset of hand-labeled examples. If the model predicts that tested clusters are equivalent, the $c_j$ is added to the set $C'$.
 
-The learning dataset used to train a classification model consists of cluster pairs $c_i$ and $c_j$ for which a human annotator provided feedback whether the clusters are equivalent or not. The dataset contains XYZ examples, of which XYZ are equivalent clusters pairs and XYZ are not. To train a model, the vector of features was first extracted for each learning example in the same way as described in Algorithm~\ref{cluster_merge_algo2}. A linear SVM method was then used to train the classifier $M$.
-
 \begin{algorithm}[tb!]
 \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
 \Input{test cluster $c_i$,\\
@@ -334,12 +333,16 @@ $C' = \{\}$\;
 \label{cluster_merge_algo2}
 \end{algorithm}
 
-\subsubsection{Learning features}
+\subsection{Training a classification model}
 
-In order to use a supervised approach to determine if two clusters $c_i$ and $c_j$ are equivalent we need to extract from the cluster pair as many informative features as possible. Based on the availability of the data, we have extracted the following groups of features:
+In order to train a classification model for predicting whether two clusters are equivalent we first need labeled training data. To obtain the data we used two human annotators. They were provided with a user interface that was displaying information about the articles in two clusters and their task was to determine if the clusters are equivalent or not. To obtain a pair of clusters $(c_i, c_j)$ to annotate, we first randomly chose a cluster $c_i$, used the Algorithm~\ref{cluster_merge_algo1} to compute a set of potentially equivalent clusters $C$ and randomly chose a cluster $c_j \in C$.
+
+The dataset provided by the annotators contains 808 examples, of which 402 are equivalent clusters pairs and 406 are not. Clusters in each learning example are either in English, Spanish or German language. Although Event Registry imports articles also in other languages, we restricted our experiments to these three languages since they have the highest volume of news articles which makes the training problem similarly hard.
+
+To build a classification model we first needed to extract from the labeled examples informative features. Based on the availability of the data, we have extracted the following groups of features:
 
 \begin{itemize}
-\item {\bf CCA related features}. CCA was already used to obtain candidates for the equivalent clusters. Additionally, it can also be used to provide valuable learning features. There are two main features that we extract using CCA -- \texttt{linkCount} and \texttt{avgSimScore}. \texttt{linkCount} is the number of times an article $a_i \in c_i$ has as one of the 10 most similar articles an article $a_j \in c_j$. In other words, it is the number of times an article from $c_i$ has a very similar article, which is in $c_j$. Beside the number of links between the two clusters we can also take into account the similarity scores of the links. The \texttt{avgSimScore} is the feature that represents the average similarity score of the links between the two clusters.
+\item {\bf Cross-lingual article linking features}. Cross-lingual article linking information was already used to obtain candidates for the equivalent clusters. Additionally, it can also be used to provide valuable learning features. There are two main features that we extract from article links between clusters -- \texttt{linkCount} and \texttt{avgSimScore}. \texttt{linkCount} is the number of times an article $a_i \in c_i$ has as one of the 10 most similar articles an article $a_j \in c_j$. In other words, it is the number of times an article from $c_i$ has a very similar article, which is in $c_j$. Beside the number of links between the two clusters we can also take into account the similarity scores of the links. The \texttt{avgSimScore} is the feature that represents the average similarity score of the links between the two clusters.
 
 \item {\bf Concept related features}. As mentioned before, articles that are imported into Event Registry are first semantically annotated by linking mentioned entities and keywords to the corresponding Wikipedia pages. Whenever Barack Obama is, for example, mentioned in the article, the article is annotated with a link to his Wikipedia page (\emph{http://en.wikipedia.org/wiki/Barack\_Obama}). In the same way all mentions of people, locations, organizations and even ordinary keywords (e.g. bank, tax, ebola, plane, company) are annotated. Although the Spanish article about Obama will be annotated with his Spanish version of the Wikipedia page, we can almost in all cases normalize the Wikipedia links to their English versions. This can be done since Wikipedia itself provides information regarding which pages in different languages represent the same concept/entity. Using this approach, the word ``avi\'on'' in a Spanish article will be annotated with the same concept as the word ``plane'' in an English article. Although articles are in different languages, the annotations can therefore provide a shared vocabulary that can be used to compare articles/clusters. By analyzing all articles in clusters $c_i$ and $c_j$ we can identify the most relevant entities and keywords for each cluster. Additionally we can also assign weights to the concepts based on how frequently they occur in the articles in the cluster. From the list of relevant concepts and corresponding weights we can now define a number of features. \texttt{entityCosSim} represents the cosine similarity on the vector of entities mentioned in both clusters. Similarly, \texttt{keywordCosSim} represents the cosine similarity on the keywords only. In case the weights are not relevant, we have also added two features (\texttt{entityJaccardSim} and \texttt{keywordJaccardSim}), where Jaccard similarity is used instead of the cosine similarity.
 
@@ -347,15 +350,20 @@ In order to use a supervised approach to determine if two clusters $c_i$ and $c_
 
 \end{itemize}
 
+Using the described features and the user-provided label we can train a classification model $M$ that can be used in Algorithm~\ref{cluster_merge_algo2} to classify a new cluster pair as equivalent or not. The classification algorithm that we used to train a model was a linear SVM method.
+
 \subsection{Evaluation}
 
-In order to evaluate the quality of individual features and the overall model we have performed a set of experiments.
+In order to determine how accurately we can predict cluster equivalence we have performed two experiments. In the first experiment we wanted to test how well do the individual approaches for cross-lingual article linking perform when used for linking the clusters about the same event. In the second experiment we tested how accurate is the prediction model when trained on different subsets of learning features. To evaluate the prediction accuracy for a given dataset we used 10-fold cross validation. In this technique, the dataset is partitioned into 10 folds, where 9 folds are used for training a model and the left-out fold is then used to test the accuracy of the model. The learning and testing process is repeated 10 times, each time with a different left-out fold.
 
-evaluate accuracy on different language pairs only. compute accuracies using the CCA features only, using concept features only, or using all features.
+In Section~\ref{sec:algorithms} we have described three main algorithms for identifying similar articles in different languages. These algorithms were $k$-means, LSI and CCA. To test which of these algorithms performs best we performed the following test. Using each algorithm, we analyzed all articles in Event Registry to find the most similar articles in other languages. The values of the cross-lingual article linking features (\texttt{linkCount} and \texttt{avgSimScore}) were then recomputed for all annotated learning examples. A dataset with only these two features and the label was constructed and used to test how accurate prediction models can be induced using the data. The results of the experiment are shown in Table~\ref{table:linkingEvalAlgos}. The table shows for each of the algorithms the obtained classification accuracy, precision and recall. We can see that the most informative features for cluster linking are obtained using the CCA algorithm, while $k$-means performs the worse. {\oldText{TODO:} add some explanation why this might be so.}
+
+In the second experiment we wanted to evaluate how relevant individual groups of features are to correctly determine cluster equivalence. For this purpose we tested the accuracies obtained using individual groups of features, as well as using different combination of groups. Since we found the CCA to perform best of the three algorithms, we used it to compute the values of the cross-lingual article linking features. Results of the evaluation are shown in Table\~ref{table:linkingEval}. We can see that using a single group of features, the highest prediction accuracy can be achieved using the concept related features. The classification accuracy in this case is 88.8\%. By additionally including also the cross-lingual article linking features, the classification accuracy rises slightly to 89.2\%. Using all three groups of features, the achieved accuracy is 89.6\%. 
+Based on the results we can make the following conclusions. The cross-lingual similarity algorithms provide valuable information that can be used to identify clusters that describe the same event in different languages. The computed features are however significantly less informative compared to the features computed on the annotated concepts. Nevertheless, the cross-lingual article similarity features are very important for two reasons. The first reason is that they allow us to identify for a given cluster a limited set of candidate clusters that are potentially equivalent. This is a very important feature since it reduces the search space for several orders of magnitude. The second reason for the importance of these features is that concept annotations are not available for all articles. Annotation of news articles is computationally intensive and can only be done for a subset of collected articles.
 
 \begin{table}[h]
-\caption{Accuracy of story linking with features obtained from different cross-lingual similarity models}
-\label{table:linkingEvalModels}
+\caption{Accuracy of cluster linking with features obtained from different cross-lingual similarity algorithms}
+\label{table:linkingEvalAlgos}
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
   \hline
@@ -386,11 +394,6 @@ evaluate accuracy on different language pairs only. compute accuracies using the
 \end{tabular}
 \end{center}
 \end{table}
-
-\subsubsection{Compare different feature subsets}
-
-\subsubsection{Accuracy across different language pairs}
-
 
 \section{Related work}
 

@@ -17,6 +17,8 @@
 \newcommand{\X}{\mathbb{X}}
 \newcommand{\Y}{\mathbb{Y}}
 
+\newcommand{\algInput}{\textbf{input:}}
+
 \jairheading{x}{xxxx}{x-xx}{x/xx}{x/xx}
 \ShortHeadings{Cross-lingeringual Document Similarity and Event Detection}
 {Rupnik, Muhi\v{c}, Leban, Fortuna, \v{S}kraba \& Grobelnik}
@@ -127,15 +129,14 @@ We then run the $k$-means algorithm \cite{kmeans} and obtain a set of $k$ centro
 
 Each matrix $C_i$ represents a vector space basis and can be used to map points in $\RR^{n_i}$ into a $k$-dimensional space, where the coordinates of a vector $x \in \RR^{n_i}$ are expressed as: $$(C_i^T C_i)^{-1} C_i^T x_i.$$
 
-The resulting matrix (when appropriately scaled to have unit norm) for similarity computation between language $i$ and language $j$ is defined as:
+The resulting matrix (when appropriately scaled to have unit norm) for similarity computation between language $i$ and language $j$ is defined as (see the reasoning below):
 $$C_i(C_i^T C_i)^{-1} (C_j^T C_j)^{-1} C_j.$$
 
-%% We could skip this par
-In the implementation of $k$-means clustering we never form the matrix $X$ explicitly but rather implement implicit multiplication as $X x = \sum_{i=1}^\ell X_i x$ and multiplication with transpose as $X^T y = \sum_{i=1}^\ell X_i^T y_i,$ where $y$ is partitioned accordingly to $X$. That lowers memory requirement and compacts sparse indexing, leading to faster element access.
+The matrix is a result of mapping documents in a language independent space using pseudo-inverses of the centroid matrices $P_i = (C_i^T C_i)^{-1} C_i$ and then comparing them using the standard inner product, which results in the matrix $P_i^T P_j$. For the sake of presentation, we assumed that the centroid vectors are linearly independent (an independent subspace could be obtained using an additional Gram-Schmidt step on the matrix $C$, if this was not the case).
 
-\subsubsection{LSI}
+\subsubsection{Cross-Lingual Latent Semantic Indexing}
 
-The next method is CL-LSI which is a variant of LSI~\cite{lsi} for more than one language. The method is based on computing a truncated singular value decomposition of $X \approx U S V^T$. Since the matrix can be large we can use an iterative method like the Lanczos~\cite{matrix_comp} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead we use a randomized version of the singular value decomposition (SVD) described in \ref{randomizedSVD} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
+The next method is Cross-Lingual Latent Semantic Indexing (CL-LSI)\cite{cl_lsi} which is a variant of LSI~\cite{lsi} for more than one language. The method is based on computing a truncated singular value decomposition of $X \approx U S V^T$. Since the matrix can be large we can use an iterative method like the Lanczos~\cite{matrix_comp} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead we use a randomized version of the singular value decomposition (SVD) described in \ref{randomizedSVD} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
 
 The cross-lingual similarity functions are based on a rank-$k$ truncated SVD: $X \approx U \Sigma V^T,$ where $U \in \RR^{N \times k}$ are basis vectors of interest and $\Sigma \in \RR^{k \times k}$ is truncated diagonal matrix of singular eigenvalues.
 
@@ -144,17 +145,40 @@ An aligned basis is obtained by first splitting $U$ vertically according to the 
 The numerical implementation of the least squares is done by QR algorithm, by computing factorizing $U_i = Q R$, where $Q^TQ = I$ and $R$ is triangular matrix. $P_i$ is then obtained by solving $R P_i = Q$.
 
 
+\subsection{Canonical Correlation Analysis}
+ For completeness we now introduce a statistical technique to analyise data from two sources - after which we will describe our main contribution to computing cross-lingual similarities.
+ 
+ Canonical Correlation Analysis (CCA)~\cite{Hotelling} is a dimensionality reduction technique similar to Principal Component Analysis (PCA)~\cite{Pearson1901On}, with an additional assumption that the data consists of feature vectors that arose from two sources (two views) that share some information (examples: bilingual document collection~\cite{mrpqr}, collection of images and captions~\cite{HardoonSS04}). Instead of looking for linear combinations of features that maximize the variance (PCA) we look for a linear combination of feature vectors from the first view and a linear combination for the second view, that are maximally correlated.
+
+Interpreting the nonzero columns of $X_i$ as observation vectors sampled from an underlying distribution $\mathcal{X}_i \in \RR^{n_i}$, the idea is to find two weight vectors $w_i \in \RR^{n_i}$ and $w_j \in \RR^{n_j}$ so that the random variables $w_i^T \cdot \mathcal{X_i}$ and $w_j^T \cdot \mathcal{X_j}$ are maximally correlated ($w_i$ and $w_j$ are used to map the random vectors to random variables, by computing weighted sums of vector components). By using the sample matrix notation $X_i$ and $X_j$ (assuming no data is missing for clearer presentation) this problem can be formulated as the following optimization problem:
+
+\begin{equation*}
+\begin{aligned}
+& \underset{w_i \in \RR^{n_i}, w_j \in \RR^{n_j}}{\text{maximize}}
+& & \frac{w_i^T C_{i,j} w_j}{\sqrt{w_i^T C_{i,i} w_i} \sqrt{w_j^T C_{j,j} w_j}},
+\end{aligned}
+\end{equation*}
+where $C_{i,i}$ and $C_{j,j}$ are empirical estimates of variances of $\mathcal{X}_i$ and $\mathcal{X}_j$ respectively and $C_{i,j}$ is an estimate for the covariance matrix. Assuming that the observation vectors are centered (only for the purposes of presentation), the matrices are computed in the following way: $C_{i,j} = \frac{1}{n-1}X_i X_j^T$, and similarly for $C_{i,i}$ and $C_{j,j}$.
+The optimization problem can be reduced to an eigenvalue problem and includes inverting the variance matrices $C_{i,i}$ and $C_{j,j}$. If the matrices are not invertible, one can use a regularization technique by replacing $C_{i,i}$ with $(1- \kappa)C_{i,i} + \kappa I$, where $\kappa \in [0,1]$ is the regularization coefficient and $I$ is the identity matrix (the same can be applied to $C_{j,j}$.
+A single canonical variable is usually inadequate in representing the original random vector and typically one looks for $k$ projection pairs $(w_i^1, w_j^1),\ldots,(w_i^k, w_j^k)$, so that $w_i^{uT} \mathcal{X}_i$ and $w_j^{uT} \mathcal{X}_j$ are highly correlated and $w_i^{uT} \mathcal{X}_i$ is uncorrelated with $w_i^{vT} \mathcal{X}_i$  for $u \neq v$ and analogously for $w_j^u$ vectors.
+
+Note that the method in its original form is only applicable to two languages where an aligned set of observations is available.
 
 \subsection{Hub languages}
 
-A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$, which in case of Wikipedia is English. We use the following notation to define subsets
-of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $a(i,j) = \left\{k | d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
+In this section we describe a method that is based on linear embeddings as well, but is more applicable to a large number of languages. The main difficulty with applying the
+LSI and $k$-means approaches lies in the fact, that when one considers a large number of languages, for example, the top 100 Wikipedia languages (ranked by number of articles), the set of completely
+aligned documents can be small or empty. Even if only two languages are considered, the set of aligned documents can be small (for example, Piedmontese and Hindi
+Wikipedias had no interlanguage links). In Wikipedia we observed that even though the training resources are scarce between certain language pairs, often there exists indirect training data
+through a hub language.
 
-{\oldText{Taken from XLite}
+A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$, which in case of Wikipedia is English. We use the following notation to define subsets of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $a(i,j) = \left\{k | d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language. 
 
-The first step in our method is to project $X_1, \ldots, X_m$ to lower dimensional spaces without destroying the cross-lingual structure. Treating the columns of $X_i$ as observation vectors sampled from an underlying distribution $\mathcal{X}_i \in V_i = \RR^{n_i}$, we can analyze the empirical cross-covariance matrices: $C_{i,j} = \frac{1}{|a(i,j)|-1 }\sum_{\ell \in a(i,j)} (X_i^{\ell} - c_i)\cdot (X_j^{\ell} - c_j)^T$, where $c_i = \frac{1}{a_i} \sum_{\ell \in a(i)}X_i^{\ell}$. By finding low rank approximations of $C_{i,j}$ we can identify the subspaces of $V_i$ and $V_j$ that are relevant for extracting linear patterns between $\mathcal{X}_i$ and $\mathcal{X}_j$. Let $X_1$ represent the hub language corpus matrix. The standard approach to finding the subspaces is to perform the singular value decomposition on the full $N \times N$ covariance matrix composed of blocks $C_{i,j}$. If $|a(i,j)|$ is small for many language pairs (as it is in the case of Wikipedia), then many empirical estimates $C_{i,j}$ are unreliable, which can result in overfitting. For this reason we perform the truncated singular value decomposition on the matrix $C = [C_{1,2}  \cdots  C_{1,m}] \approx U S V^T$, where where $U \in \RR^{n_1 \times k}, S \in \RR^{k \times k}, V \in \RR^{(\sum_{i=2}^m n_i) \times k}$. We split the matrix $V$ vertically in blocks with $n_2, \ldots, n_M$ rows to obtain a set of matrices $V_i$: $V = [V_2^T  \cdots  V_m^T]^T$. Note that columns of $U$ are orthogonal but columns in each $V_i$ are not (columns of V are orthogonal). Let $V_1 := U$. We proceed by reducing the dimensionality of each $X_i$ by setting: $Y_i = V_i^T \cdot X_i$, where $Y_i \in \RR^{k\times N}$. The step is similar to Cross-lingual Latent Semantic Indexing (CL-LSI) \cite{lsi}\cite{cl_lsi} which is less suitable due to a large amount of missing documents. Since singular value decomposition with missing values is a challenging problem and the alternative of replacing missing documents with zero vectors can result in degradation of performance.
+We now describe a two step approach to building a cross-lingual similarity matrix. The first part is related to LSI and reduces the dimensionality of the data. The second step refines the linear mappings and optimizes linear dependence between data.
 
-The second step involves solving a generalized version of canonical correlation analysis on the matrices $Y_i$ in order to find the mappings $P_i$. The approach is based on the sum of squares of correlations formulation by Kettenring \cite{Kettenring}, where we consider only correlations between pairs $(Y_1, Y_i), i >1$ due to the hub language problem characteristic. Let $D_{i,i} \in \RR^{k \times k}$ denote the empirical covariance and $D_{i,j}$ denote the empirical cross-covariance computed based on $Y_i$ and $Y_j$. We solve the following optimization problem:
+The first step in our method is to project $X_1, \ldots, X_m$ to lower dimensional spaces without destroying the cross-lingual structure. Treating the nonzero columns of $X_i$ as observation vectors sampled from an underlying distribution $\mathcal{X}_i \in V_i = \RR^{n_i}$, we can analyze the empirical cross-covariance matrices: $C_{i,j} = \frac{1}{|a(i,j)|-1 }\sum_{\ell \in a(i,j)} (X_i^{\ell} - c_i)\cdot (X_j^{\ell} - c_j)^T$, where $c_i = \frac{1}{a_i} \sum_{\ell \in a(i)}X_i^{\ell}$. By finding low rank approximations of $C_{i,j}$ we can identify the subspaces of $V_i$ and $V_j$ that are relevant for extracting linear patterns between $\mathcal{X}_i$ and $\mathcal{X}_j$. Let $X_1$ represent the hub language corpus matrix. The LSI approach to finding the subspaces is to perform the singular value decomposition on the full $N \times N$ covariance matrix composed of blocks $C_{i,j}$. If $|a(i,j)|$ is small for many language pairs (as it is in the case of Wikipedia), then many empirical estimates $C_{i,j}$ are unreliable, which can result in overfitting. For this reason we perform the truncated singular value decomposition on the matrix $C = [C_{1,2}  \cdots  C_{1,m}] \approx U S V^T$, where where $U \in \RR^{n_1 \times k}, S \in \RR^{k \times k}, V \in \RR^{(\sum_{i=2}^m n_i) \times k}$. We split the matrix $V$ vertically in blocks with $n_2, \ldots, n_M$ rows to obtain a set of matrices $V_i$: $V = [V_2^T  \cdots  V_m^T]^T$. Note that columns of $U$ are orthogonal but columns in each $V_i$ are not (columns of V are orthogonal). Let $V_1 := U$. We proceed by reducing the dimensionality of each $X_i$ by setting: $Y_i = V_i^T \cdot X_i$, where $Y_i \in \RR^{k\times N}$. To summarize, the first step reduces the dimensionality of the data and is based on CL-LSI, but optimizes only the hub-language related cross-covariance blocks.
+
+The second step involves solving a generalized version of canonical correlation analysis on the matrices $Y_i$ in order to find the mappings $P_i$. The approach is based on the sum of squares of correlations formulation by Kettenring \cite{Kettenring}, where we consider only correlations between pairs $(Y_1, Y_i), i >1$ due to the hub language problem characteristic. Let $D_{i,i} \in \RR^{k \times k}$ denote the empirical covariance of $\mathcal{Y}_i$ and $D_{i,j}$ denote the empirical cross-covariance computed based on $\mathcal{Y}_i$ and $\mathcal{Y}_j$. We solve the following optimization problem:
 \begin{equation*}
   \begin{aligned}
     & \underset{w_i \in \RR^{k}}{\text{maximize}}
@@ -166,11 +190,13 @@ The second step involves solving a generalized version of canonical correlation 
 By using Lagrangian multiplier techniques (we omit the derivation due to space constraints \todo{Add what was omitted}), the problem can be reformulated as the eigenvalue problem:$\left(\sum_{i=2}^m G_i G_i^T\right) \cdot V = \Lambda \cdot V,$ where $G_i = H_1^T D_{1,i} H_i$ and $H_i = Chol(D_{i,i})^{-1}$ where $Chol(\cdot)$ is the Cholesky decomposition: $X = Chol(X)^T Chol(X)$. The vectors $w_i$ can be reconstructed from the dominant eigenvector $v$, as: $w_1 = H_1 v$  and $w_i \propto H_i  G_i^T  v$ for $i >1$ ($w_i$ need to be appropriately normalized). Higher dimensional mappings $W_i$ are obtained in a similar way by setting the constraint $W_i^T D_{i,i} W_i = I$, where $I$ is the identity matrix. The constraint forces the columns of $W_i$ to be uncorrelated (orthogonal with respect to covariance matrix). $W_i$ can be extracted from a set of dominant eigenvectors of matrix $V$ according to eigenvalues $\Lambda$. The technique is related to a generalization of canonical correlation analysis (GCCA) by Carroll\cite{Carroll}, where an unknown group configuration variable is defined and objective is to maximize the sum of squared correlation between the group variable and the others. The problem can be reformulated as an eigenvalue problem. The difference lies in the fact that we set the unknown group configuration variable as the hub language, which simplifies the solution. The complexity of our method is $O(k^3)$, whereas solving the GCCA method scales as $O(N^3)$ where $N$ is the number of samples (see \cite{gifi}). Another issue with GCCA is that it cannot be directly applied to the case of missing documents.
 
 To summarize, we first reduced the dimensionality of our data to $k$-dimensional features and then found a new representation (via linear transformation) that maximizes directions of linear dependence between the languages. The final projections that enable mappings to a common space are defined as: $P_i(x) = W_i^T V_i^T x.$
-}
+
 
 \subsection{Scaling}
 
 100 languages!
+Describe the newsfeed volume, number of events and the number of similarities that need to be computed. Compare the memory requirements of our current implementation to the rest.
+Comment on the caching gains in our implementation.
 
 
 \subsection{Evaluation}
@@ -290,9 +316,9 @@ In order to identify clusters $c_j$ that are equivalent to cluster $c_i$ we have
 The details of the first task are described in Algorithm~\ref{cluster_merge_algo1}. The algorithms starts by individually inspecting each article $a_i$ in the cluster $c_i$. Using the CCA it then identifies 10 most similar articles to $a_i$ in each language $l \in L$. For each identified similar article $a_j$ we then identify cluster $c_j$ to which the article belongs to and add the cluster to the set of candidates that should be more closely inspected. The assumption made by this algorithm is that if two articles in different languages are describing the same event, the CCA similarity between the documents will be higher than when comparing two articles about different events. Since the CCA similarity is only an estimate, the assumption does not always hold. Due to data redundancy, however, we do not consider this to be an issue. Since we are testing each article in the cluster and compute 10 most similar articles for each article, we are very likely to identify among the candidates also the clusters that are equivalent to cluster $c_i$.
 
 \begin{algorithm}[t!]
-\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
-\Input{test cluster $c_i$,\\a set of clusters $C_l$ for each language $l \in L$}
-\Output{a set of clusters $C$ that are potentially equivalent to $c_i$}
+\SetKwInput{KwInput}{input}\SetKwInput{KwOutput}{output}
+\KwInput{test cluster $c_i$,\\a set of clusters $C_l$ for each language $l \in L$}
+\KwOutput{a set of clusters $C$ that are potentially equivalent to $c_i$}
 $C = \{\}$\;
 \For{article $a_i \in c_i$} {
     \For{language $l \in L$} {
@@ -313,11 +339,11 @@ $C = \{\}$\;
 The second part of the procedure is described in the Algorithm~\ref{cluster_merge_algo2}. The goal of this task is to determine which (if any) of the candidate clusters are equivalent to $c_i$. To solve the task we represent it as a supervised learning problem. For each candidate cluster $c_j \in C'$ we compute a vector of learning features that should be indicative of whether the $c_i$ and $c_j$ are equivalent or not. The details about these features will be described in the next section. Once the features are computed, we classify the example with a classification model that was trained using a training dataset of hand-labeled examples. If the model predicts that tested clusters are equivalent, the $c_j$ is added to the set $C'$.
 
 \begin{algorithm}[tb!]
-\SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
-\Input{test cluster $c_i$,\\
+\SetKwInput{KwInput}{input}\SetKwInput{KwOutput}{output}
+\KwInput{test cluster $c_i$,\\
 a set of candidate clusters $C$ that are potentially equivalent to $c_i$\\
 classification model $M$ trained on the hand-labeled examples}
-\Output{a set of clusters $C'$ that are equivalent to $c_i$}
+\KwOutput{a set of clusters $C'$ that are equivalent to $c_i$}
 
 $C' = \{\}$\;
 \For{cluster $c_j \in C$} {
@@ -358,7 +384,7 @@ In order to determine how accurately we can predict cluster equivalence we have 
 
 In Section~\ref{sec:algorithms} we have described three main algorithms for identifying similar articles in different languages. These algorithms were $k$-means, LSI and CCA. To test which of these algorithms performs best we performed the following test. Using each algorithm, we analyzed all articles in Event Registry to find the most similar articles in other languages. The values of the cross-lingual article linking features (\texttt{linkCount} and \texttt{avgSimScore}) were then recomputed for all annotated learning examples. A dataset with only these two features and the label was constructed and used to test how accurate prediction models can be induced using the data. The results of the experiment are shown in Table~\ref{table:linkingEvalAlgos}. The table shows for each of the algorithms the obtained classification accuracy, precision and recall. We can see that the most informative features for cluster linking are obtained using the CCA algorithm, while $k$-means performs the worse. {\oldText{TODO:} add some explanation why this might be so.}
 
-In the second experiment we wanted to evaluate how relevant individual groups of features are to correctly determine cluster equivalence. For this purpose we tested the accuracies obtained using individual groups of features, as well as using different combination of groups. Since we found the CCA to perform best of the three algorithms, we used it to compute the values of the cross-lingual article linking features. Results of the evaluation are shown in Table\~ref{table:linkingEval}. We can see that using a single group of features, the highest prediction accuracy can be achieved using the concept related features. The classification accuracy in this case is 88.8\%. By additionally including also the cross-lingual article linking features, the classification accuracy rises slightly to 89.2\%. Using all three groups of features, the achieved accuracy is 89.6\%. 
+In the second experiment we wanted to evaluate how relevant individual groups of features are to correctly determine cluster equivalence. For this purpose we tested the accuracies obtained using individual groups of features, as well as using different combination of groups. Since we found the CCA to perform best of the three algorithms, we used it to compute the values of the cross-lingual article linking features. Results of the evaluation are shown in Table\~ref{table:linkingEval}. We can see that using a single group of features, the highest prediction accuracy can be achieved using the concept related features. The classification accuracy in this case is 88.8\%. By additionally including also the cross-lingual article linking features, the classification accuracy rises slightly to 89.2\%. Using all three groups of features, the achieved accuracy is 89.6\%.
 Based on the results we can make the following conclusions. The cross-lingual similarity algorithms provide valuable information that can be used to identify clusters that describe the same event in different languages. The computed features are however significantly less informative compared to the features computed on the annotated concepts. Nevertheless, the cross-lingual article similarity features are very important for two reasons. The first reason is that they allow us to identify for a given cluster a limited set of candidate clusters that are potentially equivalent. This is a very important feature since it reduces the search space for several orders of magnitude. The second reason for the importance of these features is that concept annotations are not available for all articles. Annotation of news articles is computationally intensive and can only be done for a subset of collected articles.
 
 \begin{table}[h]

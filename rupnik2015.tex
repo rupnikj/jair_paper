@@ -40,7 +40,13 @@
 \maketitle
 
 \begin{abstract}
-\todo{tralala hopsasa.}
+Main points:
+\begin{itemize}
+\item Problem of tracking events in a large multilingual stream - we reduce it to event linking
+\item Two contributions. We propose a method that enables cross-lingaul document similarity an approach to linking multilingual data and an approach that uses is to link events.
+\item Evaluation of cross-lingual approaches on Wikipedia and the event linking task.
+\end{itemize}
+
 \end{abstract}
 \section{Overview}
 Structure
@@ -119,6 +125,11 @@ More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of
 \subsection{Algorithms}
 \label{sec:algorithms}
 
+We will present three approaches: a simple approach based on $k$-means clustering, a standard approach based on singular value decomposition and a new method that is applicable in more general
+settings. All approaches are based on linear maps and we do not focus on alternatives, such as machine translation and probabilistic models. Applicability of machine translation relies
+on the availability of training resources (strongly aligned translation corpora), which are not available for many world languages, but there exist comparable corpora. Probabilistic
+methods \todo{provide reasons for not using them: e.g. difficulty with parameter estimation}.
+
 \subsubsection{$k$-means}
 
 The $k$-means algorithm is perhaps the most well-known and used clustering algorithm. In order to apply the algorithm we first merge all the term-document matrices into a single matrix $X$ by stacking the individual term-document matrices:
@@ -179,7 +190,11 @@ We now describe a two step approach to building a cross-lingual similarity matri
 
 The first step in our method is to project $X_1, \ldots, X_m$ to lower dimensional spaces without destroying the cross-lingual structure. Treating the nonzero columns of $X_i$ as observation vectors sampled from an underlying distribution $\mathcal{X}_i \in V_i = \RR^{n_i}$, we can analyze the empirical cross-covariance matrices: $C_{i,j} = \frac{1}{|a(i,j)|-1 }\sum_{\ell \in a(i,j)} (X_i^{\ell} - c_i)\cdot (X_j^{\ell} - c_j)^T$, where $c_i = \frac{1}{a_i} \sum_{\ell \in a(i)}X_i^{\ell}$. By finding low rank approximations of $C_{i,j}$ we can identify the subspaces of $V_i$ and $V_j$ that are relevant for extracting linear patterns between $\mathcal{X}_i$ and $\mathcal{X}_j$. Let $X_1$ represent the hub language corpus matrix. The LSI approach to finding the subspaces is to perform the singular value decomposition on the full $N \times N$ covariance matrix composed of blocks $C_{i,j}$. If $|a(i,j)|$ is small for many language pairs (as it is in the case of Wikipedia), then many empirical estimates $C_{i,j}$ are unreliable, which can result in overfitting. For this reason we perform the truncated singular value decomposition on the matrix $C = [C_{1,2}  \cdots  C_{1,m}] \approx U S V^T$, where where $U \in \RR^{n_1 \times k}, S \in \RR^{k \times k}, V \in \RR^{(\sum_{i=2}^m n_i) \times k}$. We split the matrix $V$ vertically in blocks with $n_2, \ldots, n_m$ rows: $V = [V_2^T  \cdots  V_m^T]^T$. Note that columns of $U$ are orthogonal but columns in each $V_i$ are not (columns of V are orthogonal). Let $V_1 := U$. We proceed by reducing the dimensionality of each $X_i$ by setting: $Y_i = V_i^T \cdot X_i$, where $Y_i \in \RR^{k\times N}$. To summarize, the first step reduces the dimensionality of the data and is based on CL-LSI, but optimizes only the hub-language related cross-covariance blocks.
 
-The second step involves solving a generalized version of canonical correlation analysis on the matrices $Y_i$ in order to find the mappings $P_i$. The approach is based on the sum of squares of correlations formulation by Kettenring \cite{Kettenring}, where we consider only correlations between pairs $(Y_1, Y_i), i >1$ due to the hub language problem characteristic. The original sum of squared correlation is formulated as:
+The second step involves solving a generalized version of canonical correlation analysis on the matrices $Y_i$ in order to find the mappings $P_i$. The approach is based on the sum of squares of correlations formulation by Kettenring \cite{Kettenring}, where we consider only correlations between pairs $(Y_1, Y_i), i >1$ due to the hub language problem characteristic. 
+We will present the original unconstrained optimization problem, then a constrained formulation based on the hub language problem characteristic. Then we will simplify the constraints and reformulate
+the problem as an eigenvalue problem by using the method of Lagrange multipliers.
+
+The original sum of squared correlation is formulated as an unconstrained problem:
 \begin{equation*}
   \begin{aligned}
     & \underset{w_i \in \RR^{k}}{\text{maximize}}
@@ -187,7 +202,7 @@ The second step involves solving a generalized version of canonical correlation 
 \end{aligned}
 \end{equation*}
 We solve a similar problem by restricting $i=1$ and omit optimizing over non-hub language pairs.
-Let $D_{i,i} \in \RR^{k \times k}$ denote the empirical covariance of $\mathcal{Y}_i$ and $D_{i,j}$ denote the empirical cross-covariance computed based on $\mathcal{Y}_i$ and $\mathcal{Y}_j$. We solve the following optimization problem:
+Let $D_{i,i} \in \RR^{k \times k}$ denote the empirical covariance of $\mathcal{Y}_i$ and $D_{i,j}$ denote the empirical cross-covariance computed based on $\mathcal{Y}_i$ and $\mathcal{Y}_j$. We solve the following constrained (unit variance constraints) optimization problem:
 \begin{equation*}
   \begin{aligned}
     & \underset{w_i \in \RR^{k}}{\text{maximize}}
@@ -196,7 +211,21 @@ Let $D_{i,i} \in \RR^{k \times k}$ denote the empirical covariance of $\mathcal{
     & & w_i^T D_{i,i} w_i = 1, \quad\forall i = 1,\ldots, m.
 \end{aligned}
 \end{equation*}
-By using Lagrangian multiplier techniques (we omit the derivation due to space constraints \todo{Add what was omitted}), the problem can be reformulated as the eigenvalue problem:$\left(\sum_{i=2}^m G_i G_i^T\right) \cdot V = \Lambda \cdot V,$ where $G_i = H_1^T D_{1,i} H_i$ and $H_i = Chol(D_{i,i})^{-1}$ where $Chol(\cdot)$ is the Cholesky decomposition: $X = Chol(X)^T Chol(X)$. The vectors $w_i$ can be reconstructed from the dominant eigenvector $v$, as: $w_1 = H_1 v$  and $w_i \propto H_i  G_i^T  v$ for $i >1$ ($w_i$ need to be appropriately normalized). Higher dimensional mappings $W_i$ are obtained in a similar way by setting the constraint $W_i^T D_{i,i} W_i = I$, where $I$ is the identity matrix. The constraint forces the columns of $W_i$ to be uncorrelated (orthogonal with respect to covariance matrix). $W_i$ can be extracted from a set of dominant eigenvectors of matrix $V$ according to eigenvalues $\Lambda$. The technique is related to a generalization of canonical correlation analysis (GCCA) by Carroll\cite{Carroll}, where an unknown group configuration variable is defined and objective is to maximize the sum of squared correlation between the group variable and the others. The problem can be reformulated as an eigenvalue problem. The difference lies in the fact that we set the unknown group configuration variable as the hub language, which simplifies the solution. The complexity of our method is $O(k^3)$, whereas solving the GCCA method scales as $O(N^3)$ where $N$ is the number of samples (see \cite{gifi}). Another issue with GCCA is that it cannot be directly applied to the case of missing documents.
+The constraints $w_i^T D_{i,i} w_i$ can be simplified by using the Cholesky decomposition $D_{i,i} = K_i^T \cdot K_i$ and substitution: $y_i := K_i w_i$. By inverting the $K_i$ matrices and defining  $G_i := K_i^{-T} D_{1,i} K_i^{-1}$, the problem can be reformulated:
+\begin{equation*}
+  \begin{aligned}
+    & \underset{y_i \in \RR^{k}}{\text{maximize}}
+    & & \sum_{i = 2}^m  \left(y_1^T G_{i} y_i \right)^2
+    & \text{subject to}
+    & & y_i^T y_i = 1, \quad\forall i = 1,\ldots, m.
+\end{aligned}
+\end{equation*}
+
+\todo{Finish derivation: Lagrange multipliers, reformulation, backsubstitution, revisit commented text below}
+ %The problem can be reformulated as the eigenvalue problem:$\left(\sum_{i=2}^m G_i G_i^T\right) \cdot V = \Lambda \cdot V,$ where $G_i = H_1^T D_{1,i} H_i$ and $H_i = Chol(D_{i,i})^{-1}$ where $Chol(\cdot)$ is the Cholesky decomposition: $X = Chol(X)^T Chol(X)$. The vectors $w_i$ can be reconstructed from the dominant eigenvector $v$, as: $w_1 = H_1 v$  and $w_i \propto H_i  G_i^T  v$ for $i >1$ ($w_i$ need to be appropriately normalized). Higher dimensional mappings $W_i$ are obtained in a similar way by setting the constraint $W_i^T D_{i,i} W_i = I$, where $I$ is the identity matrix. The constraint forces the columns of $W_i$ to be uncorrelated (orthogonal with respect to covariance matrix). $W_i$ can be extracted from a set of dominant eigenvectors of matrix $V$ according to eigenvalues $\Lambda$. 
+ 
+ 
+ The technique is related to a generalization of canonical correlation analysis (GCCA) by Carroll\cite{Carroll}, where an unknown group configuration variable is defined and objective is to maximize the sum of squared correlation between the group variable and the others. The problem can be reformulated as an eigenvalue problem. The difference lies in the fact that we set the unknown group configuration variable as the hub language, which simplifies the solution. The complexity of our method is $O(k^3)$, whereas solving the GCCA method scales as $O(N^3)$ where $N$ is the number of samples (see \cite{gifi}). Another issue with GCCA is that it cannot be directly applied to the case of missing documents.
 
 To summarize, we first reduced the dimensionality of our data to $k$-dimensional features and then found a new representation (via linear transformation) that maximizes directions of linear dependence between the languages. The final projections that enable mappings to a common space are defined as: $P_i(x) = W_i^T V_i^T x.$
 

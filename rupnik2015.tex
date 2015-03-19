@@ -203,29 +203,44 @@ The original sum of squared correlation is formulated as an unconstrained proble
 \end{equation*}
 We solve a similar problem by restricting $i=1$ and omit optimizing over non-hub language pairs.
 Let $D_{i,i} \in \RR^{k \times k}$ denote the empirical covariance of $\mathcal{Y}_i$ and $D_{i,j}$ denote the empirical cross-covariance computed based on $\mathcal{Y}_i$ and $\mathcal{Y}_j$. We solve the following constrained (unit variance constraints) optimization problem:
-\begin{equation*}
+\begin{equation}\label{squaredCorHubOriginal}
   \begin{aligned}
     & \underset{w_i \in \RR^{k}}{\text{maximize}}
     & & \sum_{i = 2}^m  \left(w_1^T D_{1,i} w_i \right)^2
     & \text{subject to}
     & & w_i^T D_{i,i} w_i = 1, \quad\forall i = 1,\ldots, m.
 \end{aligned}
-\end{equation*}
+\end{equation}
 The constraints $w_i^T D_{i,i} w_i$ can be simplified by using the Cholesky decomposition $D_{i,i} = K_i^T \cdot K_i$ and substitution: $y_i := K_i w_i$. By inverting the $K_i$ matrices and defining  $G_i := K_i^{-T} D_{1,i} K_i^{-1}$, the problem can be reformulated:
-\begin{equation*}
+\begin{equation}\label{squaredCorHub}
   \begin{aligned}
     & \underset{y_i \in \RR^{k}}{\text{maximize}}
     & & \sum_{i = 2}^m  \left(y_1^T G_{i} y_i \right)^2
     & \text{subject to}
     & & y_i^T y_i = 1, \quad\forall i = 1,\ldots, m.
 \end{aligned}
-\end{equation*}
-
-\todo{Finish derivation: Lagrange multipliers, reformulation, backsubstitution, revisit commented text below}
- %The problem can be reformulated as the eigenvalue problem:$\left(\sum_{i=2}^m G_i G_i^T\right) \cdot V = \Lambda \cdot V,$ where $G_i = H_1^T D_{1,i} H_i$ and $H_i = Chol(D_{i,i})^{-1}$ where $Chol(\cdot)$ is the Cholesky decomposition: $X = Chol(X)^T Chol(X)$. The vectors $w_i$ can be reconstructed from the dominant eigenvector $v$, as: $w_1 = H_1 v$  and $w_i \propto H_i  G_i^T  v$ for $i >1$ ($w_i$ need to be appropriately normalized). Higher dimensional mappings $W_i$ are obtained in a similar way by setting the constraint $W_i^T D_{i,i} W_i = I$, where $I$ is the identity matrix. The constraint forces the columns of $W_i$ to be uncorrelated (orthogonal with respect to covariance matrix). $W_i$ can be extracted from a set of dominant eigenvectors of matrix $V$ according to eigenvalues $\Lambda$. 
+\end{equation}
+A necessary condition for optimality is that the derivatives of the Lagrangian vanish. The Lagrangian of (\ref{squaredCorHub}) is expressed as:
+$$  L(y_1, \ldots, y_m, \lambda_1, \ldots, \lambda_m) = \sum_{i = 2}^m  \left(y_1^T G_{i} y_i \right)^2 + \sum_{i=1}^m \lambda_i \left(y_i^T y_i - 1\right).$$
+Stationarity conditions give us:
+\begin{equation}\label{dLdx1}
+ \frac{\partial}{\partial x_1} L = 0 \Rightarrow \sum_{i = 2}^m  \left(y_1^T G_{i} y_i \right) G_i y_i + \lambda_1 y_1,
+\end{equation}
+\begin{equation}\label{dLdxi}
+\frac{\partial}{\partial x_i} L = 0 \Rightarrow \left(y_1^T G_{i} y_i \right) G_{i}^T y_1 + \lambda_i y_i = 0,~i > 1.
+\end{equation}
+Multiplying the equations (\ref{dLdxi}) with $y_i^T$ and applying the constraints, we can eliminate $\lambda_i$ which gives us:
+\begin{equation}\label{eqy1yi}
+G_{i}^T y_1 = \left(y_1^T G_{i} y_i \right) y_i,~i > 1.
+\end{equation}
+Plugging this into (\ref{dLdx1}), we obtain an eigenvalue problem:
+$$\left( \sum_{i = 2}^m G_i G_{i}^T \right) y_1 + \lambda_1 y_1 = 0.$$
+The eigenvectors of $\left( \sum_{i = 2}^m G_i G_{i}^T \right)$ solve the problem for the first language. The solutions for $y_i$ are obtained from (\ref{eqy1yi}): $y_i := \frac{G_{i}^T y_1}{\| G_{i}^T y_1 \|}$.
+Note that the solution (\ref{squaredCorHubOriginal}) to can be recovered by: $w_i := K_i^{-1} y_i$. The linear transformation of the $w$ variables are thus expressed as:
+$$W_1 = $$
+$$W_i = $$
  
- 
- The technique is related to a generalization of canonical correlation analysis (GCCA) by Carroll\cite{Carroll}, where an unknown group configuration variable is defined and objective is to maximize the sum of squared correlation between the group variable and the others. The problem can be reformulated as an eigenvalue problem. The difference lies in the fact that we set the unknown group configuration variable as the hub language, which simplifies the solution. The complexity of our method is $O(k^3)$, whereas solving the GCCA method scales as $O(N^3)$ where $N$ is the number of samples (see \cite{gifi}). Another issue with GCCA is that it cannot be directly applied to the case of missing documents.
+ The technique is related to the Generalization of Canonical Correlation Analysis (GCCA) by Carroll\cite{Carroll}, where an unknown group configuration variable is defined and objective is to maximize the sum of squared correlation between the group variable and the others. The problem can be reformulated as an eigenvalue problem. The difference lies in the fact that we set the unknown group configuration variable as the hub language, which simplifies the solution. The complexity of our method is $O(k^3)$, whereas solving the GCCA method scales as $O(N^3)$ where $N$ is the number of samples (see \cite{gifi}). Another issue with GCCA is that it cannot be directly applied to the case of missing documents.
 
 To summarize, we first reduced the dimensionality of our data to $k$-dimensional features and then found a new representation (via linear transformation) that maximizes directions of linear dependence between the languages. The final projections that enable mappings to a common space are defined as: $P_i(x) = W_i^T V_i^T x.$
 

@@ -90,8 +90,7 @@ Finally, we present and interpret the experimental results and finally give conc
 
 \section{System Overview}
 
-Event registry -> Monolingual events
-Events -> features (semantic + CCA) -> linked events
+Event registry $\Rightarrow$ Monolingual events $\Rightarrow$ features (semantic + CCA) $\Rightarrow$ linked events (crosslingual)
 
 
 \section{Cross-lingual Document Similarity}
@@ -463,7 +462,7 @@ It is clear that in the case of Creole language only at most $22\%$ documents ar
 We also have a problem with the quality of the test data. For example, if we look at test pair (\emph{war}, \emph{ht}) only 386/534 Waray-Waray test documents are unique but on other side almost all Creole test documents (523/534) are unique. This indicates a poor alignment which leads to poor performance.
 }
 
-\subsection{Cross-Lingual Event Linking}
+\subsection{Evaluation Of Cross-Lingual Event Linking}
 
 In order to determine how accurately we can predict cluster equivalence we have performed two experiments. In the first experiment we wanted to test how well do the individual approaches for cross-lingual article linking perform when used for linking the clusters about the same event. In the second experiment we tested how accurate is the prediction model when trained on different subsets of learning features. To evaluate the prediction accuracy for a given dataset we used 10-fold cross validation. In this technique, the dataset is partitioned into 10 folds, where 9 folds are used for training a model and the left-out fold is then used to test the accuracy of the model. The learning and testing process is repeated 10 times, each time with a different left-out fold.
 

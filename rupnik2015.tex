@@ -49,28 +49,28 @@ Main points:
 \end{itemize}
 
 \end{abstract}
-\section{Overview}
-Structure
-\begin{itemize}
-\item Introduction
-\item Cross lingual document similarity (model)
-\item  Event Detection
-\item  Combing the approaches
-\item Experiments
-\item Conclusions
-\end{itemize}
-The story:
-\begin{itemize}
-\item Description of the problem - we would liek to understand events ans sequences of events, but our observables (e.g. news stories) occur in a variety of languages
-\item We present an approach to tackle this problem using a combination of techniques....
-\item Ultimately we present a tool showing the feasibility of our approach
-\end{itemize}
+%\section{Overview}
+%Structure
+%\begin{itemize}
+%\item Introduction
+%\item Cross lingual document similarity (model)
+%\item  Event Detection
+%\item  Combing the approaches
+%\item Experiments
+%\item Conclusions
+%\end{itemize}
+%The story:
+%\begin{itemize}
+%\item Description of the problem - we would liek to understand events ans sequences of events, but our observables (e.g. news stories) occur in a variety of languages
+%\item We present an approach to tackle this problem using a combination of techniques....
+%\item Ultimately we present a tool showing the feasibility of our approach
+%\end{itemize}
 
 \section{Introduction}
 
 Content on the internet is becoming increasingly multi-lingual. A prime example is Wikipedia - in 2001 the majority of pages were written in English, while in 2012, the percentage of English articles has dropped to 14\%. Machine translation remains relatively rudimentary - allowing people to understand simple phrases on we pages, but remain inadequate for more advanced understanding of text. At the same time, online news has begun to dominate reporting of current events. In this paper we consider the intersection of these developments: how to track events which are reported about in multiple languages. 
 
-The term event is vague and ambiguous, but for the practical purposes we define it as ``any significant happening that is being reported about in the media''. Examples of events would include shooting down of the Malaysia Airlines plane over Ukraine on July 18th, 2014 and HSBC's admittance of aiding their clients in tax evasion on February 9th, 2015. Events such as these are covered by many articles and the question is how to find all the articles in different languages that are describing a single event.
+The term event is vague and ambiguous, but for the practical purposes we define it as ``any significant happening that is being reported about in the media''. Examples of events would include shooting down of the Malaysia Airlines plane over Ukraine on July 18th, 2014 and HSBC's admittance of aiding their clients in tax evasion on February 9th, 2015 (Figure \ref{}). Events such as these are covered by many articles and the question is how to find all the articles in different languages that are describing a single event.
 
 As input we consider a stream of articles in different languages and a list of events. Our goal is to assign articles to their corresponding events. A priori we do not know the coverage of the articles, that is not all the events may be covered and we do not know that all the articles necessarily fit into one of the events.  To achieve our goal, we divide the task into two parts: clustering the articles according to topic (regardless of language) and matching the clusters to events. 
 
@@ -86,17 +86,20 @@ Event Registry works by collecting and analyzing news articles that are publishe
 
 The paper is organized as follows: we first provide an overview of the system as a whole (Section ), followd by details on each of the two steps described above. We first introduce several approaches to measures of cross-lingual similarity (Section ) and then the algorithms for matching clusters to events.  To improve readability, we describe relevant related work for each module in its corresponding Section.
 Finally, we present and interpret the experimental results and finally give conclusions and describe promising future directions. 
+%
+%\section{Introduction}
+%
+%
+%{\oldText{Taken from XLite paper}
+%Document retrieval is a well-established problem in data mining. There have been a large number of different approaches put forward in the literature. In this paper we concentrate on a specific setting: multi-lingual corpora. As the availability of multi-lingual documents has exploded in the last few years, there is a pressing need for automatic cross-lingual processing tools.
+%
+%The prime example is Wikipedia - in 2001 the majority of pages were written in English, while in 2012, the percentage of English articles has dropped to 14\%. In this context, we look at how to find similar documents across languages. In particular, we do not assume the availability of machine translators, but rather try to frame the problem such that we can use well-established machine learning tools designed for monolingual text-mining tasks. This work represents the continuation of previous work \cite{nips, iti, nips2, sikdd} where we explored representations of documents which were valid over multiple languages.  The representations could be interpreted as multi-lingual topics, which were then used as proxies to compute cross-lingual similarities between documents. We look at a specific aspect of this problem: the distribution of articles across languages in Wikipedia is not uniform. While the percentage of English articles has fallen, English is still the largest language and one of \emph{hub} languages which not only have an order of magnitude more articles than other languages, but also many comparable articles with most of the other languages.
+%
+%When doing document retrieval, we encounter two quite different situations. If for example, we are looking for a German article comparable to an English article, there is a large alignment between the document corpora (given by the intersection in articles in the two languages) making the problem well-posed. If, however, we look for a relevant Slovenian article given a Hindi article, the intersection is small, making the problem much harder. Since almost all languages have a large intersection in articles with \emph{hub} languages, the question we ask in this paper is: can we exploit hub languages to perform better document retrieval between non-hub languages? A positive answer would vastly improve cross-lingual analysis between less represented languages. In the following section, we introduce our representation followed by our experiments, which also shed light on the structural properties of the multilingual Wikipedia corpus.
+%}
 
-\section{Introduction}
+\section{System Description}
 
-
-{\oldText{Taken from XLite paper}
-Document retrieval is a well-established problem in data mining. There have been a large number of different approaches put forward in the literature. In this paper we concentrate on a specific setting: multi-lingual corpora. As the availability of multi-lingual documents has exploded in the last few years, there is a pressing need for automatic cross-lingual processing tools.
-
-The prime example is Wikipedia - in 2001 the majority of pages were written in English, while in 2012, the percentage of English articles has dropped to 14\%. In this context, we look at how to find similar documents across languages. In particular, we do not assume the availability of machine translators, but rather try to frame the problem such that we can use well-established machine learning tools designed for monolingual text-mining tasks. This work represents the continuation of previous work \cite{nips, iti, nips2, sikdd} where we explored representations of documents which were valid over multiple languages.  The representations could be interpreted as multi-lingual topics, which were then used as proxies to compute cross-lingual similarities between documents. We look at a specific aspect of this problem: the distribution of articles across languages in Wikipedia is not uniform. While the percentage of English articles has fallen, English is still the largest language and one of \emph{hub} languages which not only have an order of magnitude more articles than other languages, but also many comparable articles with most of the other languages.
-
-When doing document retrieval, we encounter two quite different situations. If for example, we are looking for a German article comparable to an English article, there is a large alignment between the document corpora (given by the intersection in articles in the two languages) making the problem well-posed. If, however, we look for a relevant Slovenian article given a Hindi article, the intersection is small, making the problem much harder. Since almost all languages have a large intersection in articles with \emph{hub} languages, the question we ask in this paper is: can we exploit hub languages to perform better document retrieval between non-hub languages? A positive answer would vastly improve cross-lingual analysis between less represented languages. In the following section, we introduce our representation followed by our experiments, which also shed light on the structural properties of the multilingual Wikipedia corpus.
-}
 
 \section{Cross-lingual Document Similarity}
 

@@ -6,7 +6,7 @@
 \newcommand{\todo}[1]{\textcolor{red}{TODO: #1}}
 \newcommand{\oldText}[1]{\textcolor{red}{#1:}\color{blue}}
 
-\usepackage{hyperref}
+\usepackage[implicit=false]{hyperref}
 
 \usepackage{amsmath}
 \usepackage{amsfonts}
@@ -99,13 +99,37 @@ Document similarity is an important component in techniques from text mining and
 
 \subsection{Related work}
 
-TODO
+In this section we will relate the method we use to other alternatives in the literature. We will first state some requirements for our system, which motivate our choice of focusing on a particular subset of approaches in the rest of the paper.
+
+The goal is to build a system that monitors global media and analyzes how events are being reported on. In our approach this boils down to two steps: tracking events separately in each language (based on language detection and an online clustering approach) and then connecting them. The pipeline needs to process millions of articles per day and perform billions of similarity computations each day. The system should support as many languages as possible. We focus on implementations that run on a single shared memory machine, as opposed to clusters of machines. This severely simplifies the software implementation and the system maintenance. 
+To summarize, the following properties are desireable:
+\begin{itemize}
+\item{training} The building should scale to many languages and should be robust to the quality of training resources. The system should be able to take advantage of comparable corpus (as opposed to parallel translation based corpora), with missing data.
+\item{operation efficiency} The similarity computation should be fast.
+\item{operation cost} The system should run on a strong shared machine server. 
+\item{implementation} The system is simple to implement, with few parameters to tune.
+\end{itemize}
+We believe that a cross-lingual similarity component that meets such requirements is very desirable in a commercial setting, where several different costs have to be taken into consideration.
+
+There are three main families of approaches to cross-lingual similarity.
+\begin{itemize}
+\item{translation} The most obvious way to compare documents written in different languages is to use machine translation and perform monolingual similarity. One can use free tools such as Moses \cite{Hoang07moses:open} or translation services, such as Google Translate\footnote{https://translate.google.com/}. 
+\item{probabilistic topic models}
+\item{matrix factorization}
+
+\end{itemize}
+
+Based on the discussion above, we chose to focus on methods based on vector space models and linear embeddings. We propose a method that is more efficient than a simple clustering approach as well as a popular approach (LSI), but is simple to optimize and use.
+
+
+
+
 
 \subsection{Problem definition}
 
 \textbf{Document representation.}
 
-Standard vector space model \cite{xxx} represents documents as vectors, where each term corresponds to word or phrase in a fixed vocabulary. More formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_k$ correspond to the number of times term $k$ occurred in the document, also called \emph{term frequency} or $TF_k(d)$.
+Standard vector space model \cite{Salton88term-weightingapproaches} represents documents as vectors, where each term corresponds to word or phrase in a fixed vocabulary. More formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_k$ correspond to the number of times term $k$ occurred in the document, also called \emph{term frequency} or $TF_k(d)$.
 
 We also used a term re-weighting scheme that adjusts for the fact that some words occur more frequently in general. A term weight should correspond to the importance of the term for the given corpus. The common weighting scheme is called \emph{Term Frequency Inverse Document Frequency} ($TFIDF$) weighting. An \emph{Inverse Document Frequency} ($IDF$) weight for the dictionary term $k$ is defined as $\log( \frac{N}{DF_k} )$, where $DF_k$ is the number of documents in the corpus which contain term $k$.  A document $TFIDF$ vector is its original vector multiplied element-wise by the weights.
 
@@ -159,7 +183,7 @@ The matrix is a result of mapping documents in a language independent space usin
 
 \subsection{Cross-Lingual Latent Semantic Indexing}
 
-The next method is Cross-Lingual Latent Semantic Indexing (CL-LSI)\cite{cl_lsi} which is a variant of LSI~\cite{lsi} for more than one language. The method is based on computing a truncated singular value decomposition of $X \approx U S V^T$. Since the matrix can be large we can use an iterative method like the Lanczos~\cite{matrix_comp} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead we use a randomized version of the singular value decomposition (SVD) described in \ref{randomizedSVD} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
+The next method is Cross-Lingual Latent Semantic Indexing (CL-LSI)\cite{cl_lsi} which is a variant of LSI~\cite{lsi} for more than one language. The method is based on computing a truncated singular value decomposition of $X \approx U S V^T$. Since the matrix can be large we can use an iterative method like the Lanczos~\cite{golub} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead we use a randomized version of the singular value decomposition (SVD) described in \cite{tropp} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
 
 The cross-lingual similarity functions are based on a rank-$k$ truncated SVD: $X \approx U \Sigma V^T,$ where $U \in \RR^{N \times k}$ are basis vectors of interest and $\Sigma \in \RR^{k \times k}$ is truncated diagonal matrix of singular eigenvalues.
 
@@ -171,7 +195,7 @@ The numerical implementation of the least squares is done by QR algorithm, by co
 \subsection{Canonical Correlation Analysis}
  For completeness we now introduce a statistical technique to analyze data from two sources - after which we will describe our main contribution to computing cross-lingual similarities.
 
- Canonical Correlation Analysis (CCA)~\cite{Hotelling} is a dimensionality reduction technique similar to Principal Component Analysis (PCA)~\cite{Pearson1901On}, with an additional assumption that the data consists of feature vectors that arose from two sources (two views) that share some information (examples: bilingual document collection~\cite{mrpqr}, collection of images and captions~\cite{HardoonSS04}). Instead of looking for linear combinations of features that maximize the variance (PCA) we look for a linear combination of feature vectors from the first view and a linear combination for the second view, that are maximally correlated.
+ Canonical Correlation Analysis (CCA)~\cite{Hotelling} is a dimensionality reduction technique similar to Principal Component Analysis (PCA)~\cite{Pearson1901On}, with an additional assumption that the data consists of feature vectors that arose from two sources (two views) that share some information (examples: bilingual document collection~\cite{mrpqr}, collection of images and captions~\cite{Hardoon_usingimage}). Instead of looking for linear combinations of features that maximize the variance (PCA) we look for a linear combination of feature vectors from the first view and a linear combination for the second view, that are maximally correlated.
 
 Interpreting the columns of $X_i$ as observation vectors sampled from an underlying distribution $\mathcal{X}_i \in \RR^{n_i}$, the idea is to find two weight vectors $w_i \in \RR^{n_i}$ and $w_j \in \RR^{n_j}$ so that the random variables $w_i^T \cdot \mathcal{X}_i$ and $w_j^T \cdot \mathcal{X}_j$ are maximally correlated ($w_i$ and $w_j$ are used to map the random vectors to random variables, by computing weighted sums of vector components). Let $\rho(x,y)$ denote the sample based correlation coefficient between two vectors of observations $x$ and $y$. By using the sample matrix notation $X_i$ and $X_j$ (assuming no data is missing for clearer presentation) this problem can be formulated as the following optimization problem:
 
@@ -543,7 +567,7 @@ Comment on the caching gains in our implementation.
 \acks{The authors wish to thank blah blah blah.}
 
 \vskip 0.2in
-%\bibliography{rupnik2015}
+\bibliography{jair}
 \bibliographystyle{theapa}
 
 \end{document}

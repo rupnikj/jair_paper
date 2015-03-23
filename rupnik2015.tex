@@ -105,19 +105,7 @@ Event Registry works by collecting and analyzing news articles that are publishe
    Within this system, we test our multilingual similarity measures as well as our algorithms for matching clusters to events.  The result is that we can test total performance in a multilingual, real-world setting.
 
 The paper is organized as follows: we first provide an overview of the system as a whole (Section ), followd by details on each of the two steps described above. We first introduce several approaches to measures of cross-lingual similarity (Section ) and then the algorithms for matching clusters to events.  To improve readability, we describe relevant related work for each module in its corresponding Section.
-Finally, we present and interpret the experimental results and finally give conclusions and describe promising future directions. 
-%
-%\section{Introduction}
-%
-%
-%{\oldText{Taken from XLite paper}
-%Document retrieval is a well-established problem in data mining. There have been a large number of different approaches put forward in the literature. In this paper we concentrate on a specific setting: multi-lingual corpora. As the availability of multi-lingual documents has exploded in the last few years, there is a pressing need for automatic cross-lingual processing tools.
-%
-%The prime example is Wikipedia - in 2001 the majority of pages were written in English, while in 2012, the percentage of English articles has dropped to 14\%. In this context, we look at how to find similar documents across languages. In particular, we do not assume the availability of machine translators, but rather try to frame the problem such that we can use well-established machine learning tools designed for monolingual text-mining tasks. This work represents the continuation of previous work \cite{nips, iti, nips2, sikdd} where we explored representations of documents which were valid over multiple languages.  The representations could be interpreted as multi-lingual topics, which were then used as proxies to compute cross-lingual similarities between documents. We look at a specific aspect of this problem: the distribution of articles across languages in Wikipedia is not uniform. While the percentage of English articles has fallen, English is still the largest language and one of \emph{hub} languages which not only have an order of magnitude more articles than other languages, but also many comparable articles with most of the other languages.
-%
-%When doing document retrieval, we encounter two quite different situations. If for example, we are looking for a German article comparable to an English article, there is a large alignment between the document corpora (given by the intersection in articles in the two languages) making the problem well-posed. If, however, we look for a relevant Slovenian article given a Hindi article, the intersection is small, making the problem much harder. Since almost all languages have a large intersection in articles with \emph{hub} languages, the question we ask in this paper is: can we exploit hub languages to perform better document retrieval between non-hub languages? A positive answer would vastly improve cross-lingual analysis between less represented languages. In the following section, we introduce our representation followed by our experiments, which also shed light on the structural properties of the multilingual Wikipedia corpus.
-%}
-
+Finally, we present and interpret the experimental results and finally give conclusions and describe promising future directions.
 
 \section{System Overview}
 
@@ -132,29 +120,24 @@ Document similarity is an important component in techniques from text mining and
 
 In this section we will relate the method we use to other alternatives in the literature. We will first state some requirements for our system, which motivate our choice of focusing on a particular subset of approaches in the rest of the paper.
 
-The goal is to build a system that monitors global media and analyzes how events are being reported on. In our approach this boils down to two steps: tracking events separately in each language (based on language detection and an online clustering approach) and then connecting them. The pipeline needs to process millions of articles per day and perform billions of similarity computations each day. The system should support as many languages as possible. We focus on implementations that run on a single shared memory machine, as opposed to clusters of machines. This severely simplifies the software implementation and the system maintenance. 
-To summarize, the following properties are desireable:
+The goal is to build a system that monitors global media and analyzes how events are being reported on. In our approach this boils down to two steps: tracking events separately in each language (based on language detection and an online clustering approach) and then connecting them. The pipeline needs to process millions of articles per day and perform billions of similarity computations each day. The system should support as many languages as possible. We focus on implementations that run on a single shared memory machine, as opposed to clusters of machines. This severely simplifies the software implementation and the system maintenance.
+To summarize, these are the relevant design aspects:
 \begin{itemize}
-\item{training} The building should scale to many languages and should be robust to the quality of training resources. The system should be able to take advantage of comparable corpus (as opposed to parallel translation based corpora), with missing data.
-\item{operation efficiency} The similarity computation should be fast.
-\item{operation cost} The system should run on a strong shared machine server. 
-\item{implementation} The system is simple to implement, with few parameters to tune.
+\item \textbf{model building} - The building should scale to many languages and should be robust to the quality of training resources. The system should be able to take advantage of comparable corpus (as opposed to parallel translation based corpora), with missing data. Supporting a new language should be simple.
+\item \textbf{operation efficiency} - The similarity computation should be fast - the system needs to handle billions of similarity computations per day.
+\item \textbf{operation cost} - The system should run on a strong shared machine server and not rely on paid services.
+\item \textbf{implementation} - The system is simple to implement, with few parameters to tune.
 \end{itemize}
 We believe that a cross-lingual similarity component that meets such requirements is very desirable in a commercial setting, where several different costs have to be taken into consideration.
 
 There are three main families of approaches to cross-lingual similarity.
 \begin{itemize}
-\item{translation} The most obvious way to compare documents written in different languages is to use machine translation and perform monolingual similarity. One can use free tools such as Moses \cite{Hoang07moses:open} or translation services, such as Google Translate\footnote{https://translate.google.com/}. 
-\item{probabilistic topic models}
-\item{matrix factorization}
-
+\item \textbf{translation} - The most obvious way to compare documents written in different languages is to use machine translation and perform monolingual similarity. One can use free tools such as Moses \cite{moses} or translation services, such as Google Translate\footnote{https://translate.google.com/}. There are two issues with such approaches: they solve a harder problem than needs to be solved and they are less robust to training resource quality - large sets of translated sentences are typically needed. Training Moses for languages with scarce linguistic resources is thus problematic. The issue with using online services such as Google Translate is that the APIs are limited and not free. The operation efficiency and cost requirements make translation based approaches less suited for our system.
+\item \textbf{probabilistic topic models} - not nice with term weighting, hyperparameters setting, burn-in and other black magic. Representing documents as latent vectors = inference problem.
+\item \textbf{matrix factorization} - nonnegative \cite{huertatowards}, svd based \cite{cl_lsi}, cca \cite{Hotelling}, opca \cite{platt2010translingual} - opca makes the assumption that the vocabulary sizes are the same ? that's lame. 
 \end{itemize}
 
-Based on the discussion above, we chose to focus on methods based on vector space models and linear embeddings. We propose a method that is more efficient than a simple clustering approach as well as a popular approach (LSI), but is simple to optimize and use.
-
-
-
-
+Based on the discussion above, we chose to focus on methods based on vector space models and linear embeddings. We propose a method that is more efficient than popular alternatives (a clustering based approach and latent semantic indexing), but is still simple to optimize and use.
 
 \subsection{Problem definition}
 
@@ -182,7 +165,7 @@ where $d_1$ and $d_2$ are documents written in the $i$-th and $j$-th language re
 In this section, we describe several approaches to computing multilingual simliarities described in the previous section. We present three approaches
 \begin{enumerate}
 \item  a simple approach based on $k$-means clustering
-\item  a standard approach based on singular value decomposition 
+\item  a standard approach based on singular value decomposition
 \item a new method that is applicable in more general settings.
 \end{enumerate}
  We concentrate on approaches that are based on linear maps rather than alternatives, such as machine translation and probabilistic models. Applicability of machine translation relies
@@ -320,10 +303,10 @@ To summarize, we first reduced the dimensionality of our data to $k$-dimensional
 \section{Cross-lingual Event Linking}
 The main application we test the above simliarity on  is cross-lingual event linking. In online media streams - particularly new articles - there is often duplication of reporting, different viewpoints or opinions, all centering around a single event.  Examples of events would include shooting down of the Malaysia Airlines plane over Ukraine on July 18th, 2014 and HSBC's admittance of aiding their clients in tax evasion on February 9th, 2015. (Sports example)
 
-Informally, events are covered by many articles and the question we address is how to find all the articles in different languages that are describing a single event. We base our evaluation on an online system for detection of world events, called Event Registry\cite{}. We do not address the problem of detection of events in this paper but rather consider the problem that given a series of events, how may we best ``tag" or match articles in different languages to these events. The events are represented by clusters of articles and so ultimately our problem reduces to find suitable matchings between clusters with articles in different languages. 
+Informally, events are covered by many articles and the question we address is how to find all the articles in different languages that are describing a single event. We base our evaluation on an online system for detection of world events, called Event Registry\cite{}. We do not address the problem of detection of events in this paper but rather consider the problem that given a series of events, how may we best ``tag" or match articles in different languages to these events. The events are represented by clusters of articles and so ultimately our problem reduces to find suitable matchings between clusters with articles in different languages.
 
 \begin{comment}
-One of the use cases where article linking information can be applied is also in an online system for detection of world events, called Event Registry\cite{}. Event Registry is a repository of events, where events are automatically identified by analyzing news articles. The term event is vague and ambiguous, but for the practical purposes we define it as ``any significant happening that is being reported about in the media''. 
+One of the use cases where article linking information can be applied is also in an online system for detection of world events, called Event Registry\cite{}. Event Registry is a repository of events, where events are automatically identified by analyzing news articles. The term event is vague and ambiguous, but for the practical purposes we define it as ``any significant happening that is being reported about in the media''.
 
 Event Registry works by collecting and analyzing news articles that are published by news outlets in different languages all over the world. Collected articles are first semantically annotated by identifying in them mentions of relevant concepts -- either entities or important keywords. The disambiguated and entity linking of the concepts is done using Wikipedia as the main knowledge base. The key step in Event Registry is then to apply an online clustering algorithm on the articles in order to identify groups of articles that are discussing the same event. For each new article, the clustering algorithm determines if the article should be assigned to some existing cluster or into a new cluster. The underlying assumption is that articles that are describing the same event are similar enough and will therefore be put into the same cluster.
 
@@ -338,9 +321,9 @@ The clustering of articles is done for each language separately -- English artic
 
 \subsection{Problem definition}
 
-The problem in the second phase of the pipeline is to identify the clusters (given?) describing the same events. Each article $a_i$ is written in a language $l$, where $l \in L = \{l_1,l_2,...,l_k\}$. For each language $l$, we generate and maintain a set of language-specific clusters $C_l$. That is, all articles are in language $l$. For any cluster $c_i \in C_{l_a}$, we would like to identify clusters $c_j \in C_{l_b}$ (where $l_a \neq l_b$) that describe the same event as $c_i$. We define \emph{equivalent clusters} as  pairs $(c_i,c_j)$ such that both clusters in the pair describe the same event in languages $C_{l_a}$ and $C_{l_b}$ respectively. 
+The problem in the second phase of the pipeline is to identify the clusters (given?) describing the same events. Each article $a_i$ is written in a language $l$, where $l \in L = \{l_1,l_2,...,l_k\}$. For each language $l$, we generate and maintain a set of language-specific clusters $C_l$. That is, all articles are in language $l$. For any cluster $c_i \in C_{l_a}$, we would like to identify clusters $c_j \in C_{l_b}$ (where $l_a \neq l_b$) that describe the same event as $c_i$. We define \emph{equivalent clusters} as  pairs $(c_i,c_j)$ such that both clusters in the pair describe the same event in languages $C_{l_a}$ and $C_{l_b}$ respectively.
 
-We impose an additional requirement.  Identification of the equivalent clusters cannot be done exhaustively -- for a cluster $c_i$ we wish to avoid testing all other clusters for all the other languages. Performing exhaustive comparison for each cluster $c_i$ would result in $O(N^2)$ tests, where $N$ is the number of all clusters (over all languages), which is not feasible for when the number of clusters is on the order of tens of thousands. 
+We impose an additional requirement.  Identification of the equivalent clusters cannot be done exhaustively -- for a cluster $c_i$ we wish to avoid testing all other clusters for all the other languages. Performing exhaustive comparison for each cluster $c_i$ would result in $O(N^2)$ tests, where $N$ is the number of all clusters (over all languages), which is not feasible for when the number of clusters is on the order of tens of thousands.
 
 \subsection{Related work}
 

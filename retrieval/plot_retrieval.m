@@ -37,7 +37,7 @@ plot(dim, [resultLSI_WITH_S{:}], 'green');
 plot(dim, [resultLSI_WITHOUT_S{:}], 'blue');
 %Last place, slow Kmeans
 plot(dim, [resultKMEANS{:}], 'black');
-legend('Star CCA', 'LSI with S', 'LSI without S', 'Kmeans');
+legend('Hub CCA', 'LSI with S', 'LSI without S', 'Kmeans');
 xlabel('Number of feature vectors');
 ylabel('AMPR');
 

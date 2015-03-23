@@ -406,24 +406,31 @@ Using the  features described above and the user-provided labels, we train a cla
 We describe the datasets involved in the experiments and two evaluations: comparing the crosslingual approaches on an information retrieval task, and evaluation of cross-lingual event linking.
 
 \subsection{Datasets}
-\emph{Andrej started shuffling it, will do it till Monday :) }
+%\emph{Andrej started shuffling it, will do it till Monday :) }
+%{\oldText{Taken from ITI paper}
+To investigate the empirical performance of the low rank approximations we will test the algorithms on a large-scale, real-world multilingual dataset that we extracted from Wikipedia by using inter-language links as an alignment. This  results in a large number of weakly comparable documents in more than $200$ languages. Wikipedia is a large source of multilingual data that is especially important for the languages for which no translation tools, multilingual dictionaries as Eurovoc, or strongly aligned multilingual corpora as Europarl are available. Documents in different languages are related with so called 'inter-language' links that can be found on the left of the Wikipedia page. The Wikipedia is constantly growing. There are currently 12 Wikipedias with more than $10^6$ articles, $52$ with more than $10^5$ articles, $129$ with more than $10^4$ articles, and $236$ with more than $1000$ articles. 
+%Wikipedia uses special user-friendly markup language that is very easy to write but very hard to parse. Simplicity of language can cause ambiguities and moreover it is constantly changing. For example, separator | can be used in %different contexts.
 
-{\oldText{Taken from ITI paper}
-To investigate the empirical performance of the low rank approximations we will test the algorithms on a large-scale, real-world multilingual dataset that we extracted from Wikipedia by using inter-language links as an alignment. This  results in a large number of weakly comparable documents in more than $200$ languages. Wikipedia is a large source of multilingual data that is especially important for the languages for which no translation tools, multilingual dictionaries as Eurovoc, or strongly aligned multilingual corpora as Europarl are available. Documents in different languages are related with so called 'inter-language' links that can be found on the left of the Wikipedia page. The Wikipedia is constantly growing. There are currently four Wikipedias with more than $10^6$ articles, $40$ with more than $10^5$ articles, $100$ with more than $10^4$ articles, and $216$ with more than $1000$ articles. Wikipedia uses special user-friendly markup language that is very easy to write but very hard to parse. Simplicity of language can cause ambiguities and moreover it is constantly changing. For example, separator | can be used in different contexts.
-
-Wikipedia raw xml dumps of all currently $270$ active editions were downloaded from the Wikipedia dump page\href{http://dumps.wikimedia.org}. The xml files are too large to be parsed with DOM like parser that needs to store the whole xml tree in the memory, instead we implemented Sax like parser that tries to simulate behavior of Wikipedia official parser and is as simple, fast and error prone as possible. We parse all Wikipedia markup but do not extend the templates. Each Wikipedia page is embedded in the page tag. First we check if the title of the page consists of any special namespace and do not process such pages. Then we check if this is a redirection page and we store the redirect link as inter-language links can point to redirection link also. If nothing of the above applies we extract the text and parse the Wikipedia markup. Currently all the markup is removed.
+%Wikipedia raw xml dumps of all currently $288$ active editions were downloaded from the Wikipedia dump page\href{http://dumps.wikimedia.org}. The xml files are too large to be parsed with DOM like parser that needs to store the whole xml tree in the memory, instead we implemented Sax like parser that tries to simulate behavior of Wikipedia official parser and is as simple, fast and error prone as possible. We parse all Wikipedia markup but do not expand the templates.
+Each Wikipedia page is embedded in the page tag. First we check if the title of the page consists of any special namespace and do not process such pages. Then we check if this is a redirection page and we store the redirect link as inter-language links can point to redirection link also. If nothing of the above applies we extract the text and parse the Wikipedia markup. Currently all the markup is removed.
 
 We get inter-language link matrix using previously stored redirection links and inter-language links. If inter-language link points to the redirection we replace it with the redirection target link. It turns out that we obtain the matrix $M$ that is not symmetric, consequently the underlying graph is not symmetric. That means that existence of the inter-language link in one way (i.e. English to German) does not guarantee that there is an inter-language link in the reverse direction (German to English). To correct this we transform this matrix to symmetric by computing $M+M^T$ and obtaining an undirected graph. In the rare case that we have multiple links pointing from the document, we pick the first one that we encountered. This matrix enables us to build an alignment across all Wikipedia languages.
-}
+%}
 
 \subsection{Wikipedia Information Retrieval}
 
 Mate retrieval results
 
 \subsection{Experiments With Missing Alignment Data}
-\emph{Andrej started working on this, done by Monday}
-{\oldText{Taken from XLite paper}
-To investigate the empirical performance of our algorithm we will test it on a large-scale, real-world multilingual dataset that we extracted from Wikipedia  by  using so called 'inter-language' links as an alignment. We select a subset of Wikipedia languages containing three major languages, English--\emph{en} (hub language), Spanish--\emph{es}, Russian--\emph{ru}, and five minority (in the sense of Wikipedia sizes) languages, Slovenian--\emph{sl}, Piedmontese--\emph{pms}, Waray-Waray--\emph{war} (all with about 2 million native speakers), Creole--\emph{ht} (8 million native speakers), and Hindi--\emph{hi} (180 million native speakers). For preprocessing we remove the documents that contain less than 20 different words (stubs) and remove words occur in less than 50 documents as well as the top 100 most frequent words (in each language separately). We represent the documents as normalized TFIDF\cite{Salton88term-weightingapproaches} weighted vectors. These are languages with Wikipedia article sizes comparable to the minority languages.  (since the number of speakers does not directly correlate with the number of Wikipedia articles). The prime hub candidate is the English language which is well aligned with all other Wikipedia languages, although the alignment quality varies quite a bit. Furthermore, we remove the documents that contain less than 20 different words and remove words that are too infrequent as well as the top 100 most frequent words in the vocabularies. Furthermore, we call the document consisting of less than 20 different words, a stub. This documents are typically garbage, the titles of the columns in the table, remains of the parsing process, or Wikipedia articles with very little or no information contained in one or two sentences.
+%\emph{Andrej started working on this, done by Monday}
+%{\oldText{Taken from XLite paper}
+%To investigate the empirical performance of our algorithm we will test it on a large-scale, real-world multilingual dataset that we extracted from Wikipedia  by  using so called 'inter-language' links as an alignment.
+ In this subsection we will investigate the empirical performance of cca hub approach. We will demonstrate that this approach can be successfully applied even in the case of missing alignment information.
+ To this purpose we select a subset of Wikipedia languages containing three major languages, English--\emph{en} (hub language), Spanish--\emph{es}, Russian--\emph{ru}, and five minority (in the sense of Wikipedia sizes) languages, Slovenian--\emph{sl}, Piedmontese--\emph{pms}, Waray-Waray--\emph{war} (all with about 2 million native speakers), Creole--\emph{ht} (8 million native speakers), and Hindi--\emph{hi} (180 million native speakers). For preprocessing we remove the documents that contain less than 20 different words (stubs) and remove words occurring in less than 50 documents as well as the top 100 most frequent words (in each language separately). We represent the documents as normalized TFIDF\cite{Salton88term-weightingapproaches} weighted vectors. 
+ %These are languages with Wikipedia article sizes comparable to the minority languages.  (since the number of speakers does not directly correlate with the number of Wikipedia articles). The prime hub candidate is the English %language which is well aligned with all other Wikipedia languages, although the alignment quality varies quite a bit. Furthermore, we remove the documents that contain less than 20 different words and remove words that are too %infrequent as well as the top 100 most frequent words in the vocabularies. 
+ Although the English language is well aligned with all Wikipedia languages, we must note that quality of alignment varies quite a bit, especially in the case of small Wikipedias.
+ Furthermore, we call the document consisting of less than 20 different words, a stub. This documents are typically garbage, the titles of the columns in the table, remains of the parsing process, or Wikipedia articles with very little or no information contained in one or two sentences.
+
 
 The evaluation is based on splitting the data into training and test sets (described later). On the training set, we perform the two step procedure to obtain the common document representation as a set of mappings $P_i$. A test set for each language pair, $test_{i,j} = \{(x_\ell,y_\ell) | \ell = 1:n(i,j)\} $, consists of comparable document pairs (linked Wikipedia pages), where $n(i,j)$ is the test set size. We evaluate the representation by measuring mate retrieval quality on the test sets: for each $\ell$, we rank the projected documents $P_j(y_1),\ldots, P_j(y_{n(i,j)})$ according to their similarity with $P_i(x_\ell)$ and compute the rank of the mate document $r(\ell) = rank(P_j(y_\ell))$. The final retrieval score (between -100 and 100) is computed as: $\frac{100}{n(i,j)} \cdot \sum_{\ell = 1}^{n(i,j)} \left( \frac{n(i,j) - r(\ell)}{n(i,j) -1} -0.5\right)$. A score that is less than 0 means that the method performs worse than random retrieval and a score of 100 indicates perfect mate retrieval. The mate retrieval results are included in Table \ref{table:retrieval}.
 
@@ -506,14 +513,18 @@ We further inspect the properties of the training sets by roughly estimating the
 It is clear that in the case of Creole language only at most $22\%$ documents are unique and suitable for the training. Though we removed the stub documents, many of remaining documents are almost the same, as the quality of some minor Wikipedias is low. This was confirmed for Creole, Waray-Waray, and Piedmontese language by manual inspection. The low quality documents correspond to templates about the year, person, town, etc. and contain very few unique words.
 
 We also have a problem with the quality of the test data. For example, if we look at test pair (\emph{war}, \emph{ht}) only 386/534 Waray-Waray test documents are unique but on other side almost all Creole test documents (523/534) are unique. This indicates a poor alignment which leads to poor performance.
-}
+%}
 
 \subsection{Evaluation Of Cross-Lingual Event Linking}
 
 In order to determine how accurately we can predict cluster equivalence we have performed two experiments. In the first experiment we wanted to test how well do the individual approaches for cross-lingual article linking perform when used for linking the clusters about the same event. In the second experiment we tested how accurate is the prediction model when trained on different subsets of learning features. To evaluate the prediction accuracy for a given dataset we used 10-fold cross validation. In this technique, the dataset is partitioned into 10 folds, where 9 folds are used for training a model and the left-out fold is then used to test the accuracy of the model. The learning and testing process is repeated 10 times, each time with a different left-out fold.
 
-In Section~\ref{sec:algorithms} we have described three main algorithms for identifying similar articles in different languages. These algorithms were $k$-means, LSI and CCA. To test which of these algorithms performs best we performed the following test. Using each algorithm, we analyzed all articles in Event Registry to find the most similar articles in other languages. The values of the cross-lingual article linking features (\texttt{linkCount} and \texttt{avgSimScore}) were then recomputed for all annotated learning examples. A dataset with only these two features and the label was constructed and used to test how accurate prediction models can be induced using the data. The results of the experiment are shown in Table~\ref{table:linkingEvalAlgos}. The table shows for each of the algorithms the obtained classification accuracy, precision and recall. We can see that the most informative features for cluster linking are obtained using the CCA algorithm, while $k$-means performs the worse. {\oldText{TODO:} add some explanation why this might be so.}
-\emph{Andrej adds some tests, new experiment description graphs, and explanations for performance, done by Monday}
+In Section~\ref{sec:models} we have described three main algorithms for identifying similar articles in different languages. These algorithms were $k$-means, LSI and CCA. To test which of these algorithms performs best we performed the following test. Using each algorithm, we analyzed all articles in Event Registry to find the most similar articles in other languages. The values of the cross-lingual article linking features (\texttt{linkCount} and \texttt{avgSimScore}) were then recomputed for all annotated learning examples. A dataset with only these two features and the label was constructed and used to test how accurate prediction models can be induced using the data. The results of the experiment are shown in Table~\ref{table:linkingEvalAlgos}. The table shows for each of the algorithms the obtained classification accuracy, precision and recall. We can see that the most informative features for cluster linking are obtained using the CCA algorithm, while $k$-means performs the worse. Firstly we verified the AMPR performance of approaches by holding out 15000 aligned test documents and using 300000 aligned documents
+ as the training set. Picture \cite{pc:AMPR} shows AMPR score as the function of the number of feature vectors. It is clear that CCA outperforms LSI approach and K-means lags far behind.
+Then we verified how number of features influences the accuracy of cluster linking. As we can see from Table~\ref{table:linkingEvalAlgosMulti} choosing number of features vectors larger than 500 barely effects linking performance. That is probably due to overfitting.
+   
+%{\oldText{TODO:} add some explanation why this might be so.}
+%\emph{Andrej adds some tests, new experiment description graphs, and explanations for performance, done by Monday}
 %15000 test documents, around 300 000 sth training documents
 %Results for feature spaces of dimensions 500, 800, 1000  overfitting, 800 minor improvement
 %Timex complexity of similarity computation scales linearly with dimension space. We double numbers of articles and decrease memory requirements by 1/2.
@@ -530,14 +541,31 @@ In Section~\ref{sec:algorithms} we have described three main algorithms for iden
 
 %AMPR as function of the number of feature vectors
 %500 is good, 800 better, 1000 overfitting, noise!
+\begin{figure}
+\label{pic:AMPR}
 \includegraphics{slika.png}
+\end{figure}
 %Why the hub approach?
 %Optimize for language pairs in the system that have the largest number of articles in the system!
 %Is star CCA really the best???
 %Maybe omit this table?
+\begin{table}[h]
+\caption{Accuracy of cluster linking with 500 - 800 - 1000 features obtained from different cross-lingual similarity algorithms}
+\label{table:linkingEvalAlgosMulti}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+  \hline
+  \cline{1-4}
+  Models & CA & Precision & Recall \\ \cline{1-4}
+  CCA & 78.8 - 79.6 - 80.3 \% & 76.9 - 77.9 - 80.2 \%  & 82.1 - 82.3 - 80.4 \%  \\ \cline{1-4}
+  LSI & 78.9 - 78.7 - 80.2\% & 76.7 - 76.6 - 78.5 \%  & 82.8 - 82.3 - 82.8 \%  \\ \cline{1-4}
+  \hline
+\end{tabular}
+\end{center}
+\end{table}
 
 
-In the second experiment we wanted to evaluate how relevant individual groups of features are to correctly determine cluster equivalence. For this purpose we tested the accuracies obtained using individual groups of features, as well as using different combination of groups. Since we found the CCA to perform best of the three algorithms, we used it to compute the values of the cross-lingual article linking features. Results of the evaluation are shown in Table\~ref{table:linkingEval}. We can see that using a single group of features, the highest prediction accuracy can be achieved using the concept related features. The classification accuracy in this case is 88.8\%. By additionally including also the cross-lingual article linking features, the classification accuracy rises slightly to 89.2\%. Using all three groups of features, the achieved accuracy is 89.6\%.
+In the second experiment we wanted to evaluate how relevant individual groups of features are to correctly determine cluster equivalence. For this purpose we tested the accuracies obtained using individual groups of features, as well as using different combination of groups. Since we found the CCA to perform best of the three algorithms, we recomputed it and used it to compute the values of the cross-lingual article linking features. Results of the evaluation are shown in Table~\ref{table:linkingEval}. We can see that using a single group of features, the highest prediction accuracy can be achieved using the concept related features. The classification accuracy in this case is 88.8\%. By additionally including also the cross-lingual article linking features, the classification accuracy rises slightly to 89.2\%. Using all three groups of features, the achieved accuracy is 89.6\%.
 Based on the results we can make the following conclusions. The cross-lingual similarity algorithms provide valuable information that can be used to identify clusters that describe the same event in different languages. The computed features are however significantly less informative compared to the features computed on the annotated concepts. Nevertheless, the cross-lingual article similarity features are very important for two reasons. The first reason is that they allow us to identify for a given cluster a limited set of candidate clusters that are potentially equivalent. This is a very important feature since it reduces the search space for several orders of magnitude. The second reason for the importance of these features is that concept annotations are not available for all articles. Annotation of news articles is computationally intensive and can only be done for a subset of collected articles.
 
 \begin{table}[h]
@@ -548,9 +576,9 @@ Based on the results we can make the following conclusions. The cross-lingual si
   \hline
   \cline{1-4}
   Models & CA & Precision & Recall \\ \cline{1-4}
-  CCA & 77.6\% & 0.783 & 0.811 \\ \cline{1-4}
-  $k$-means & 73.9\% & 0.695 & 0.846 \\ \cline{1-4}
-  LSI & 76.1\% & 0.755 & 0.769 \\ \cline{1-4}
+  CCA & 77.6\% & 78.3 \%  & 81.1\%  \\ \cline{1-4}
+  $k$-means & 73.9\% & 69.5\%  & 84.6\%  \\ \cline{1-4}
+  LSI & 76.1\% & 75.5\%  & 76.9\%  \\ \cline{1-4}
   \hline
 \end{tabular}
 \end{center}
@@ -581,7 +609,12 @@ Based on the results we can make the following conclusions. The cross-lingual si
 \subsection{Scaling}
 \emph{Andrej asks who is the rest? I think that this section should be short.}
 100 languages!
-%Newsfeed volume
+%Memory 100 GB per day
+%Newsfeed volume 430k articles per day, 210k english, 36k Spanish, 27k German, 17k French, ....
+%Number of similarities, 430k similarities every 200ms, currently could handle 1M articles,
+%(n \over 2) 500X500 proxy matrices, 300000x500 Projector matrices, 430000x500 data
+%Premultiply with proxy matrices, compare blockwise!
+
 Describe the newsfeed volume, number of events and the number of similarities that need to be computed. Compare the memory requirements of our current implementation to the rest.
 Comment on the caching gains in our implementation.
 

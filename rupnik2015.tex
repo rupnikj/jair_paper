@@ -1,6 +1,7 @@
 \documentclass[twoside,11pt]{article}
 \usepackage{jair, theapa, rawfonts}
-\usepackage{graphicx}
+\usepackage{pgfplots} 
+%\usepackage{graphicx}
 
 \usepackage{color}
 \newcommand{\todo}[1]{\textcolor{red}{TODO: #1}}
@@ -219,7 +220,7 @@ The next method is Cross-Lingual Latent Semantic Indexing (CL-LSI)\cite{cl_lsi} 
 
 The cross-lingual similarity functions are based on a rank-$k$ truncated SVD: $X \approx U \Sigma V^T,$ where $U \in \RR^{N \times k}$ are basis vectors of interest and $\Sigma \in \RR^{k \times k}$ is truncated diagonal matrix of singular eigenvalues.
 
-An aligned basis is obtained by first splitting $U$ vertically according to the number of dimensions of each language: $U = [U_1^T \cdots U_m^T]^T$. Then, the same as with $k$-means clustering, we compute the pseudoinverses$P_i = (U_i^T U_i)^{-1} U_i^T$. The matrices $P_i$ are used to change the basis from the standard basis in $\RR^{n_i}$ to the basis of columns of $U_i$.
+An aligned basis is obtained by first splitting $U$ vertically according to the number of dimensions of each language: $U = [U_1^T \cdots U_m^T]^T$. Then, the same as with $k$-means clustering, we compute the pseudoinverses $P_i = (U_i^T U_i)^{-1} U_i^T$. The matrices $P_i$ are used to change the basis from the standard basis in $\RR^{n_i}$ to the basis of columns of $U_i$.
 
 The numerical implementation of the least squares is done by QR algorithm, by computing factorizing $U_i = Q R$, where $Q^TQ = I$ and $R$ is triangular matrix. $P_i$ is then obtained by solving $R P_i = Q$.
 
@@ -230,17 +231,15 @@ The numerical implementation of the least squares is done by QR algorithm, by co
  Canonical Correlation Analysis (CCA)~\cite{Hotelling} is a dimensionality reduction technique similar to Principal Component Analysis (PCA)~\cite{Pearson1901On}, with an additional assumption that the data consists of feature vectors that arose from two sources (two views) that share some information (examples: bilingual document collection~\cite{mrpqr}, collection of images and captions~\cite{Hardoon_usingimage}). Instead of looking for linear combinations of features that maximize the variance (PCA) we look for a linear combination of feature vectors from the first view and a linear combination for the second view, that are maximally correlated.
 
 Interpreting the columns of $X_i$ as observation vectors sampled from an underlying distribution $\mathcal{X}_i \in \RR^{n_i}$, the idea is to find two weight vectors $w_i \in \RR^{n_i}$ and $w_j \in \RR^{n_j}$ so that the random variables $w_i^T \cdot \mathcal{X}_i$ and $w_j^T \cdot \mathcal{X}_j$ are maximally correlated ($w_i$ and $w_j$ are used to map the random vectors to random variables, by computing weighted sums of vector components). Let $\rho(x,y)$ denote the sample based correlation coefficient between two vectors of observations $x$ and $y$. By using the sample matrix notation $X_i$ and $X_j$ (assuming no data is missing for clearer presentation) this problem can be formulated as the following optimization problem:
-
 \begin{equation*}
 \begin{aligned}
 & \underset{w_i \in \RR^{n_i}, w_j \in \RR^{n_j}}{\text{maximize}}
 & & \rho(w_i^T X_i , w_j^T X_j) = \frac{w_i^T C_{i,j} w_j}{\sqrt{w_i^T C_{i,i} w_i} \sqrt{w_j^T C_{j,j} w_j}},
 \end{aligned}
 \end{equation*}
-
 where $C_{i,i}$ and $C_{j,j}$ are empirical estimates of variances of $\mathcal{X}_i$ and $\mathcal{X}_j$ respectively and $C_{i,j}$ is an estimate for the covariance matrix. Assuming that the observation vectors are centered (only for the purposes of presentation), the matrices are computed in the following way: $C_{i,j} = \frac{1}{n-1}X_i X_j^T$, and similarly for $C_{i,i}$ and $C_{j,j}$.
 The optimization problem can be reduced to an eigenvalue problem and includes inverting the variance matrices $C_{i,i}$ and $C_{j,j}$. If the matrices are not invertible, one can use a regularization technique by replacing $C_{i,i}$ with $(1- \kappa)C_{i,i} + \kappa I$, where $\kappa \in [0,1]$ is the regularization coefficient and $I$ is the identity matrix (the same can be applied to $C_{j,j}$.
-A single canonical variable is usually inadequate in representing the original random vector and typically one looks for $k$ projection pairs $(w_i^1, w_j^1),\ldots,(w_i^k, w_j^k)$, so that $w_i^{uT} \mathcal{X}_i$ and $w_j^{uT} \mathcal{X}_j$ are highly correlated and $w_i^{uT} \mathcal{X}_i$ is uncorrelated with $w_i^{vT} \mathcal{X}_i$  for $u \neq v$ and analogously for $w_j^u$ vectors.
+A single canonical variable is usually inadequate in representing the original random vector and typically one looks for $k$ projection pairs $(w_i^1, w_j^1),\ldots,(w_i^k, w_j^k)$, so that $(w_i^{u})^T \mathcal{X}_i$ and $(w_j^{u})^T \mathcal{X}_j$ are highly correlated and $(w_i^{u})^T \mathcal{X}_i$ is uncorrelated with $(w_i^{v})^T \mathcal{X}_i$  for $u \neq v$ and analogously for $w_j^u$ vectors.
 
 Note that the method in its original form is only applicable to two languages where an aligned set of observations is available.
 
@@ -536,9 +535,9 @@ We also have a problem with the quality of the test data. For example, if we loo
 
 In order to determine how accurately we can predict cluster equivalence we have performed two experiments. In the first experiment we wanted to test how well do the individual approaches for cross-lingual article linking perform when used for linking the clusters about the same event. In the second experiment we tested how accurate is the prediction model when trained on different subsets of learning features. To evaluate the prediction accuracy for a given dataset we used 10-fold cross validation. In this technique, the dataset is partitioned into 10 folds, where 9 folds are used for training a model and the left-out fold is then used to test the accuracy of the model. The learning and testing process is repeated 10 times, each time with a different left-out fold.
 
-In Section~\ref{sec:models} we have described three main algorithms for identifying similar articles in different languages. These algorithms were $k$-means, LSI and CCA. To test which of these algorithms performs best we performed the following test. Using each algorithm, we analyzed all articles in Event Registry to find the most similar articles in other languages. The values of the cross-lingual article linking features (\texttt{linkCount} and \texttt{avgSimScore}) were then recomputed for all annotated learning examples. A dataset with only these two features and the label was constructed and used to test how accurate prediction models can be induced using the data. The results of the experiment are shown in Table~\ref{table:linkingEvalAlgos}. The table shows for each of the algorithms the obtained classification accuracy, precision and recall. We can see that the most informative features for cluster linking are obtained using the CCA algorithm, while $k$-means performs the worse. Firstly we verified the AMPR performance of approaches by holding out 15000 aligned test documents and using 300000 aligned documents
- as the training set. Picture \cite{pc:AMPR} shows AMPR score as the function of the number of feature vectors. It is clear that CCA outperforms LSI approach and K-means lags far behind.
-Then we verified how number of features influences the accuracy of cluster linking. As we can see from Table~\ref{table:linkingEvalAlgosMulti} choosing number of features vectors larger than 500 barely effects linking performance. That is probably due to overfitting.
+In Section~\ref{sec:models} we have described three main algorithms for identifying similar articles in different languages. These algorithms were $k$-means, LSI and CCA. To test which of these algorithms performs best we performed the following test. Using each algorithm, we analyzed all articles in Event Registry to find the most similar articles in other languages. The values of the cross-lingual article linking features (\texttt{linkCount} and \texttt{avgSimScore}) were then recomputed for all annotated learning examples. A dataset with only these two features and the label was constructed and used to test how accurate prediction models can be induced using the data. The results of the experiment are shown in Table~\ref{table:linkingEvalAlgos}. The table shows for each of the algorithms the obtained classification accuracy, precision and recall. We can see that the most informative features for cluster linking are obtained using the CCA algorithm, while $k$-means performs the worse. Firstly we verified the AMRR (average of mean reciprocal ranks over all language pairs) performance of approaches by holding out $15000$ aligned test documents and using $300000$ aligned documents
+ as the training set. Picture \ref{pc:AMRR} shows AMRR score as the function of the number of feature vectors. It is clear that CCA outperforms LSI approach and K-means lags far behind.
+Furthermore we inspected how number of features influences the accuracy of cluster linking. As we can see from Table~\ref{table:linkingEvalAlgos} choosing number of features vectors larger than $500$ barely effects linking performance. That is probably due to overfitting. Moreover we tested the performance of detecting large/small cluster linking. As expected we obtained that it is harder to link small clusters and we need better retrieval. Hub CCA outperform other methods in this sense also, probably as it has the best retrieval performance, see Figure~\ref{pic:AMRR}.
 
 %{\oldText{TODO:} add some explanation why this might be so.}
 %\emph{Andrej adds some tests, new experiment description graphs, and explanations for performance, done by Monday}
@@ -559,8 +558,10 @@ Then we verified how number of features influences the accuracy of cluster linki
 %AMPR as function of the number of feature vectors
 %500 is good, 800 better, 1000 overfitting, noise!
 \begin{figure}
-\label{pic:AMPR}
-\includegraphics{slika.png}
+\caption{Average of mean reciprocal ranks}
+\label{pic:AMRR}
+%\includegraphics{slika.png}
+\input{retrieval}
 \end{figure}
 %Why the hub approach?
 %Optimize for language pairs in the system that have the largest number of articles in the system!
@@ -568,38 +569,54 @@ Then we verified how number of features influences the accuracy of cluster linki
 %Maybe omit this table?
 \begin{table}[h]
 \caption{Accuracy of cluster linking with 500 - 800 - 1000 features obtained from different cross-lingual similarity algorithms}
-\label{table:linkingEvalAlgosMulti}
-\begin{center}
-\begin{tabular}{|c|c|c|c|}
-  \hline
-  \cline{1-4}
-  Models & CA & Precision & Recall \\ \cline{1-4}
-  CCA & 78.8 - 79.6 - 80.3 \% & 76.9 - 77.9 - 80.2 \%  & 82.1 - 82.3 - 80.4 \%  \\ \cline{1-4}
-  LSI & 78.9 - 78.7 - 80.2\% & 76.7 - 76.6 - 78.5 \%  & 82.8 - 82.3 - 82.8 \%  \\ \cline{1-4}
-  \hline
-\end{tabular}
-\end{center}
-\end{table}
-
-
-In the second experiment we wanted to evaluate how relevant individual groups of features are to correctly determine cluster equivalence. For this purpose we tested the accuracies obtained using individual groups of features, as well as using different combination of groups. Since we found the CCA to perform best of the three algorithms, we recomputed it and used it to compute the values of the cross-lingual article linking features. Results of the evaluation are shown in Table~\ref{table:linkingEval}. We can see that using a single group of features, the highest prediction accuracy can be achieved using the concept related features. The classification accuracy in this case is 88.8\%. By additionally including also the cross-lingual article linking features, the classification accuracy rises slightly to 89.2\%. Using all three groups of features, the achieved accuracy is 89.6\%.
-Based on the results we can make the following conclusions. The cross-lingual similarity algorithms provide valuable information that can be used to identify clusters that describe the same event in different languages. The computed features are however significantly less informative compared to the features computed on the annotated concepts. Nevertheless, the cross-lingual article similarity features are very important for two reasons. The first reason is that they allow us to identify for a given cluster a limited set of candidate clusters that are potentially equivalent. This is a very important feature since it reduces the search space for several orders of magnitude. The second reason for the importance of these features is that concept annotations are not available for all articles. Annotation of news articles is computationally intensive and can only be done for a subset of collected articles.
-
-\begin{table}[h]
-\caption{Accuracy of cluster linking with features obtained from different cross-lingual similarity algorithms}
 \label{table:linkingEvalAlgos}
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
   \hline
   \cline{1-4}
   Models & CA & Precision & Recall \\ \cline{1-4}
-  CCA & 77.6\% & 78.3 \%  & 81.1\%  \\ \cline{1-4}
-  $k$-means & 73.9\% & 69.5\%  & 84.6\%  \\ \cline{1-4}
-  LSI & 76.1\% & 75.5\%  & 76.9\%  \\ \cline{1-4}
-  \hline
+  CCA      & 78.2 - 79.6 - 80.3 \% & 76.3 - 78.0 - 80.5 \%  & 81.6 - 82.1 - 79.9 \%  \\ \cline{1-4}
+  LSI      & 78.9 - 78.7 - 80.6 \%  & 76.8 - 77.0 - 78.7 \%  & 83.3 - 80.6 - 83.6 \%  \\ \cline{1-4}
+ $k$-means & 73.9\phantom{ - 78.7 - 80.6 }\% & 69.5\phantom{ - 78.7 - 80.6 }\%  & 84.6\phantom{ - 78.7 - 80.6 }\%  \\ \cline{1-4}
 \end{tabular}
 \end{center}
 \end{table}
+
+\begin{table}[h]
+\caption{Accuracy of large/small cluster linking with $500$ features obtained from different cross-lingual similarity algorithms}
+\label{table:linkingEvalAlgosLargeSmall}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+  \hline
+  \cline{1-4}
+  Models & CA & Precision & Recall \\ \cline{1-4}
+  CCA      & 81.2 - 77.8 \% & 80.5 - 74.5 \%  & 91.3 - 57.5 \%  \\ \cline{1-4}
+  LSI      & 82.8 - 76.4 \% & 81.3 - 70.9 \%  & 93.1 - 57.5 \%  \\ \cline{1-4}
+ $k$-means & 75.5 - 71.2 \% & 72.8 - 70.8 \%  & 95.3 - 36.2 \%  \\ \cline{1-4}
+\end{tabular}
+\end{center}
+\end{table}
+
+
+
+In the second experiment we wanted to evaluate how relevant individual groups of features are to correctly determine cluster equivalence. For this purpose we tested the accuracies obtained using individual groups of features, as well as using different combination of groups. Since we found the CCA to perform best of the three algorithms, we recomputed $500$ feature vectors with better accuracy and used it to compute the values of the cross-lingual article linking features. Results of the evaluation are shown in Table~\ref{table:linkingEval}. We can see that using a single group of features, the highest prediction accuracy can be achieved using the concept related features. The classification accuracy in this case is 88.8\%. By additionally including also the cross-lingual article linking features, the classification accuracy rises slightly to 89.2\%. Using all three groups of features, the achieved accuracy is 89.6\%.
+Based on the results we can make the following conclusions. The cross-lingual similarity algorithms provide valuable information that can be used to identify clusters that describe the same event in different languages. The computed features are however significantly less informative compared to the features computed on the annotated concepts. Nevertheless, the cross-lingual article similarity features are very important for two reasons. The first reason is that they allow us to identify for a given cluster a limited set of candidate clusters that are potentially equivalent. This is a very important feature since it reduces the search space for several orders of magnitude. The second reason for the importance of these features is that concept annotations are not available for all articles. Annotation of news articles is computationally intensive and can only be done for a subset of collected articles.
+
+%\begin{table}[h]
+%\caption{Accuracy of cluster linking with features obtained from different cross-lingual similarity algorithms}
+%\label{table:linkingEvalAlgos}
+%\begin{center}
+%\begin{tabular}{|c|c|c|c|}
+%  \hline
+%  \cline{1-4}
+%  Models & CA & Precision & Recall \\ \cline{1-4}
+%  CCA & 77.6\% & 78.3 \%  & 81.1\%  \\ \cline{1-4}
+%  $k$-means & 73.9\% & 69.5\%  & 84.6\%  \\ \cline{1-4}
+%  LSI & 79.2\% & 78.9\%  & 80.6\%  \\ \cline{1-4}
+%  \hline
+%\end{tabular}
+%\end{center}
+%\end{table}
 
 \begin{table}[h]
 \caption{Accuracy of story linking with different sets of features}

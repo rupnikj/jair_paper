@@ -30,14 +30,14 @@ load RetrievalKMEANS.mat
 %   resultKMEANS                 1x10             1200  cell      
 hold on
 %Star CCA the best
-plot(dim, [resultCCA{:}], 'red');
+plot(dim, [resultCCA{:}], '-red');
 %Closely followed by LSI with S
-plot(dim, [resultLSI_WITH_S{:}], 'green');
+%plot(dim, [resultLSI_WITH_S{:}], 'green');
 %Followed by LSI without S
-plot(dim, [resultLSI_WITHOUT_S{:}], 'blue');
+plot(dim, [resultLSI_WITHOUT_S{:}], '-.blue');
 %Last place, slow Kmeans
-plot(dim, [resultKMEANS{:}], 'black');
-legend('Hub CCA', 'LSI with S', 'LSI without S', 'Kmeans');
+plot(dim, [resultKMEANS{:}], 'black.-.');
+legend('Hub CCA', 'LSI', 'k-means');
 xlabel('Number of feature vectors');
-ylabel('AMPR');
+ylabel('AMRR');
 

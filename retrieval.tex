@@ -1,0 +1,75 @@
+% This file was created by matlab2tikz.
+% Minimal pgfplots version: 1.3
+%
+%The latest updates can be retrieved from
+%  http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz
+%where you can also make suggestions and rate matlab2tikz.
+%
+\begin{tikzpicture}[scale=0.8]
+
+\begin{axis}[%
+width=4.520833in,
+height=3.565625in,
+at={(0.758333in,0.48125in)},
+scale only axis,
+every outer x axis line/.append style={black},
+every x tick label/.append style={font=\color{black}},
+xmin=100,
+xmax=1000,
+xlabel={Number of feature vectors},
+every outer y axis line/.append style={black},
+every y tick label/.append style={font=\color{black}},
+ymin=0.2,
+ymax=0.9,
+ylabel={AMRR},
+axis x line*=bottom,
+axis y line*=left,
+legend style={at={(0.692559,0.152778)},anchor=south west,legend cell align=left,align=left,draw=black}
+]
+\addplot [color=red,solid]
+  table[row sep=crcr]{%
+100	0.574094231082746\\
+200	0.645978450670063\\
+300	0.682226506762222\\
+400	0.710722094692085\\
+500	0.731517169423203\\
+600	0.746223870375363\\
+700	0.758312886611436\\
+800	0.766279310559898\\
+900	0.768159613081689\\
+1000	0.76200517888255\\
+};
+\addlegendentry{Hub CCA};
+
+\addplot [color=blue,dash pattern=on 1pt off 3pt on 3pt off 3pt]
+  table[row sep=crcr]{%
+100	0.388773162433835\\
+200	0.49061571487968\\
+300	0.550801867794634\\
+400	0.592565604079171\\
+500	0.625657099289601\\
+600	0.65240747960386\\
+700	0.675602522126668\\
+800	0.694149727717174\\
+900	0.711511053167843\\
+1000	0.726455461653153\\
+};
+\addlegendentry{LSI};
+
+\addplot [color=black,dash pattern=on 1pt off 3pt on 3pt off 3pt,mark=*,mark options={solid}]
+  table[row sep=crcr]{%
+100	0.203799120889507\\
+200	0.275537657758881\\
+300	0.334738107118325\\
+400	0.378380649062479\\
+500	0.409668545430712\\
+600	0.427765004442194\\
+700	0.454449272479224\\
+800	0.477291178317808\\
+900	0.490692600634559\\
+1000	0.518392823243787\\
+};
+\addlegendentry{k-means};
+
+\end{axis}
+\end{tikzpicture}% 

@@ -100,10 +100,12 @@ Content on the internet is becoming increasingly multi-lingual. A prime example 
 The term event is vague and ambiguous, but for the practical purposes we define it as ``any significant happening that is being reported about in the media''. Examples of events would include shooting down of the Malaysia Airlines plane over Ukraine on July 18th, 2014 and HSBC's admittance of aiding their clients in tax evasion on February 9th, 2015 (Figure \ref{}). Events such as these are covered by many articles and the question is how to find all the articles in different languages that are describing a single event.
 
 As input we consider a high volume of articles in different languages. By using a language detector the stream is split into separate monolingual streams. 
-The documents are semantically annotated and linked across languages by using a cross-lingual similarity measure. Within each monolingual stream, an online
-clustering approach is employed, where tracked clusters correspond to events. Finally, using 
-  
-  and using the cross-lingual techniques  as well as processed using standard text mining techniquesBy using an online clustering approach
+Within each monolingual stream, an online clustering approach is employed, where tracked clusters correspond to our definition of events - this is based on the Event Registry system \shortcite{Leban2014W,Leban2014I}. Our main goal is to connect such clusters (representations of events) across languages, that is detect that a set of documents in language 1 reports on the same event as a set of documents in language 2.
+
+Our approach to combines two ingredients: a cross-lingual document similarity measure, which can be interpreted as a language independent topic model, and
+semantic annotation of documents, which enables an alternative way to comparing documents by comparing the lists of detected semantic entities.
+
+The first approach represents a continuation of previous work \shortcite{nips,sikdd,nips2,iti} where we explored representations of documents which were valid over multiple languages.  The representations could be interpreted as multi-lingual topics, which were then used as proxies to compute cross-lingual similarities between documents. To learn the representations, we use Wikipedia as a training corpus. Significantly, we do not only consider the major or \emph{hub} languages such as English, German, French, etc. which have significant overlap in article coverage, but also smaller languages (in terms of number of Wikipedia articles) such as Slovenian and Hindi, which may have a negligible overlap in article coverage. We can then define a similarity between any two articles regardless of language,  which allows us to cluster the articles according to topic. The underlying assumption being that articles describing the same event are similar  and will therefore be put into the same cluster.
 
 
 %As input we consider a stream of articles in different languages and a list of events. Our goal is to assign articles to their corresponding events. A priori we do not know the coverage of the articles, that is not all the events may be covered and we do not know that all the articles necessarily fit into one of the events.  To achieve our goal, we divide the task into two parts: clustering the articles according to topic (regardless of language) and matching the clusters to events.
@@ -113,11 +115,11 @@ clustering approach is employed, where tracked clusters correspond to events. Fi
 %The second step is to match our computed clusters to events. Since our similarity measure and clustering
 %may not be perfect, we need to find the ``best" correspondence between clusters and events. In this paper, we test several different algorithms for both steps for performance in an integrated system. In particular, we test our approach within an online system for detection of world events, called Event Registry \shortcite{Leban2014W,Leban2014I}. Event Registry is a repository of events, where events are automatically identified by analyzing news articles.
 
-
-Event Registry works by collecting and analyzing news articles that are published by news outlets in different languages all over the world. Collected articles are first semantically annotated by identifying in them mentions of relevant concepts -- either entities or important keywords. The disambiguation and entity linking of the concepts is done using Wikipedia as the main knowledge base.
-   The key step in Event Registry is then to apply an online clustering algorithm on the articles in order to identify groups of articles that are discussing the same event.
-
-   Within this system, we test our multilingual similarity measures as well as our algorithms for matching clusters across languages.  The result is that we can test total performance in a multilingual, real-world setting.
+%
+%Event Registry works by collecting and analyzing news articles that are published by news outlets in different languages all over the world. Collected articles are first semantically annotated by identifying in them mentions of relevant concepts -- either entities or important keywords. The disambiguation and entity linking of the concepts is done using Wikipedia as the main knowledge base.
+%   The key step in Event Registry is then to apply an online clustering algorithm on the articles in order to identify groups of articles that are discussing the same event.
+%
+%   Within this system, we test our multilingual similarity measures as well as our algorithms for matching clusters across languages.  The result is that we can test total performance in a multilingual, real-world setting.
 
 The paper is organized as follows: we first provide an overview of the system as a whole (Section ), followed by details on each of the two steps described above. We first introduce several approaches to measures of cross-lingual similarity (Section ) and then the algorithms for matching clusters to events.  To improve readability, we describe relevant related work for each module in its corresponding Section.
 Finally, we present and interpret the experimental results and finally give conclusions and describe promising future directions.

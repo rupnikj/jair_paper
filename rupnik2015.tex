@@ -97,14 +97,26 @@ Main points:
 
 Content on the internet is becoming increasingly multi-lingual. A prime example is Wikipedia - in 2001 the majority of pages were written in English, while in 2015, the percentage of English articles has dropped to 14\%. Machine translation remains relatively rudimentary - allowing people to understand simple phrases on we pages, but remain inadequate for more advanced understanding of text. At the same time, online news has begun to dominate reporting of current events. In this paper we consider the intersection of these developments: how to track events which are reported about in multiple languages.
 
-The term event is vague and ambiguous, but for the practical purposes we define it as ``any significant happening that is being reported about in the media''. Examples of events would include shooting down of the Malaysia Airlines plane over Ukraine on July 18th, 2014 and HSBC's admittance of aiding their clients in tax evasion on February 9th, 2015 (Figure \ref{}). Events such as these are covered by many articles and the question is how to find all the articles in different languages that are describing a single event.
+The term event is vague and ambiguous, but for the practical purposes we define it as ``any significant happening that is being reported about in the media''. Examples of events would include shooting down of the Malaysia Airlines plane over Ukraine on July 18th, 2014 and HSBC's admittance of aiding their clients in tax evasion on February 9th, 2015 (Figure \ref{fig:event2}). Events such as these are covered by many articles and the question is how to find all the articles in different languages that are describing a single event.
 
-As input we consider a high volume of articles in different languages. By using a language detector the stream is split into separate monolingual streams. 
-The documents are semantically annotated and linked across languages by using a cross-lingual similarity measure. Within each monolingual stream, an online
-clustering approach is employed, where tracked clusters correspond to events. Finally, using 
-  
-  and using the cross-lingual techniques  as well as processed using standard text mining techniquesBy using an online clustering approach
+\begin{figure}
+\centering
+\includegraphics[width=0.75\textwidth]{events2.png}
+\caption{\label{fig:event2} Events are represented by collections of articles about an event, in this case the Malaysian airliner which was shot down over the Ukraine.}
+\end{figure}
 
+As input we consider a stream of articles in different languages and a list of events. Our goal is to assign articles to their corresponding events. A priori we do not know the coverage of the articles, that is not all the events may be covered and we do not know that all the articles necessarily fit into one of the events. The task is divided into two parts: detecting events within each language and then linking events across languages. In this paper we address the second step.
+
+As input we consider a high volume of articles in different languages. By using a language detector the stream is split into separate monolingual streams.
+Within each monolingual stream, an online clustering approach is employed, where tracked clusters correspond to our definition of events - this is based on the Event Registry system \shortcite{Leban2014W,Leban2014I}. Our main goal is to connect such clusters (representations of events) across languages, that is detect that a set of documents in language 1 reports on the same event as a set of documents in language 2.
+
+Our approach combines two ingredients: a cross-lingual document similarity measure, which can be interpreted as a language independent topic model, and
+semantic annotation of documents, which enables an alternative way to comparing documents.
+
+The first approach represents a continuation of previous work \shortcite{nips,sikdd,nips2,iti} where we explored representations of documents which were valid over multiple languages.  The representations could be interpreted as multi-lingual topics, which were then used as proxies to compute cross-lingual similarities between documents. To learn the representations, we use Wikipedia as a training corpus. Significantly, we do not only consider the major or \emph{hub} languages such as English, German, French, etc. which have significant overlap in article coverage, but also smaller languages (in terms of number of Wikipedia articles) such as Slovenian and Hindi, which may have a negligible overlap in article coverage. We can then define a similarity between any two articles regardless of language,  which allows us to cluster the articles according to topic. The underlying assumption being that articles describing the same event are similar  and will therefore be put into the same cluster.
+
+Based on the similarity function we propose a novel algorithm for linking events/clusters across languages. The approach is based on learning a classification model from labelled data based on several sets of features. In addition to these features, cross-lingual similarity is also used to quickly identify a small list of potential linking candidates for each cluster.
+This greatly increases the scalability of the system.
 
 %As input we consider a stream of articles in different languages and a list of events. Our goal is to assign articles to their corresponding events. A priori we do not know the coverage of the articles, that is not all the events may be covered and we do not know that all the articles necessarily fit into one of the events.  To achieve our goal, we divide the task into two parts: clustering the articles according to topic (regardless of language) and matching the clusters to events.
 %
@@ -113,33 +125,46 @@ clustering approach is employed, where tracked clusters correspond to events. Fi
 %The second step is to match our computed clusters to events. Since our similarity measure and clustering
 %may not be perfect, we need to find the ``best" correspondence between clusters and events. In this paper, we test several different algorithms for both steps for performance in an integrated system. In particular, we test our approach within an online system for detection of world events, called Event Registry \shortcite{Leban2014W,Leban2014I}. Event Registry is a repository of events, where events are automatically identified by analyzing news articles.
 
+%
+%Event Registry works by collecting and analyzing news articles that are published by news outlets in different languages all over the world. Collected articles are first semantically annotated by identifying in them mentions of relevant concepts -- either entities or important keywords. The disambiguation and entity linking of the concepts is done using Wikipedia as the main knowledge base.
+%   The key step in Event Registry is then to apply an online clustering algorithm on the articles in order to identify groups of articles that are discussing the same event.
+%
+%   Within this system, we test our multilingual similarity measures as well as our algorithms for matching clusters across languages.  The result is that we can test total performance in a multilingual, real-world setting.
 
-Event Registry works by collecting and analyzing news articles that are published by news outlets in different languages all over the world. Collected articles are first semantically annotated by identifying in them mentions of relevant concepts -- either entities or important keywords. The disambiguation and entity linking of the concepts is done using Wikipedia as the main knowledge base.
-   The key step in Event Registry is then to apply an online clustering algorithm on the articles in order to identify groups of articles that are discussing the same event.
-
-   Within this system, we test our multilingual similarity measures as well as our algorithms for matching clusters across languages.  The result is that we can test total performance in a multilingual, real-world setting.
-
-The paper is organized as follows: we first provide an overview of the system as a whole (Section ), followed by details on each of the two steps described above. We first introduce several approaches to measures of cross-lingual similarity (Section ) and then the algorithms for matching clusters to events.  To improve readability, we describe relevant related work for each module in its corresponding Section.
+The paper is organized as follows: we first provide an overview of the system as a whole (Section ~\ref{sec:pipeline}), followed by details on each of the two steps described above. We first introduce several approaches to measures of cross-lingual similarity (Section~\ref{sec:crosslingual}) and then the algorithms for matching clusters iin different languages(Section~\ref{sec:linking}).  To improve readability, we describe relevant related work for each module in its corresponding Section.
 Finally, we present and interpret the experimental results and finally give conclusions and describe promising future directions.
 
 
-\section{Pipeline}
+\section{Pipeline}\label{sec:pipeline}
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=0.75\textwidth]{pipeline1}
+\caption{\label{fig:pipeline} Our pipeline - from the Event Registry we obtain a stream of multi-lingual documents and monolingual clusters. Our contribution is shown on the right, where using cross-lingual similarity, we link the clusters across languages which correspond to the same event.}
+\end{figure}
 
 We base our techniques of cross-lingual event linking on an online system for detection of world events, called Event Registry \shortcite{Leban2014W,Leban2014I}. Event Registry is a repository of events, where events are automatically identified by analyzing news articles.  Event Registry works by collecting and analyzing news articles that are published by news outlets in different languages all over the world. Collected articles are first semantically annotated by identifying in them mentions of relevant concepts -- either entities or important keywords. The disambiguated and entity linking of the concepts is done using Wikipedia as the main knowledge base. An online clustering algorithm is then applied on the articles in order to identify groups of articles that are discussing the same event. For each new article, the clustering algorithm determines if the article should be assigned to some existing cluster or into a new cluster. The underlying assumption is that articles that are describing the same event are similar enough and will therefore be put into the same cluster.
 
 The processing is done independently for each language and the output is a clustering of articles in each language, with each cluster ideally representing an event, which are defined by topically, geographically and temporally. The goal of this paper is present approaches to  connecting the clusters/events across languages.
 
-Our approach is based on first defining a similarity function between articles in different languages (Section~\ref{}) and then we present several efficient approaches to linking the clusters based on features (Section~\ref{}). First, however we describe the pre-processing on the input articles which we then take as input.
+Our approach is based on first defining a similarity function between articles in different languages (Section~\ref{sec:crosslingual}) and then we present several efficient approaches to linking the clusters based on features (Section~\ref{sec:linking}). The pipeline is shown in Figure~\ref{fig:pipeline} First, however we describe the pre-processing on the input articles which we then take as input.
 
-The system is designed to handle streams and so we describe how a document which enters the stream is processed.   A new document is first tokenized, stop words are removed and words are stemmed.
- What remains is represented in a vector-space model and normalized using $TF-IDF$ (see Section~\ref{} for the definition). Since each article is tagged with its language, cosine similiarity  is used to find the modst similar existing cluster, by comparing it to the centroid vector of each cluster. A selected threshold is used to determine if the article is not similar to any existing clusters (0.4 was used in our experiments).  The article is then assigned to the corresponding cluster, otherwise a new cluster is created, initially containing only the single article.
+
+The system is designed to handle streams and so we describe how a document which enters the stream is processed. The sequence of operations is shown in  Figure~\ref{fig:erpipeline}.  A new document is first tokenized, stop words are removed and words are stemmed.
+ What remains is represented in a vector-space model and normalized using $TF-IDF$ (see Section~\ref{sec:tfidf} for the definition). Since each article is tagged with its language, cosine similiarity  is used to find the modst similar existing cluster, by comparing it to the centroid vector of each cluster. A selected threshold is used to determine if the article is not similar to any existing clusters (0.4 was used in our experiments).  The article is then assigned to the corresponding cluster, otherwise a new cluster is created, initially containing only the single article.
+
 
 Since articles about an event are commonly written only for a short period of time, we remove clusters once the oldest article in the cluster becomes more than 4 days old. This housekeeping mechanism prevents the clustering from becoming slow and also ensures that articles are not assigned to obsolete clusters.
 
 The clusters, we consider must have a sufficient number of articles (which is a language dependent paramater). This is to ensure that we consider events. Once an event is identified(i.e. a cluster of sufficient size), a new unique ID is assigned to it and the main information about the event is then automatically extracted by analyzing the articles assigned to it. The extracted information includes properties such as the date of the event, the location, who is involved in it, what the event is about, etc.
 
- Further details about the system can be found in \cite{}, while our full pipeline is shown in Figure~\ref{}.
+ Further details about the system can be found in \cite{}.
 
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\textwidth]{ev_pipeline}
+\caption{\label{fig:erpipeline}  The Event Registry pipeline, after obtaining the raw stream of multi-lingual news articles, it first cleans and processes articles individually. It then aggregates and clusters the articles into similar events (within each language) and finally provides an interface allowing us to query for articles.}
+\end{figure}
 
 \begin{comment}
 In short, the article clustering works as follows (details are available in \cite{}). First we create a new document by joining the title and the body of the article. We then tokenize the document, remove the stop words and stem the words. The remaining words are represented as a vector in the vector-space model. Each value in the vector is additionally normalized using TF-IDF. After normalization, we use the vector to find the most similar existing cluster. To be able to compare the vector with a cluster we first need a vector representation for each of the clusters. This is done by computing a centroid vector of the cluster by simply averaging the vectors of the articles in the cluster. By computing the cosine similarity of the article vector with each of the centroid vectors we then find the cluster with the highest similarity. If the highest similarity is above the selected threshold (we used 0.4 in our experiments),
@@ -153,7 +178,7 @@ The clustering of articles is done for each language separately -- English artic
 
 
 \section{Cross-lingual Document Similarity}
-
+\label{sec:crosslingual}
 Document similarity is an important component in techniques from text mining and natural language processing. Many techniques use the similarity as a black box, i.e., a kernel in Support Vector Machines. Comparison of documents (or other types of text snippets) is a well studied problem \todo{some references to prove that}. In this section we define document similarity in a cross-lingual setting, where the similarity function receives documents in different languages. We conclude the section by an introduction of \todo{two datasets} which we used in this paper to learn cross-lingual similarity functions.
 
 \subsection{Related work}
@@ -182,7 +207,7 @@ There are three main families of approaches to cross-lingual similarity.
 Based on the discussion above, we chose to focus on methods based on vector space models and linear embeddings. We propose a method that is more efficient than popular alternatives (a clustering based approach and latent semantic indexing), but is still simple to optimize and use.
 
 \subsection{Problem definition}
-
+\label{sec:tfidf}
 \textbf{Document representation.}
 
 Standard vector space model \cite{Salton88term-weightingapproaches} represents documents as vectors, where each term corresponds to word or phrase in a fixed vocabulary. More formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_k$ correspond to the number of times term $k$ occurred in the document, also called \emph{term frequency} or $TF_k(d)$.
@@ -249,7 +274,7 @@ An aligned basis is obtained by first splitting $U$ vertically according to the 
 The numerical implementation of the least squares is done by QR algorithm, by computing factorizing $U_i = Q R$, where $Q^TQ = I$ and $R$ is triangular matrix. $P_i$ is then obtained by solving $R P_i = Q$.
 
 
-\subsection{Canonical Correlation Analysis}
+\subsection{Canonical Correlation Analysis}\label{sec:CCA}
  The final approach is a statistical technique to analyze data from two sources - after which we will describe our main contribution to computing cross-lingual similarities.
 
  Canonical Correlation Analysis (CCA)~\cite{Hotelling} is a dimensionality reduction technique similar to Principal Component Analysis (PCA)~\cite{Pearson1901On}, with an additional assumption that the data consists of feature vectors that arose from two sources (two views) that share some information (examples: bilingual document collection~\shortcite{mrpqr}, collection of images and captions~\shortcite{Hardoon_usingimage}). Instead of looking for linear combinations of features that maximize the variance (PCA) we look for a linear combination of feature vectors from the first view and a linear combination for the second view, that are maximally correlated.
@@ -350,7 +375,14 @@ The main application on which we test the above similarity is cross-lingual even
 
 The problem of cross-lingual event linking is to identify the clusters describing the same events. Each article $a_i$ is written in a language $l$, where $\ell \in L = \{\ell_1,\ell_2,...,\ell_k\}$. For each language $\ell$, we generate and maintain a set of language-specific clusters $C_l$. That is, all articles are in language $l$. For any cluster $c_i \in C_{\ell_a}$, we would like to identify clusters $c_j \in C_{\ell_b}$ (where $\ell_a \neq \ell_b$) that describe the same event as $c_i$. We define \emph{equivalent clusters} as  pairs $(c_i,c_j)$ such that both clusters in the pair describe the same event in languages $C_{\ell_a}$ and $C_{\ell_b}$ respectively. Furthermore, we iterate over all the languages we consider. That is, given a cluster in language $\ell_i$, we look for matching clusters in language $\ell_j$ for $i\neq j$  in a pairwise fashion.
 
-Furthermore, the matching of clusters is a \emph{generalized matching}. We cannot assume that there is only one cluster per language per event, nor can we assume complete coverage -- that there exists at least one cluster per event in every language. This implies that we cannot make any assumptions on the matching, e.g. one-to-one, complete, etc. This excludes the use of standard weighted bipartite matching type of algortihms for this problem. 	
+\begin{figure}[tb]
+\centering
+\includegraphics[width=0.6\textwidth]{clusters}
+\caption{\label{fig:clusters}  Given clusters of articles in different languages, the goal of  linking is to match clusters which have similar content across languages. The challenge in linking is to overcome the errors in the clustering and differing content as well as make the approach scalable. Therefore, we first identify candidate clusters. }
+\end{figure}
+
+Furthermore, the matching of clusters is a \emph{generalized matching}. We cannot assume that there is only one cluster per language per event, nor can we assume complete coverage -- that there exists at least one cluster per event in every language. This implies that we cannot make any assumptions on the matching, e.g. one-to-one, complete, etc. This excludes the use of standard weighted bipartite matching type of algortihms for this problem. An example is shown in Figure~\ref{fig:clusters}, where a cluster may contain articles which are closely matched with many clusters in a different language.
+
 
 
 We impose an additional requirement.  Identification of the equivalent clusters cannot be done exhaustively -- for a cluster $c_i$ we wish to avoid testing all other clusters for all the other languages. Performing exhaustive comparison for each cluster $c_i$ would result in $O(N^2)$ tests, where $N$ is the number of all clusters (over all languages), which is not feasible when the number of clusters is on the order of tens of thousands.
@@ -383,9 +415,9 @@ A system that is significantly different, but worth mentioning is the GDELT proj
 
 \subsection{Algorithm}
 
-In order to identify clusters $c_j$ that are equivalent to cluster $c_i$, we have developed a two-stage algoirhtm. For a cluster $c_i$, we first efficiently identify a small set of candidate clusters and then find those clusters among the candidates, which are equivalent to $c_i$.
+In order to identify clusters $c_j$ that are equivalent to cluster $c_i$, we have developed a two-stage algoirhtm. For a cluster $c_i$, we first efficiently identify a small set of candidate clusters and then find those clusters among the candidates, which are equivalent to $c_i$. An example is  shown in  Figure~\ref{fig:clusters}.
 
-The details of the first step are described in Algorithm~\ref{cluster_merge_algo1}. The algorithm begins by individually inspecting each article $a_i$ in the cluster $c_i$. Using a cross-lingual document similarity measure (see Section~\ref{}) it identifies the 10 most similar articles to $a_i$ in each language $l \in L$. For each  similar article $a_j$, we identify its corresponding  cluster $c_j$ and add it to the set of candidates. The set of candidate clusters obtained in this way is several orders of magnitude smaller than the number of all clusters. Although computed document similarities are approximate, our  assumption  is that articles in different languages describing the same event, will generally have a higher similarity than articles about different events. While this assumption does not always hold, redundancy in the data mitigates these false positives. Since we compute the 10 most similar articles for each article in $c_i$, we are likely to identify all the relevant candidates for cluster $c_i$.
+The details of the first step are described in Algorithm~\ref{cluster_merge_algo1}. The algorithm begins by individually inspecting each article $a_i$ in the cluster $c_i$. Using a cross-lingual document similarity measure (see Section~\ref{}), it identifies the 10 most similar articles to $a_i$ in each language $l \in L$. For each  similar article $a_j$, we identify its corresponding  cluster $c_j$ and add it to the set of candidates. The set of candidate clusters obtained in this way is several orders of magnitude smaller than the number of all clusters. Although computed document similarities are approximate, our  assumption  is that articles in different languages describing the same event, will generally have a higher similarity than articles about different events. While this assumption does not always hold, redundancy in the data mitigates these false positives. Since we compute the 10 most similar articles for each article in $c_i$, we are likely to identify all the relevant candidates for cluster $c_i$.
 
 \begin{algorithm}[t!]
 \SetKwInput{KwInput}{input}\SetKwInput{KwOutput}{output}

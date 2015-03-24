@@ -46,10 +46,8 @@ Cross-Lingual Document Similarity and Event Tracking}
 \maketitle
 
 \begin{abstract}
-Today, we follow news  which is distributed globally and reported on in many different languages. When a significant event occurs, it is often reported on in many different sources. In this work, our goal is to consider the problem tracking events in a large multilingual stream. In this paper, we consider a particular aspect of this problem, namely how to link collections of articles in different languages which refer to the same event. Given a multi-lingual stream,  articles are first clustered according in each language we consider separately. Given these clusters, we first propose a
-method to enables cross-lingual document similarity based on Wikipedia, which
- enables us to compute the similarity of any two articles regardless of language. Using this similarity, we then propose an approach to find and match clusters across languages which represent the same event. We provide an extensive evaluation of the system as a whole, as well as an evaluation of the quality of the similarity measure and linking algorithm.
- \begin{comment}
+Today, we follow news which is distributed globally. Significant events are reported by different sources and in different languages. In this work, we address the problem of tracking and events in a large multilingual stream. We consider a particular aspect of this problem, namely how to link collections of articles in different languages which refer to the same event. Given a multi-lingual stream and clusters of articles from each language, we first propose a method for cross-lingual document similarity based on Wikipedia, which enables us to compute the similarity of any two articles regardless of language. The proposed method is can scale to 100 languages and can match articles from languages with little or no direct overlap in the training data. Using this similarity, we then propose an approach to link clusters of articles across languages which represent the same event. We provide an extensive evaluation of the system as a whole, as well as an evaluation of the quality and robustness of the similarity measure and the linking algorithm.
+\begin{comment}
 Main points:
 \begin{itemize}
 \item Problem of tracking events in a large multilingual stream - we reduce it to event linking

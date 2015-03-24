@@ -201,8 +201,8 @@ There are three main families of approaches to cross-lingual similarity.
 
 Based on the discussion above, we chose to focus on methods based on vector space models and linear embeddings. We propose a method that is more efficient than popular alternatives (a clustering based approach and latent semantic indexing), but is still simple to optimize and use.
 
-\subsection{Problem definition}
-\label{sec:tfidf}
+\subsection{Problem definition}\label{sec:tfidf}
+We will start by describing how documents are represented as vectors and how to compare in a mono-lingual setting. We will then define a way to measure cross-lingual similarity that is natural for the models we consider.
 \textbf{Document representation.}
 
 Standard vector space model \cite{Salton88term-weightingapproaches} represents documents as vectors, where each term corresponds to word or phrase in a fixed vocabulary. More formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_k$ correspond to the number of times term $k$ occurred in the document, also called \emph{term frequency} or $TF_k(d)$.

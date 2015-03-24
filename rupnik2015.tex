@@ -709,6 +709,12 @@ We now discuss some aspects of the methods and the system as a whole.
 \begin{itemize}
 \item \textbf{LSI and hub CCA} - We first comment on the empirical validation of LSI and hub CCA. On the task of mate retrieval we observe that refining the LSI based projections with hub CCA leads to improved retrieval precision, but the methods perform comparably on the task of event linking. Further inspection showed that the CCA based approach reached a higher precision on smaller clusters. The interpretation is that the linking features are highly aggregated for large clusters, which compensates the lower per-document percision of LSI. Another possible reason is, that the advantage that we show on Wikipedia is lost on the news domain - which indicates that domain adaptation should be explored.
 
+\item \textbf{Features} - The experiments show that the hub CCA based features present good baseline, which can greatly benefit from additional semantic extraction based features. Even though the CCA based features do not greatly improve the system performance when the semantic features are used, there are two main benefits in the approach: the linking process can be sped up (smaller candidate cluster sets), and in the case when semantic extraction is not possible.		
+		
+\item \textbf{Future work} - Currently the system is loosely coupled - the language component is built independently of the rest of the system, in particular the linking component. It is possible that better embeddings can be obtained by methods that jointly optimize a classification task and the embedding.		
+		
+    Another point of interest is to evaluate the system on languages with scarce linguistic resources, where semantic annotation might not be available. For this reason, the labelled dataset of linked clusters should to be extended first. The mate retrieval evaluation showed that even for language pairs with no training set overlap, the hub cca recovers some signal.
+
 \end{itemize}
 
 

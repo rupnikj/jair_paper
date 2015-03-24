@@ -203,8 +203,8 @@ Based on the discussion above, we chose to focus on methods based on vector spac
 
 \subsection{Problem definition}\label{sec:tfidf}
 We will start by describing how documents are represented as vectors and how to compare in a mono-lingual setting. We will then define a way to measure cross-lingual similarity that is natural for the models we consider.
-\textbf{Document representation.}
 
+\textbf{Document representation.} 
 Standard vector space model \cite{Salton88term-weightingapproaches} represents documents as vectors, where each term corresponds to word or phrase in a fixed vocabulary. More formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_k$ correspond to the number of times term $k$ occurred in the document, also called \emph{term frequency} or $TF_k(d)$.
 
 We also used a term re-weighting scheme that adjusts for the fact that some words occur more frequently in general. A term weight should correspond to the importance of the term for the given corpus. The common weighting scheme is called \emph{Term Frequency Inverse Document Frequency} ($TFIDF$) weighting. An \emph{Inverse Document Frequency} ($IDF$) weight for the dictionary term $k$ is defined as $\log\left( \frac{N}{DF_k} \right)$, where $DF_k$ is the number of documents in the corpus which contain term $k$.  A document $TFIDF$ vector is its original vector multiplied element-wise by the weights.
@@ -230,10 +230,7 @@ In this section, we describe several approaches to computing multilingual simlia
 \item  a standard approach based on singular value decomposition
 \item a new method that is applicable in more general settings.
 \end{enumerate}
- We concentrate on approaches that are based on linear maps rather than alternatives, such as machine translation and probabilistic models. Applicability of machine translation relies
-on the availability of training resources (strongly aligned translation corpora), which are not available for many world languages, but there exist comparable corpora. Probabilistic
-methods \todo{provide reasons for not using them: e.g. difficulty with parameter estimation, maybe just say future work?}.
-
+ We concentrate on approaches that are based on linear maps rather than alternatives, such as machine translation and probabilistic models, as discussed in the related work section. 
 For completeness we will also present the method of Canonical Correlation Analysis, since it is related to our proposed method.
 
 \subsection{Notation}
@@ -707,8 +704,8 @@ Based on the results, we can make the following conclusions. The cross-lingual s
 
 
 \subsection{Scaling}
-\emph{I think that this section should be short.}
-100 languages!
+%\emph{I think that this section should be short.}
+%100 languages!
 %Memory 100 GB per day
 %Newsfeed volume 430k articles per day, 210k english, 36k Spanish, 27k German, 17k French, ....
 %Number of similarities, 430k similarities every 200ms, currently could handle 1M articles,
@@ -725,7 +722,7 @@ In our current implementation, we use the variation of hub approach. Our project
 Our system is also easily extendable. Adding a new language requires the  computation of  a projector matrix and proxy matrices with all other already available languages.
 %Add the conclusion of the story and the wrap up, Andrej needs help with this. We presented the system ...
 \section{Discussion and Future Work}
-In this paper we have presented a cross-lingual system for linking events in different languages. Building on an existing system, Event Registry, we present and evaluate several approaches to computing a  cross-lingual simialirty function. We also present an approach to linking events and evaluate effectiveness of various features.  The  final pipeline is scalable both in terms of number of articles and number of languages, while accurately linking events.  
+In this paper we have presented a cross-lingual system for linking events in different languages. Building on an existing system, Event Registry, we present and evaluate several approaches to computing a  cross-lingual simialirty function. We also present an approach to linking events and evaluate effectiveness of various features.  The  final pipeline is scalable both in terms of number of articles and number of languages, while accurately linking events.
 
 Finally, we discuss some aspects of the methods and the system as a whole.
 \begin{itemize}
@@ -739,10 +736,9 @@ Finally, we discuss some aspects of the methods and the system as a whole.
 
 \end{itemize}
 
-
 %\subsection{Future Work}
 
-\acks{The authors wish to thank blah blah blah.}
+%\acks{The authors wish to thank blah blah blah.}
 
 \vskip 0.2in
 \bibliography{jair}

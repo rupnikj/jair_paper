@@ -105,16 +105,18 @@ The term event is vague and ambiguous, but for the practical purposes we define 
 \caption{\label{fig:event2} Events are represented by collections of articles about an event, in this case the Malaysian airliner which was shot down over the Ukraine.}
 \end{figure}
 
-As input we consider a stream of articles in different languages and a list of events. Our goal is to assign articles to their corresponding events. A priori we do not know the coverage of the articles, that is not all the events may be covered and we do not know that all the articles necessarily fit into one of the events.  To achieve our goal, we divide the task into two parts: clustering the articles according to topic (regardless of language) and matching the clusters to events.
+As input we consider a stream of articles in different languages and a list of events. Our goal is to assign articles to their corresponding events. A priori we do not know the coverage of the articles, that is not all the events may be covered and we do not know that all the articles necessarily fit into one of the events. The task is divided into two parts: detecting events within each language and then linking events across languages. In this paper we address the second step.
 
-As input we consider a high volume of articles in different languages. By using a language detector the stream is split into separate monolingual streams. 
+As input we consider a high volume of articles in different languages. By using a language detector the stream is split into separate monolingual streams.
 Within each monolingual stream, an online clustering approach is employed, where tracked clusters correspond to our definition of events - this is based on the Event Registry system \shortcite{Leban2014W,Leban2014I}. Our main goal is to connect such clusters (representations of events) across languages, that is detect that a set of documents in language 1 reports on the same event as a set of documents in language 2.
 
-Our approach to combines two ingredients: a cross-lingual document similarity measure, which can be interpreted as a language independent topic model, and
-semantic annotation of documents, which enables an alternative way to comparing documents by comparing the lists of detected semantic entities.
+Our approach combines two ingredients: a cross-lingual document similarity measure, which can be interpreted as a language independent topic model, and
+semantic annotation of documents, which enables an alternative way to comparing documents.
 
 The first approach represents a continuation of previous work \shortcite{nips,sikdd,nips2,iti} where we explored representations of documents which were valid over multiple languages.  The representations could be interpreted as multi-lingual topics, which were then used as proxies to compute cross-lingual similarities between documents. To learn the representations, we use Wikipedia as a training corpus. Significantly, we do not only consider the major or \emph{hub} languages such as English, German, French, etc. which have significant overlap in article coverage, but also smaller languages (in terms of number of Wikipedia articles) such as Slovenian and Hindi, which may have a negligible overlap in article coverage. We can then define a similarity between any two articles regardless of language,  which allows us to cluster the articles according to topic. The underlying assumption being that articles describing the same event are similar  and will therefore be put into the same cluster.
 
+Based on the similarity function we propose a novel algorithm for linking events/clusters across languages. The approach is based on learning a classification model from labelled data based on several sets of features. In addition to these features, cross-lingual similarity is also used to quickly identify a small list of potential linking candidates for each cluster.
+This greatly increases the scalability of the system.
 
 %As input we consider a stream of articles in different languages and a list of events. Our goal is to assign articles to their corresponding events. A priori we do not know the coverage of the articles, that is not all the events may be covered and we do not know that all the articles necessarily fit into one of the events.  To achieve our goal, we divide the task into two parts: clustering the articles according to topic (regardless of language) and matching the clusters to events.
 %
@@ -372,13 +374,13 @@ The main application on which we test the above similiarity is cross-lingual eve
 
 \subsection{Problem definition}
 
-The problem in the second phase of the pipeline is to identify the clusters describing the same events. Each article $a_i$ is written in a language $l$, where $\ell \in L = \{\ell_1,\ell_2,...,\ell_k\}$. For each language $\ell$, we generate and maintain a set of language-specific clusters $C_l$. That is, all articles are in language $l$. For any cluster $c_i \in C_{\ell_a}$, we would like to identify clusters $c_j \in C_{\ell_b}$ (where $\ell_a \neq \ell_b$) that describe the same event as $c_i$. We define \emph{equivalent clusters} as  pairs $(c_i,c_j)$ such that both clusters in the pair describe the same event in languages $C_{\ell_a}$ and $C_{\ell_b}$ respectively. Furthermore, we iterate over all the languages we consider. That is, given a cluster in language $\ell_i$, we look for matching clusters in language $\ell_j$ for $i\neq j$  in a pairwise fashion. 
+The problem in the second phase of the pipeline is to identify the clusters describing the same events. Each article $a_i$ is written in a language $l$, where $\ell \in L = \{\ell_1,\ell_2,...,\ell_k\}$. For each language $\ell$, we generate and maintain a set of language-specific clusters $C_l$. That is, all articles are in language $l$. For any cluster $c_i \in C_{\ell_a}$, we would like to identify clusters $c_j \in C_{\ell_b}$ (where $\ell_a \neq \ell_b$) that describe the same event as $c_i$. We define \emph{equivalent clusters} as  pairs $(c_i,c_j)$ such that both clusters in the pair describe the same event in languages $C_{\ell_a}$ and $C_{\ell_b}$ respectively. Furthermore, we iterate over all the languages we consider. That is, given a cluster in language $\ell_i$, we look for matching clusters in language $\ell_j$ for $i\neq j$  in a pairwise fashion.
 
 \begin{figure}[tb]
 \centering
 \includegraphics[width=0.6\textwidth]{clusters}
 \caption{\label{fig:clusters}  Given clusters of articles in different languages, the goal of  linking is to match clusters which have similar content across languages. The challenge in linking is to overcome the errors in the clustering and differing content as well as make the approach scalable. Therefore, we first identify candidate clusters. }
-\end{figure} 
+\end{figure}
 
 Furthermore, the matching of clusters is a \emph{generalized matching}. We cannot assume that there is only one cluster per language per event, nor can we assume complete coverage - that there exists at least one cluster per event in every language. This implies that we cannot make any assumptions on the matching, e.g. one-to-one, complete, etc. This excludes the use of standard weighted bipartite matching type of algortihms for this problem. An example is shown in Figure~\ref{fig:clusters}, where a cluster may contain articles which are closely matched with many clusters in a different language.
 
@@ -414,7 +416,7 @@ A system that is significantly different, but worth mentioning is the GDELT proj
 
 \subsection{Algorithm}
 
-In order to identify clusters $c_j$ that are equivalent to cluster $c_i$, we have developed a two-stage algoirhtm. First, for a cluster $c_i$, we efficiently identify a small set of candidate clusters and then  find the clusters from among the candidates which are equivalent to $c_i$. An example is  shown in  Figure~\ref{fig:clusters}. 
+In order to identify clusters $c_j$ that are equivalent to cluster $c_i$, we have developed a two-stage algoirhtm. First, for a cluster $c_i$, we efficiently identify a small set of candidate clusters and then  find the clusters from among the candidates which are equivalent to $c_i$. An example is  shown in  Figure~\ref{fig:clusters}.
 
 The details of the first step are described in Algorithm~\ref{cluster_merge_algo1}. The algorithm begins by individually inspecting each article $a_i$ in the cluster $c_i$. Using CCA  (see Section~\ref{sec:CCA}),  it then identifies the 10 most similar articles to $a_i$ in each language $l \in L$. For each  similar article $a_j$, we identify its corresponding  cluster $c_j$ and add it to the set of candidates. \todo{we should say a few words why this is more efficient - since now we are comparing each article to all other articles - while we said it is not feadible for clusters}. While the CCA simliarity is approximate, our  assumption  is that articles in different languages describing the same event, will generally have a higher similarity than articles about different events. While this assumption does not always hold, redundancy in the data mitigates these false positives. Since we compute the 10 most similar articles for each article in $c_i$, we are likely to identify all the relevant candidates for cluster $c_i$.
 

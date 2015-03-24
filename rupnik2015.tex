@@ -620,10 +620,11 @@ It is worth noting that added accuracy is also beneficial when we wish to choose
 %AMPR as function of the number of feature vectors
 %500 is good, 800 better, 1000 overfitting, noise!
 \begin{figure}
-\caption{Average of mean reciprocal ranks}
 \label{pic:AMRR}
 %\includegraphics{slika.png}
+\centering
 \input{retrieval}
+\caption{Average of mean reciprocal ranks}
 \end{figure}
 %Why the hub approach?
 %Optimize for language pairs in the system that have the largest number of articles in the system!
@@ -708,9 +709,9 @@ Based on the results, we can make the following conclusions. The cross-lingual s
 %Number of similarities, 430k similarities every 200ms, currently could handle 1M articles,
 %(n \over 2) 500X500 proxy matrices, 300000x500 Projector matrices, 430000x500 data
 %Premultiply with proxy matrices, compare blockwise!
-One of the main advantages of our approach is highly scalable. It is fast, very robust to quality of training data, easily extendable, simple to implement and has relatively small hardware requirements. The similarity pipeline is the most computationally intensive part and currently runs on two Intel Xeon E5-2667 v2, 3.30GHz processor machine with 256GB of RAM. This is sufficient to do similarity computation over 150 languages if needed. It currently uses Wikipedia as a freely available knowledge base and experiments show that the similarity pipeline dramatically reduces the search space when linking clusters.
+One of the main advantages of our approach is that it is highly scalable. It is fast, very robust to quality of training data, easily extendable, simple to implement and has relatively small hardware requirements. The similarity pipeline is the most computationally intensive part and currently runs on two Intel Xeon E5-2667 v2, 3.30GHz processor machine with 256GB of RAM. This is sufficient to do similarity computation over 150 languages if needed. It currently uses Wikipedia as a freely available knowledge base and experiments show that the similarity pipeline dramatically reduces the search space when linking clusters.
 
-Currently we compute similarities over $24$ languages with tags: eng, spa, deu, zho, ita, fra, rus, swe, nld, tur, jpn, por, ara, fin, ron, kor, hrv, tam, hun, slv, pol, srp, cat, ukr but we support up to $100$ top Wikipedia languages. Our data stream is Newsfeed (http://newsfeed.ijs.si/) which provides $430k$ unique articles per day. Our system currently computes 400k similarities per 200ms, that means that we compute $16 \cdot 10^{10}$ similarities per day. We
+Currently we compute similarities over $24$ languages with tags: eng, spa, deu, zho, ita, fra, rus, swe, nld, tur, jpn, por, ara, fin, ron, kor, hrv, tam, hun, slv, pol, srp, cat, ukr but we support any language from the top $100$ Wikipedia languages. Our data stream is Newsfeed (http://newsfeed.ijs.si/) which provides $430k$ unique articles per day. Our system currently computes 400k similarities per 200ms, that means that we compute $16 \cdot 10^{10}$ similarities per day. We
 store one day buffer for each language which requires 1.5 GB of memory with documents   stored as 500 dimensional vectors. We  note that the time complexity of the similarity computations scales linearly with dimension of the feature space and does not  depend of number of languages. For each article, we compute the top $10$  most similar ones in every other language.
 
 For all linear algebra matrix and vector operations, we use high performance numerical linear algebra libraries as BLAS, OPENBLAS and Intel MKL, which currently allows us to process more than million articles per day.

@@ -481,30 +481,20 @@ Using the  features described above and the user-provided labels, we train a cla
 
 We will describe the main dataset for building cross-lingual models which is based on Wikipedia. After that we will present three sets of experiments. The first set of experiments
 will establish that the hub based approach can deal with language pairs where little or no training data is available. The second set of experiments will compare the main approaches
-the we presented on the task of mate retrieval. We will then explore how different choices of features influence the performance of event linking.
+the we presented on the task of mate retrieval and the task of event linking. We will also examine how different choices of features impact the event linking performance.
 
 \subsection{Wikipedia Comparable Corpus}
-%\emph{Andrej started shuffling it, will do it till Monday :) }
-%{\oldText{Taken from ITI paper}
+
 To investigate the empirical performance of the low rank approximations we will test the algorithms on a large-scale, real-world multi-lingual dataset that we extracted from Wikipedia by using inter-language links for alignment. This  results in a large number of weakly comparable documents in more than $200$ languages. Wikipedia is a large source of multi-lingual data that is especially important for the languages for which no translation tools, multi-lingual dictionaries as Eurovoc, or strongly aligned multi-lingual corpora as Europarl are available. Documents in different languages are related with so called 'inter-language' links that can be found on the left of the Wikipedia page. The Wikipedia is constantly growing. There are currently 12 Wikipedias with more than 1 million%$10^6$
  articles, $52$ with more than 100k %$10^5$
  articles, $129$ with more than 10 k articles, and $236$ with more than $1000$ articles.
-%Wikipedia uses special user-friendly markup language that is very easy to write but very hard to parse. Simplicity of language can cause ambiguities and moreover it is constantly changing. For example, separator | can be used in %different contexts.
 
-%Wikipedia raw xml dumps of all currently $288$ active editions were downloaded from the Wikipedia dump page\href{http://dumps.wikimedia.org}. The xml files are too large to be parsed with DOM like parser that needs to store the whole xml tree in the memory, instead we implemented Sax like parser that tries to simulate behavior of Wikipedia official parser and is as simple, fast and error prone as possible. We parse all Wikipedia markup but do not expand the templates.
 Each Wikipedia page is embedded in the page tag. First, we check if the title of the page consists of any special namespace and do not process such pages. Then, we check if this is a redirection page and we store the redirect link as inter-language links can point to redirection link also. If none of the above applies, we extract the text and parse the Wikipedia markup. Currently, all the markup is removed.
 
 We get inter-language link matrix using previously stored redirection links and inter-language links. If inter-language link points to the redirection we replace it with the redirection target link. It turns out that we obtain the matrix $M$ that is not symmetric, consequently the underlying graph is not symmetric. That means that existence of the inter-language link in one way (i.e. English to German) does not guarantee that there is an inter-language link in the reverse direction (German to English). To correct this we transform this matrix to symmetric by computing $M+M^T$ and obtaining an undirected graph. In the rare case that we have multiple links pointing from the document, we pick the first one that we encountered. This matrix enables us to build an alignment across all Wikipedia languages.
-%}
-
-%\subsection{Wikipedia Information Retrieval}
-
-%Mate retrieval results
 
 \subsection{Experiments With Missing Alignment Data}
-%\emph{Andrej started working on this, done by Monday}
-%{\oldText{Taken from XLite paper}
-%To investigate the empirical performance of our algorithm we will test it on a large-scale, real-world multilingual dataset that we extracted from Wikipedia  by  using so called 'inter-language' links as an alignment.
+
  In this subsection, we will investigate the empirical performance of CCA hub approach. We will demonstrate that this approach can be successfully applied even in the case of fully missing alignment information.
  To this purpose, we select a subset of Wikipedia languages containing three major languages, English--\emph{en} (hub language), Spanish--\emph{es}, Russian--\emph{ru}, and five minority (in the sense of Wikipedia sizes) languages, Slovenian--\emph{sl}, Piedmontese--\emph{pms}, Waray-Waray--\emph{war} (all with about 2 million native speakers), Creole--\emph{ht} (8 million native speakers), and Hindi--\emph{hi} (180 million native speakers). For preprocessing, we remove the documents that contain less than 20 different words (stubs) and remove words occurring in less than 50 documents as well as the top 100 most frequent words (in each language separately). We represent the documents as normalized TFIDF\cite{Salton88term-weightingapproaches} weighted vectors.
  %These are languages with Wikipedia article sizes comparable to the minority languages.  (since the number of speakers does not directly correlate with the number of Wikipedia articles). The prime hub candidate is the English %language which is well aligned with all other Wikipedia languages, although the alignment quality varies quite a bit. Furthermore, we remove the documents that contain less than 20 different words and remove words that are too %infrequent as well as the top 100 most frequent words in the vocabularies.

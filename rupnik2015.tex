@@ -1,6 +1,6 @@
 \documentclass[twoside,11pt]{article}
 \usepackage{jair, theapa, rawfonts}
-\usepackage{pgfplots} 
+\usepackage{pgfplots}
 %\usepackage{graphicx}
 
 \usepackage{color}
@@ -44,9 +44,9 @@ Cross-Lingual Document Similarity and Event Tracking}
 \maketitle
 
 \begin{abstract}
-Today, we follow news  which is distributed globally and reported on in many different languages. When a significant event occurs, it is often reported on in many different sources. In this work, our goal is to consider the problem tracking events in a large multilingual stream. In this paper, we consider a particular aspect of this problem, namely how to link collections of articles in different languages which refer to the same event. Given a multi-lingual stream,  articles are first clustered according in each language we consider separately. Given these clusters, we first propose a  
+Today, we follow news  which is distributed globally and reported on in many different languages. When a significant event occurs, it is often reported on in many different sources. In this work, our goal is to consider the problem tracking events in a large multilingual stream. In this paper, we consider a particular aspect of this problem, namely how to link collections of articles in different languages which refer to the same event. Given a multi-lingual stream,  articles are first clustered according in each language we consider separately. Given these clusters, we first propose a
 method to enables cross-lingual document similarity based on Wikipedia, which
- enabling us to compute the similarity of any two articles regardless of language. Using this simliarity, we then propose an approach to find and match clusters across ;anguages which represent the same event. We provide an extensive evaluation of the performance of the system as a while as well as the quality of the similarity measure and linking algorithm. 
+ enabling us to compute the similarity of any two articles regardless of language. Using this simliarity, we then propose an approach to find and match clusters across ;anguages which represent the same event. We provide an extensive evaluation of the performance of the system as a while as well as the quality of the similarity measure and linking algorithm.
  \begin{comment}
 Main points:
 \begin{itemize}
@@ -130,23 +130,23 @@ We base our techniques of cross-lingual event linking on an online system for de
 
 The processing is done independently for each language and the output is a clustering of articles in each language, with each cluster ideally representing an event, which are defined by topically, geographically and temporally. The goal of this paper is present approaches to  connecting the clusters/events across languages.
 
-Our approach is based on first defining a similarity function between articles in different languages (Section~\ref{}) and then we present several efficient approaches to linking the clusters based on features (Section~\ref{}). First, however we describe the pre-processing on the input articles which we then take as input.  
+Our approach is based on first defining a similarity function between articles in different languages (Section~\ref{}) and then we present several efficient approaches to linking the clusters based on features (Section~\ref{}). First, however we describe the pre-processing on the input articles which we then take as input.
 
-The system is designed to handle streams and so we describe how a document which enters the stream is processed.   A new document is first tokenized, stop words are removed and words are stemmed. 
+The system is designed to handle streams and so we describe how a document which enters the stream is processed.   A new document is first tokenized, stop words are removed and words are stemmed.
  What remains is represented in a vector-space model and normalized using $TF-IDF$ (see Section~\ref{} for the definition). Since each article is tagged with its language, cosine similiarity  is used to find the modst similar existing cluster, by comparing it to the centroid vector of each cluster. A selected threshold is used to determine if the article is not similar to any existing clusters (0.4 was used in our experiments).  The article is then assigned to the corresponding cluster, otherwise a new cluster is created, initially containing only the single article.
- 
-Since articles about an event are commonly written only for a short period of time, we remove clusters once the oldest article in the cluster becomes more than 4 days old. This housekeeping mechanism prevents the clustering from becoming slow and also ensures that articles are not assigned to obsolete clusters. 
 
-The clusters, we consider must have a sufficient number of articles (which is a language dependent paramater). This is to ensure that we consider events. Once an event is identified(i.e. a cluster of sufficient size), a new unique ID is assigned to it and the main information about the event is then automatically extracted by analyzing the articles assigned to it. The extracted information includes properties such as the date of the event, the location, who is involved in it, what the event is about, etc. 
+Since articles about an event are commonly written only for a short period of time, we remove clusters once the oldest article in the cluster becomes more than 4 days old. This housekeeping mechanism prevents the clustering from becoming slow and also ensures that articles are not assigned to obsolete clusters.
+
+The clusters, we consider must have a sufficient number of articles (which is a language dependent paramater). This is to ensure that we consider events. Once an event is identified(i.e. a cluster of sufficient size), a new unique ID is assigned to it and the main information about the event is then automatically extracted by analyzing the articles assigned to it. The extracted information includes properties such as the date of the event, the location, who is involved in it, what the event is about, etc.
 
  Further details about the system can be found in \cite{}, while our full pipeline is shown in Figure~\ref{}.
- 
- 
+
+
 \begin{comment}
 In short, the article clustering works as follows (details are available in \cite{}). First we create a new document by joining the title and the body of the article. We then tokenize the document, remove the stop words and stem the words. The remaining words are represented as a vector in the vector-space model. Each value in the vector is additionally normalized using TF-IDF. After normalization, we use the vector to find the most similar existing cluster. To be able to compare the vector with a cluster we first need a vector representation for each of the clusters. This is done by computing a centroid vector of the cluster by simply averaging the vectors of the articles in the cluster. By computing the cosine similarity of the article vector with each of the centroid vectors we then find the cluster with the highest similarity. If the highest similarity is above the selected threshold (we used 0.4 in our experiments),
 
 
-In order to treat the cluster as describing an event in Event Registry, 
+In order to treat the cluster as describing an event in Event Registry,
 
 The clustering of articles is done for each language separately -- English articles are, for example, clustered separately from Spanish articles. When events are identified, they will therefore be identified from clusters in each language separately. As a result, the same event will be represented in Event Registry with two or more event IDs, and each event will only contain coverage in a single language. To avoid this problem we want to exploit the available information about the similarity of the articles in a cluster with articles in other languages. Using this information we hope to be able to connect clusters in different languages and represent them using a single event ID.
 \end{comment}
@@ -350,7 +350,7 @@ The main application on which we test the above similiarity is cross-lingual eve
 
 \subsection{Problem definition}
 
-The problem in the second phase of the pipeline is to identify the clusters describing the same events. Each article $a_i$ is written in a language $l$, where $\ell \in L = \{\ell_1,\ell_2,...,\ell_k\}$. For each language $\ell$, we generate and maintain a set of language-specific clusters $C_l$. That is, all articles are in language $l$. For any cluster $c_i \in C_{\ell_a}$, we would like to identify clusters $c_j \in C_{\ell_b}$ (where $\ell_a \neq \ell_b$) that describe the same event as $c_i$. We define \emph{equivalent clusters} as  pairs $(c_i,c_j)$ such that both clusters in the pair describe the same event in languages $C_{\ell_a}$ and $C_{\ell_b}$ respectively. Furthermore, we iterate over all the languages we consider. That is, given a cluster in language $\ell_i$, we look for matching clusters in language $\ell_j$ for $i\neq j$  in a pairwise fashion. 
+The problem in the second phase of the pipeline is to identify the clusters describing the same events. Each article $a_i$ is written in a language $l$, where $\ell \in L = \{\ell_1,\ell_2,...,\ell_k\}$. For each language $\ell$, we generate and maintain a set of language-specific clusters $C_l$. That is, all articles are in language $l$. For any cluster $c_i \in C_{\ell_a}$, we would like to identify clusters $c_j \in C_{\ell_b}$ (where $\ell_a \neq \ell_b$) that describe the same event as $c_i$. We define \emph{equivalent clusters} as  pairs $(c_i,c_j)$ such that both clusters in the pair describe the same event in languages $C_{\ell_a}$ and $C_{\ell_b}$ respectively. Furthermore, we iterate over all the languages we consider. That is, given a cluster in language $\ell_i$, we look for matching clusters in language $\ell_j$ for $i\neq j$  in a pairwise fashion.
 
 Furthermore, the matching of clusters is a \emph{generalized matching}. We cannot assume that there is only one cluster per language per event, nor can we assume complete coverage - that there exists at least one cluster per event in every language. This implies that we cannot make any assumptions on the matching, e.g. one-to-one, complete, etc. This excludes the use of standard weighted bipartite matching type of algortihms for this problem. 	
 
@@ -574,8 +574,8 @@ We also have a problem with the quality of the test data. For example, if we loo
 In order to determine how accurately we can predict cluster equivalence we have performed two experiments. In the first experiment we wanted to test how well do the individual approaches for cross-lingual article linking perform when used for linking the clusters about the same event. In the second experiment we tested how accurate is the prediction model when trained on different subsets of learning features. To evaluate the prediction accuracy for a given dataset we used 10-fold cross validation. In this technique, the dataset is partitioned into 10 folds, where 9 folds are used for training a model and the left-out fold is then used to test the accuracy of the model. The learning and testing process is repeated 10 times, each time with a different left-out fold.
 
 In Section~\ref{sec:models} we have described three main algorithms for identifying similar articles in different languages. These algorithms were $k$-means, LSI and CCA. To test which of these algorithms performs best we performed the following test. Using each algorithm, we analyzed all articles in Event Registry to find the most similar articles in other languages. The values of the cross-lingual article linking features (\texttt{linkCount} and \texttt{avgSimScore}) were then recomputed for all annotated learning examples. A dataset with only these two features and the label was constructed and used to test how accurate prediction models can be induced using the data. The results of the experiment are shown in Table~\ref{table:linkingEvalAlgos}. The table shows for each of the algorithms the obtained classification accuracy, precision and recall. We can see that the most informative features for cluster linking are obtained using the CCA algorithm, while $k$-means performs the worse. Firstly we verified the AMRR (average of mean reciprocal ranks over all language pairs) performance of approaches by holding out $15000$ aligned test documents and using $300000$ aligned documents
- as the training set. Picture \ref{pc:AMRR} shows AMRR score as the function of the number of feature vectors. It is clear that CCA outperforms LSI approach and K-means lags far behind.
-Furthermore we inspected how number of features influences the accuracy of cluster linking. As we can see from Table~\ref{table:linkingEvalAlgos} choosing number of features vectors larger than $500$ barely effects linking performance. That is probably due to overfitting. Moreover we tested the performance of detecting large/small cluster linking. As expected we obtained that it is harder to link small clusters and we need better retrieval. Hub CCA outperform other methods in this sense also, probably as it has the best retrieval performance, see Figure~\ref{pic:AMRR}.
+ as the training set. Figure~\ref{pc:AMRR} shows AMRR score as the function of the number of feature vectors. It is clear that CCA outperforms LSI approach and K-means lags far behind.
+Furthermore we inspected how number of features influences the accuracy of cluster linking. As we can see from Table~\ref{table:linkingEvalAlgos} choosing number of features vectors larger than $500$ barely effects linking performance. That is probably due to overfitting. Moreover we tested the performance of detecting large/small cluster linking, see Table~\ref{table:linkingEvalAlgosLargeSmall}.  As expected we obtained that it is harder to link small clusters and we need better retrieval. Hub CCA outperforms other methods in this sense also, probably as it has the best retrieval performance, see Figure~\ref{pic:AMRR}.
 
 %{\oldText{TODO:} add some explanation why this might be so.}
 %\emph{Andrej adds some tests, new experiment description graphs, and explanations for performance, done by Monday}
@@ -686,9 +686,16 @@ Based on the results we can make the following conclusions. The cross-lingual si
 %Number of similarities, 430k similarities every 200ms, currently could handle 1M articles,
 %(n \over 2) 500X500 proxy matrices, 300000x500 Projector matrices, 430000x500 data
 %Premultiply with proxy matrices, compare blockwise!
+One of the main advantages of our approach is that scales really well. It is fast, very robust to quality of training data, easily extendable, simple to implement and with low machine requirements. Ut currently runs on two Intel Xeon E5-2667 v2, 3.30GHz processor machine with 256GB of RAM. That is enough to do similarity computation over 150 languages if needed. It currently uses Wikipedia as freely available knowledge base.  
 
-Describe the newsfeed volume, number of events and the number of similarities that need to be computed. Compare the memory requirements of our current implementation to the rest.
-Comment on the caching gains in our implementation.
+Currently we compute similarities over $24$ languages with tags: eng, spa, deu, zho, ita, fra, rus, swe, nld, tur, jpn, por, ara, fin, ron, kor, hrv, tam, hun, slv, pol, srp, cat, ukr but we support up to $100$ top Wikipedis languages. Our data stream is Newsfeed(http://newsfeed.ijs.si/) that produces $430k$ unique articles per day. Our system currently computes 400k similiarites per 200ms, that means that we compute $16*10^10$ similarities per day. We
+store one day buffer for every language, for that we need 1.5GB of memory, we store documents as 500 dimensional vectors. For each article we compute top $10$ most similar ones in every language.
+For all linear algebra matrix and vector operations we use high performance numerical libraries as BLAS, OPENBLAS and Intel MKL. This currently allows us to process more than million articles per day.
+In our current implementation we use variation of hub approach. Our projector matrices are of size $500\times 300000,$ so every projector takes about $1.1$ GB of RAM. Moreover we need proxy matrices of size $500x500$ for every language pair. That is 0.5 GB for $24$ languages and $9.2$ GB for $100$ languages. All together we need around 135 GB of RAM for the system with 100 languages. Using proxy matrices we can project all the input documents in the common space. That enables us to do blockwise similarity computations and
+additional improvement in our system efficiency. Our code can be therefore easily parallelized using matrix multiplication instead of doing more matrix - vector multiplications. This speeds up our code by factor around $4.$ In this way we obtain some caching gains and ability to use vectorization. 
+Our system is also easily extendable. If we want to add a language we only need to compute a projector matrix and proxy matrices with all other already available languages.
+
+Comment on the caching gains in our implementation.¸¸Add the conclusion if the story.
 
 
 \acks{The authors wish to thank blah blah blah.}

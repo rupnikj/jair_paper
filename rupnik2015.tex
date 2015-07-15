@@ -175,19 +175,14 @@ The clustering of articles is done for each language separately -- English artic
 \end{comment}
 %Event registry $\Rightarrow$ Monolingual events $\Rightarrow$ features (semantic + CCA) $\Rightarrow$ linked events (crosslingual)
 
-
-\section{Cross-lingual Document Similarity}\label{sec:crosslingual}
-\label{sec:crosslingual}
-Document similarity is an important component in techniques from text mining and natural language processing. Many techniques use the similarity as a black box, i.e., a kernel in Support Vector Machines. Comparison of documents (or other types of text snippets) in a monolingual setting is a well studied problem in the field of information retrieval \cite{Salton88term-weightingapproaches}. We first recount some system requirements, then review  related approaches to cross-lingual similarity models and then formally introduce the problem as well as our approach.
-
 \primoz{we may want to move this out to the pipeline section}
 \subsection{System Requirements}
 
 Our goal is to build a system that monitors global media and analyzes how events are being reported on. Our approach consists of two steps: tracking events separately in each language (based on language detection and an online clustering approach) and then connecting them. The pipeline must be able to process millions of articles per day and perform billions of similarity computations each day - implying that similarity computation should be highly scalable.  %The system should support as many languages as possible.
  We focus on implementations that run on a single shared memory machine, as opposed to clusters of machines. This  simplifies implementation and system maintenance.
-To summarize, the following properties are desireable:
+To summarize, the following properties are desirable:
 \begin{itemize}
-\item \textbf{Training} - The training (building corss-lingual models) should scale to many languages and should be robust to the quality of training resources. The system should be able to take advantage of comparable corpus (as opposed to parallel translation based corpora), with missing data. Supporting a new language should be straightforward.
+\item \textbf{Training} - The training (building cross-lingual models) should scale to many languages and should be robust to the quality of training resources. The system should be able to take advantage of comparable corpus (as opposed to parallel translation based corpora), with missing data. Supporting a new language should be straightforward.
 \item \textbf{Operation efficiency} - The similarity computation should be fast - the system must be able to handle billions of similarity computations per day.
 \item \textbf{Operation cost} - The system should run on a strong shared machine server and not rely on paid services.
 \item \textbf{Implementation} - The system is straightforward to implement, with few parameters to tune.
@@ -222,6 +217,18 @@ There are four main families of approaches to cross-lingual similarity.
 
 Based on our requirements in Section~\ref{} \primoz{System requirements}, we chose to focus on methods based on vector space models and linear embeddings. We propose a method that is more efficient than popular alternatives (a clustering based approach and latent semantic indexing), but is still simple to optimize and use.
 
+\subsection{Related work}
+
+Although there are a number of services that aggregate news by identifying clusters of similar articles, there are almost no services that provide linking of clusters over different languages. Google News as well as Yahoo! News are able to identify clusters of articles about same event, but they offer no linking of clusters across languages. The only service that we found, which provides cross-lingual cluster linking, is the European Media Monitor (EMM)~\cite{Steinberger2008}. EMM clusters articles in 60 languages and then tries to determine which clusters of articles in different languages describe the same event. To achieve cluster linking, EMM uses three different language independent vector representations for each cluster. First vector contains the weighted list of references to countries mentioned in the articles, while the second vector contains the weighted list of mentioned people and organizations. The last vector contains the weighted list of Eurovoc subject domain descriptors. These descriptors are topics, such as \emph{air transport}, \emph{EC agreement}, \emph{competition} and \emph{pollution control} into which articles are automatically categorized~\shortcite{Pouliquen2006}. Similarity between clusters is then computed using a linear combination of the cosine similarities computed on the lists. If the similarity is above the threshold, the clusters are linked. Compared to EMM, our approach uses document similarities to obtain a small set of potentially equivalent clusters. Additionally, we do not decide if two clusters are equivalent based on a hand-set threshold on a similarity value -- instead we use a classification model that uses a larger set of features related to the tested pair of clusters.
+
+A system that is significantly different, but worth mentioning is the GDELT project~\cite{Leetaru2013Gdelt}. In GDELT, events are also extracted from articles, but in their case, an event is specified in a form of a triple containing two actors and a relation. The project contains an extensive vocabulary of possible relations, mostly related to political events. In order to identify events, GDELT collects articles in more than 65 languages and uses machine translation to translate them to English. All information extraction is then done on the translated article.
+
+
+
+\section{Cross-lingual Document Similarity}\label{sec:crosslingual}
+\label{sec:crosslingual}
+Document similarity is an important component in techniques from text mining and natural language processing. Many techniques use the similarity as a black box, i.e., a kernel in Support Vector Machines. Comparison of documents (or other types of text snippets) in a monolingual setting is a well studied problem in the field of information retrieval \cite{Salton88term-weightingapproaches}. We first recount some system requirements, then review  related approaches to cross-lingual similarity models and then formally introduce the problem as well as our approach.
+
 \subsection{Problem definition}\label{sec:tfidf}
 We will first describe how documents are represented as vectors and how to compare douments in a mono-lingual setting. We will then define a way to measure cross-lingual similarity that is natural for the models we consider.
 
@@ -244,7 +251,7 @@ The similarity between documents in language $i$ and language $j$ is defined as 
 $$sim_{i,j}(d_1, d_2) = \frac{ \langle \phi_i (d_1), S_{i,j} \phi_j (d_2) \rangle }{\|\phi_i(d_1)\| \|\phi_j(d_2)\|},$$
 where $d_1$ and $d_2$ are documents written in the $i$-th and $j$-th language respectively. If the the maximal singular value of $S_{i,j}$ is bounded by $1$, then the similarity scores will lie on the interval $[-1, 1]$. In section \ref{sec:models} we will describe some approaches to computing $S_{i,j}$ given training data.
 
-\section{Cross-Lingual Models}\label{sec:models}
+\subsection{Cross-Lingual Models}\label{sec:models}
 In this section, we describe several approaches to the problem of computing multilingual simliarities introduced in \ref{sec:tfidf}. We present four approaches:
 a simple approach based on $k$-means clustering in \ref{sec:kmeans}, a standard approach based on singular value decomposition in \ref{sec:LSI}, a related
 approach called Canonical Correlation Analysis (CCA) in \ref{sec:CCA} and finally a new, more generally applicable method, which is an extension of CCA to more than two languages in \ref{sec:hublang}.
@@ -265,16 +272,16 @@ More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of
 
 \subsection{$k$-means}\label{sec:kmeans}
 
-The $k$-means algorithm is perhaps the most well-known and widely-used clustering algorithm. We now present its application 
+The $k$-means algorithm is perhaps the most well-known and widely-used clustering algorithm. We now present its application
 to computing cross-lingual similarities. The idea is based on concatenating the corpus matrices, running standard $k$-means clustering to obtain the matrix of centroids, "reversing" the concatenation step to obtain a set of aligned bases, which are finally used to compute cross-lingual similarities.
- 
+
  In order to apply the algorithm, we first merge all the term-document matrices into a single matrix $X$ by stacking the individual term-document matrices:
 $$X := \begin{bmatrix}X_1^T ,X_2^T, \cdots, X_m^T \end{bmatrix}^T,$$
 such that the columns respect the alignment of the documents (here MATLAB notation for concatenating matrices is used). Therefore, each document  is represented by a long vector indexed by the terms in all languages.
 
 We then run the $k$-means algorithm \cite{kmeans} and obtain a centroid matrix $C \in \RR^{N \times k}$, where the $k$ columns represent centroid vectors. The centroid matrix can be split vertically into $m$ blocks: $$C = [C_1^T \cdots C_m^T]^T,$$ according to the number of dimensions of each language, i.e. $C_i \in \RR^{n_i \times k}$.
 
-The matrices $C_i$ are obtained by analyzing the multilingual corpus matrix $X$ (obtained from Wikipedia for example) and we now show how to use them to compute cross-lingual document similarities on new documents (news documents, for example). 
+The matrices $C_i$ are obtained by analyzing the multilingual corpus matrix $X$ (obtained from Wikipedia for example) and we now show how to use them to compute cross-lingual document similarities on new documents (news documents, for example).
 
 Each matrix $C_i$ represents a vector space basis and can be used to map points in $\RR^{n_i}$ into a $k$-dimensional space, where the coordinates of a vector $x \in \RR^{n_i}$ are expressed as: $$(C_i^T C_i)^{-1} C_i^T x_i.$$
 
@@ -312,9 +319,14 @@ A single canonical variable is usually inadequate in representing the original r
 
 Note that the method in its original form is only applicable to two languages where an aligned set of observations is available.
 
-\subsection{Hub languages}\label{sec:hublang}
+\subsection{Hub language based CCA Extension}\label{sec:hublang}
+Building cross-lingual similarity models based on comparable corpora is challenging for two main reasons. The problem of missing alignment data: when a number of languages is large, the dataset of documents that cover all languages is small (or may even be empty). Even if only two languages are considered, the set of aligned documents can be small (an extreme example is given by the Piedmontese and Hindi Wikipedias where no inter-language links are available). The second problem is that the number of documents and the involved
+1. missing data
+2. LSI step
+3. Sum of squared correlations
 
-In this section, we describe an extension to CCA, which is more applicable to a large number of languages. The main difficulty with applying the
+
+In this section, we describe an extension of CCA to more than two languages which can be trained on large comparable corpora. The main difficulty with applying the
 LSI and $k$-means approaches lies in the fact, that when one considers a large number of languages, for example, the top 100 Wikipedia languages (ranked by number of articles), the set of completely
 aligned documents is often small or empty. Even if only two languages are considered, the set of aligned documents can be small (for example, Piedmontese and Hindi
 Wikipedias had no interlanguage links). In Wikipedia, we observed that even though the training resources are scarce between certain language pairs, there often exists indirect training data
@@ -427,11 +439,7 @@ The problem in the second phase of the pipeline is to identify the clusters (giv
 
 \end{comment}
 
-\subsection{Related work}
 
-Although there are a number of services that aggregate news by identifying clusters of similar articles, there are almost no services that provide linking of clusters over different languages. Google News as well as Yahoo! News are able to identify clusters of articles about same event, but they offer no linking of clusters across languages. The only service that we found, which provides cross-lingual cluster linking, is the European Media Monitor (EMM)~\cite{Steinberger2008}. EMM clusters articles in 60 languages and then tries to determine which clusters of articles in different languages describe the same event. To achieve cluster linking, EMM uses three different language independent vector representations for each cluster. First vector contains the weighted list of references to countries mentioned in the articles, while the second vector contains the weighted list of mentioned people and organizations. The last vector contains the weighted list of Eurovoc subject domain descriptors. These descriptors are topics, such as \emph{air transport}, \emph{EC agreement}, \emph{competition} and \emph{pollution control} into which articles are automatically categorized~\shortcite{Pouliquen2006}. Similarity between clusters is then computed using a linear combination of the cosine similarities computed on the lists. If the similarity is above the threshold, the clusters are linked. Compared to EMM, our approach uses document similarities to obtain a small set of potentially equivalent clusters. Additionally, we do not decide if two clusters are equivalent based on a hand-set threshold on a similarity value -- instead we use a classification model that uses a larger set of features related to the tested pair of clusters.
-
-A system that is significantly different, but worth mentioning is the GDELT project~\cite{Leetaru2013Gdelt}. In GDELT, events are also extracted from articles, but in their case, an event is specified in a form of a triple containing two actors and a relation. The project contains an extensive vocabulary of possible relations, mostly related to political events. In order to identify events, GDELT collects articles in more than 65 languages and uses machine translation to translate them to English. All information extraction is then done on the translated article.
 
 \subsection{Algorithm}
 

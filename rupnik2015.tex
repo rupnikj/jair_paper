@@ -24,7 +24,7 @@
 
 \newcommand{\algInput}{\textbf{input:}}
 
-\newcommand{\primoz}[#1]{\textcolor{red}{#1}}
+\newcommand{\primoz}[1]{\textcolor{red}{#1}}
 
 
 
@@ -229,9 +229,7 @@ We will first describe how documents are represented as vectors and how to compa
 The standard vector space model \cite{Salton88term-weightingapproaches} represents documents as vectors, where each term corresponds to word or phrase in a fixed vocabulary. Formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_k$ correspond to the number of times term $k$ occurred in the document, also called \emph{term frequency} or $TF_k(d)$.
 
 We also used a term re-weighting scheme that adjusts for the fact that some words occur more frequently in general. A term weight should correspond to the importance of the term for the given corpus. The common weighting scheme is called \emph{Term Frequency Inverse Document Frequency} ($TFIDF$) weighting. An \emph{Inverse Document Frequency} ($IDF$) weight for the dictionary term $k$ is defined as $\log\left( \frac{N}{DF_k} \right)$, where $DF_k$ is the number of documents in the corpus which contain term $k$.  Therefore we can definte a document's $TFIDF$ as
-$$ x_{ij}  := \frac{\mbox{term frequency in document } i}{\mbox{inverse document frequency of term } j}
-%A document $TFIDF$ vector is its original vector multiplied element-wise by the weights.
-%
+$$ x_{ij}  := \frac{\mbox{term frequency in document } i}{\mbox{inverse document frequency of term } j}.$$
 The $TFIDF$ weighted vector space model document representation corresponds to a map $\phi : \text{text} \rightarrow \RR^n$ defined by:
 $$\phi(d)_k = {TF}_k(d) \log\left( \frac{N}{{DF}_k}\right).$$
 
@@ -247,14 +245,16 @@ $$sim_{i,j}(d_1, d_2) = \frac{ \langle \phi_i (d_1), S_{i,j} \phi_j (d_2) \rangl
 where $d_1$ and $d_2$ are documents written in the $i$-th and $j$-th language respectively. If the the maximal singular value of $S_{i,j}$ is bounded by $1$, then the similarity scores will lie on the interval $[-1, 1]$. In section \ref{sec:models} we will describe some approaches to computing $S_{i,j}$ given training data.
 
 \section{Cross-Lingual Models}\label{sec:models}
-In this section, we describe several approaches to computing multilingual simliarities described in the previous section. We present three approaches
-\begin{enumerate}
-\item  a simple approach based on $k$-means clustering
-\item  a standard approach based on singular value decomposition
-\item a new method that is applicable in more general settings.
-\end{enumerate}
- We concentrate on approaches that are based on linear maps rather than alternatives, such as machine translation and probabilistic models, as discussed in the related work section.
-For completeness we will also present the method of Canonical Correlation Analysis, since it is related to our proposed method. We will start by introducing some notation.
+In this section, we describe several approaches to the problem of computing multilingual simliarities introduced in \ref{sec:tfidf}. We present four approaches:
+a simple approach based on $k$-means clustering in \ref{sec:kmeans}, a standard approach based on singular value decomposition in \ref{sec:LSI}, a related
+approach called Canonical Correlation Analysis (CCA) in \ref{sec:CCA} and finally a new, more generally applicable method, which is an extension of CCA to more than two languages in \ref{sec:hublang}.
+
+CCA can be used to find
+correlated patterns for a pair of languages, whereas the extended method optimizes a
+sum of squared correlations between several language pairs. The method takes advantage of the hub language assumption in the training dataset (the English Wikipedia corresponds to a hub) as well as a preprocessing step based on LSI that acts as regularization and improves scalability.
+
+We concentrate on approaches that are based on linear maps rather than alternatives, such as machine translation and probabilistic models, as discussed in the related work section.
+We will start by introducing some notation.
 
 \subsection{Notation}
 
@@ -263,22 +263,27 @@ The cross-lingual similarity models presented in this paper are based on compara
 More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least two nonempty documents. A comparable corpus $D = {d_1, \ldots, d_N}$ is a collection of multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times N}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$ and the matrices respect the document alignment - the vector $X_i^\ell$ corresponds to the TFIDF vector of the $i$-th component of multilingual document $d_\ell$. We use $N$ to denote the total row dimension of $X$, i.e. $N:= \sum_{i=1}^m n_i$.
 
 
-\subsection{$k$-means}
+\subsection{$k$-means}\label{sec:kmeans}
 
-The $k$-means algorithm is perhaps the most well-known and widely-used clustering algorithm. In order to apply the algorithm, we first merge all the term-document matrices into a single matrix $X$ by stacking the individual term-document matrices:
+The $k$-means algorithm is perhaps the most well-known and widely-used clustering algorithm. We now present its application 
+to computing cross-lingual similarities. The idea is based on concatenating the corpus matrices, running standard $k$-means clustering to obtain the matrix of centroids, "reversing" the concatenation step to obtain a set of aligned bases, which are finally used to compute cross-lingual similarities.
+ 
+ In order to apply the algorithm, we first merge all the term-document matrices into a single matrix $X$ by stacking the individual term-document matrices:
 $$X := \begin{bmatrix}X_1^T ,X_2^T, \cdots, X_m^T \end{bmatrix}^T,$$
 such that the columns respect the alignment of the documents (here MATLAB notation for concatenating matrices is used). Therefore, each document  is represented by a long vector indexed by the terms in all languages.
 
 We then run the $k$-means algorithm \cite{kmeans} and obtain a centroid matrix $C \in \RR^{N \times k}$, where the $k$ columns represent centroid vectors. The centroid matrix can be split vertically into $m$ blocks: $$C = [C_1^T \cdots C_m^T]^T,$$ according to the number of dimensions of each language, i.e. $C_i \in \RR^{n_i \times k}$.
+
+The matrices $C_i$ are obtained by analyzing the multilingual corpus matrix $X$ (obtained from Wikipedia for example) and we now show how to use them to compute cross-lingual document similarities on new documents (news documents, for example). 
 
 Each matrix $C_i$ represents a vector space basis and can be used to map points in $\RR^{n_i}$ into a $k$-dimensional space, where the coordinates of a vector $x \in \RR^{n_i}$ are expressed as: $$(C_i^T C_i)^{-1} C_i^T x_i.$$
 
 The resulting matrix (when appropriately scaled to have unit norm) for similarity computation between language $i$ and language $j$ is defined as (see the reasoning below):
 $$C_i(C_i^T C_i)^{-1} (C_j^T C_j)^{-1} C_j.$$
 
-The matrix is a result of mapping documents in a language independent space using pseudo-inverses of the centroid matrices $P_i = (C_i^T C_i)^{-1} C_i$ and then comparing them using the standard inner product, which results in the matrix $P_i^T P_j$. For the sake of presentation, we assumed that the centroid vectors are linearly independent (an independent subspace could be obtained using an additional Gram-Schmidt step on the matrix $C$, if this was not the case).
+The matrix is a result of mapping documents in a language independent space using pseudo-inverses of the centroid matrices $P_i = (C_i^T C_i)^{-1} C_i$ and then comparing them using the standard inner product, which results in the matrix $P_i^T P_j$. For the sake of presentation, we assumed that the centroid vectors are linearly independent (an independent subspace could be obtained using an additional Gram-Schmidt step~\cite{golub} on the matrix $C$, if this was not the case).
 
-\subsection{Cross-Lingual Latent Semantic Indexing}
+\subsection{Cross-Lingual Latent Semantic Indexing}\label{sec:LSI}
 
 The next method is Cross-Lingual Latent Semantic Indexing (CL-LSI)\cite{cl_lsi} which is a variant of LSI~\shortcite{lsi} for more than one language. The method is based on computing a truncated singular value decomposition of $X \approx U S V^T$. Since the matrix can be large we can use an iterative method like the Lanczos~\cite{golub} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead we use a randomized version of the singular value decomposition (SVD) described in \shortcite{tropp} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
 
@@ -307,9 +312,9 @@ A single canonical variable is usually inadequate in representing the original r
 
 Note that the method in its original form is only applicable to two languages where an aligned set of observations is available.
 
-\subsection{Hub languages}
+\subsection{Hub languages}\label{sec:hublang}
 
-In this section, we describe an extension to CCA, but is more applicable to a large number of languages. The main difficulty with applying the
+In this section, we describe an extension to CCA, which is more applicable to a large number of languages. The main difficulty with applying the
 LSI and $k$-means approaches lies in the fact, that when one considers a large number of languages, for example, the top 100 Wikipedia languages (ranked by number of articles), the set of completely
 aligned documents is often small or empty. Even if only two languages are considered, the set of aligned documents can be small (for example, Piedmontese and Hindi
 Wikipedias had no interlanguage links). In Wikipedia, we observed that even though the training resources are scarce between certain language pairs, there often exists indirect training data

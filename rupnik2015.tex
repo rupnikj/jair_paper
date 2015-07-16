@@ -24,7 +24,7 @@
 
 \newcommand{\algInput}{\textbf{input:}}
 
-\newcommand{\primoz}[#1]{\textcolor{red}{#1}}
+\newcommand{\primoz}[1]{\textcolor{red}{#1}}
 
 
 
@@ -229,7 +229,7 @@ We will first describe how documents are represented as vectors and how to compa
 The standard vector space model \cite{Salton88term-weightingapproaches} represents documents as vectors, where each term corresponds to word or phrase in a fixed vocabulary. Formally, document $d$ is represented by a vector $x \in \RR^n$, where $n$ corresponds to the size of the vocabulary, and vector elements $x_k$ correspond to the number of times term $k$ occurred in the document, also called \emph{term frequency} or $TF_k(d)$.
 
 We also used a term re-weighting scheme that adjusts for the fact that some words occur more frequently in general. A term weight should correspond to the importance of the term for the given corpus. The common weighting scheme is called \emph{Term Frequency Inverse Document Frequency} ($TFIDF$) weighting. An \emph{Inverse Document Frequency} ($IDF$) weight for the dictionary term $k$ is defined as $\log\left( \frac{N}{DF_k} \right)$, where $DF_k$ is the number of documents in the corpus which contain term $k$.  Therefore we can definte a document's $TFIDF$ as
-$$ x_{ij}  := \frac{\mbox{term frequency in document } i}{\mbox{inverse document frequency of term } j}
+$$ x_{ij}  := \frac{\mbox{term frequency in document } i}{\mbox{inverse document frequency of term } j}$$
 %A document $TFIDF$ vector is its original vector multiplied element-wise by the weights.
 %
 The $TFIDF$ weighted vector space model document representation corresponds to a map $\phi : \text{text} \rightarrow \RR^n$ defined by:
@@ -502,19 +502,19 @@ Using the  features described above and the user-provided labels, we train a cla
 
 \section{Evaluation}
 
-We will describe the main dataset for building cross-lingual models which is based on Wikipedia. After that we will present three sets of experiments. The first set of experiments
+We will describe the main dataset for building cross-lingual models which is based on Wikipedia. After that we will present two sets of experiments. The first set of experiments
 will establish that the hub based approach can deal with language pairs where little or no training data is available. The second set of experiments will compare the main approaches
 the we presented on the task of mate retrieval and the task of event linking. We will also examine how different choices of features impact the event linking performance.
 
 \subsection{Wikipedia Comparable Corpus}
 
-To investigate the empirical performance of the low rank approximations we will test the algorithms on a large-scale, real-world multi-lingual dataset that we extracted from Wikipedia by using inter-language links for alignment. This  results in a large number of weakly comparable documents in more than $200$ languages. Wikipedia is a large source of multi-lingual data that is especially important for the languages for which no translation tools, multi-lingual dictionaries as Eurovoc, or strongly aligned multi-lingual corpora as Europarl are available. Documents in different languages are related with so called 'inter-language' links that can be found on the left of the Wikipedia page. The Wikipedia is constantly growing. There are currently 12 Wikipedias with more than 1 million %$10^6$
+To investigate the empirical performance of the low rank approximations we will test the algorithms on a large-scale, real-world multi-lingual dataset that we extracted from Wikipedia by using inter-language links for alignment. This  results in a large number of weakly comparable documents in more than $200$ languages. Wikipedia is a large source of multi-lingual data that is especially important for the languages for which no translation tools, multi-lingual dictionaries as Eurovoc \cite{eurovoc}, or strongly aligned multi-lingual corpora as Europarl \cite{europarl} are available. Documents in different languages are related with so called 'inter-language' links that can be found on the left of the Wikipedia page. The Wikipedia is constantly growing. There are currently 12 Wikipedias with more than 1 million %$10^6$
  articles, $52$ with more than 100k %$10^5$
  articles, $129$ with more than 10k articles, and $236$ with more than $1000$ articles.
 
 Each Wikipedia page is embedded in the page tag. First, we check if the title of the page consists of any special namespace and do not process such pages. Then, we check if this is a redirection page and we store the redirect link as inter-language links can point to redirection link also. If none of the above applies, we extract the text and parse the Wikipedia markup. Currently, all the markup is removed.
 
-We get inter-language link matrix using previously stored redirection links and inter-language links. If inter-language link points to the redirection we replace it with the redirection target link. It turns out that we obtain the matrix $M$ that is not symmetric, consequently the underlying graph is not symmetric. That means that existence of the inter-language link in one way (i.e. English to German) does not guarantee that there is an inter-language link in the reverse direction (German to English). To correct this we transform this matrix to symmetric by computing $M+M^T$ and obtaining an undirected graph. In the rare case that we have multiple links pointing from the document, we pick the first one that we encountered. This matrix enables us to build an alignment across all Wikipedia languages.
+We get inter-language link matrix using previously stored redirection links and inter-language links. If inter-language link points to the redirection we replace it with the redirection target link. It turns out that we obtain the matrix $M$ that is not symmetric, consequently the underlying graph is not symmetric. That means that existence of the inter-language link in one way (i.e. English to German) does not guarantee that there is an inter-language link in the reverse direction (German to English). To correct this we transform this matrix to symmetric by computing $M+M^T$ and obtaining an undirected graph. In the rare case that we have multiple links pointing from the document, we pick the first one that we encountered. \todo{Make this more sharp} This matrix enables us to build an alignment across all Wikipedia languages.
 
 \subsection{Experiments With Missing Alignment Data}\label{experiments:hubcca}
 
@@ -522,7 +522,7 @@ We get inter-language link matrix using previously stored redirection links and 
  To this purpose, we select a subset of Wikipedia languages containing three major languages, English--\emph{en} (hub language), Spanish--\emph{es}, Russian--\emph{ru}, and five minority (in the sense of Wikipedia sizes) languages, Slovenian--\emph{sl}, Piedmontese--\emph{pms}, Waray-Waray--\emph{war} (all with about 2 million native speakers), Creole--\emph{ht} (8 million native speakers), and Hindi--\emph{hi} (180 million native speakers). For preprocessing, we remove the documents that contain less than 20 different words (stubs) and remove words occurring in less than 50 documents as well as the top 100 most frequent words (in each language separately). We represent the documents as normalized TFIDF\cite{Salton88term-weightingapproaches} weighted vectors.
  %These are languages with Wikipedia article sizes comparable to the minority languages.  (since the number of speakers does not directly correlate with the number of Wikipedia articles). The prime hub candidate is the English %language which is well aligned with all other Wikipedia languages, although the alignment quality varies quite a bit. Furthermore, we remove the documents that contain less than 20 different words and remove words that are too %infrequent as well as the top 100 most frequent words in the vocabularies.
  Although the English language is well aligned with all Wikipedia languages, we must note that quality of alignment varies quite a bit, especially in the case of small Wikipedias.
- Furthermore, we call the document consisting of less than 20 different words, a stub. This documents are typically garbage, the titles of the columns in the table, remains of the parsing process, or Wikipedia articles with very little or no information contained in one or two sentences.
+ Furthermore, we call the document consisting of less than 20 different words, a stub. This documents are typically garbage, the titles of the columns in the table, remains of the parsing process, or Wikipedia articles with very little or no information contained in one or two sentences. \todo{Move this to footnote for stubs}
 
 
 The evaluation is based on splitting the data into training and test sets (which are described later). On the training set, we perform the two step procedure to obtain the common document representation as a set of mappings $P_i$. A test set for each language pair, $test_{i,j} = \{(x_\ell,y_\ell) | \ell = 1:n(i,j)\} $, consists of comparable document pairs (linked Wikipedia pages), where $n(i,j)$ is the test set size. We evaluate the representation by measuring mate retrieval quality on the test sets: for each $\ell$, we rank the projected documents $P_j(y_1),\ldots, P_j(y_{n(i,j)})$ according to their similarity with $P_i(x_\ell)$ and compute the rank of the mate document $r(\ell) = rank(P_j(y_\ell))$. The final retrieval score (between -100 and 100) is computed as: $\frac{100}{n(i,j)} \cdot \sum_{\ell = 1}^{n(i,j)} \left( \frac{n(i,j) - r(\ell)}{n(i,j) -1} -0.5\right)$. A score that is less than 0 means that the method performs worse than random retrieval and a score of 100 indicates perfect mate retrieval. The mate retrieval results are included in Table \ref{table:retrieval}.
@@ -643,11 +643,11 @@ It is worth noting that added accuracy is also beneficial when we wish to choose
 %AMPR as function of the number of feature vectors
 %500 is good, 800 better, 1000 overfitting, noise!
 \begin{figure}
-\label{pic:AMRR}
 %\includegraphics{slika.png}
 \centering
 \input{retrieval}
 \caption{Average of mean reciprocal ranks}
+\label{pic:AMRR}
 \end{figure}
 %Why the hub approach?
 %Optimize for language pairs in the system that have the largest number of articles in the system!

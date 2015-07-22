@@ -1,0 +1,79 @@
+original data size: 1164
+data after removing same langs: 808
+======
+cca
+attributes:  CCAMatchCount,CCAArtMatchRatio,CCAAvgMatchWgt,CCAAvgCosSim
+Accuracy:  78.3%
+Precision: 0.779
+Recall:    0.789
+F1:        0.784
+Accuracy:  78.3% +- 5.9%
+Precision: 0.782 +- 0.070
+Recall:    0.789 +- 0.052
+F1:        0.784 +- 0.055
+======
+semantic
+attributes:  ConceptCosSim,EntityCosSim,KeywordCosSim,ConceptJaccardSim,EntityJaccardSim,KeywordJaccardSim
+Accuracy:  88.5%
+Precision: 0.883
+Recall:    0.886
+F1:        0.884
+Accuracy:  88.5% +- 2.7%
+Precision: 0.886 +- 0.048
+Recall:    0.886 +- 0.022
+F1:        0.885 +- 0.024
+======
+misc
+attributes:  TimeDiff,CoreTimeDiff,ExtractedDateJaccardSim,MatchingDateCount,MatchingDateRatio,HasSameLocation
+Accuracy:  54.8%
+Precision: 0.543
+Recall:    0.582
+F1:        0.562
+Accuracy:  54.8% +- 6.7%
+Precision: 0.618 +- 0.165
+Recall:    0.582 +- 0.302
+F1:        0.524 +- 0.130
+======
+cca + semantic
+attributes:  CCAMatchCount,CCAArtMatchRatio,CCAAvgMatchWgt,CCAAvgCosSim,ConceptCosSim,EntityCosSim,KeywordCosSim,ConceptJaccardSim,EntityJaccardSim,KeywordJaccardSim
+Accuracy:  89.4%
+Precision: 0.891
+Recall:    0.896
+F1:        0.893
+Accuracy:  89.4% +- 2.5%
+Precision: 0.894 +- 0.046
+Recall:    0.896 +- 0.024
+F1:        0.894 +- 0.023
+======
+cca + misc
+attributes:  CCAMatchCount,CCAArtMatchRatio,CCAAvgMatchWgt,CCAAvgCosSim,TimeDiff,CoreTimeDiff,ExtractedDateJaccardSim,MatchingDateCount,MatchingDateRatio,HasSameLocation
+Accuracy:  78.8%
+Precision: 0.784
+Recall:    0.794
+F1:        0.789
+Accuracy:  78.8% +- 5.0%
+Precision: 0.789 +- 0.071
+Recall:    0.794 +- 0.046
+F1:        0.790 +- 0.045
+======
+semantic + misc
+attributes:  ConceptCosSim,EntityCosSim,KeywordCosSim,ConceptJaccardSim,EntityJaccardSim,KeywordJaccardSim,TimeDiff,CoreTimeDiff,ExtractedDateJaccardSim,MatchingDateCount,MatchingDateRatio,HasSameLocation
+Accuracy:  88.7%
+Precision: 0.886
+Recall:    0.888
+F1:        0.887
+Accuracy:  88.7% +- 2.6%
+Precision: 0.888 +- 0.046
+Recall:    0.888 +- 0.022
+F1:        0.887 +- 0.023
+======
+cca + semantic + misc
+attributes:  CCAMatchCount,CCAArtMatchRatio,CCAAvgMatchWgt,CCAAvgCosSim,ConceptCosSim,EntityCosSim,KeywordCosSim,ConceptJaccardSim,EntityJaccardSim,KeywordJaccardSim,TimeDiff,CoreTimeDiff,ExtractedDateJaccardSim,MatchingDateCount,MatchingDateRatio,HasSameLocation
+Accuracy:  89.2%
+Precision: 0.885
+Recall:    0.900
+F1:        0.893
+Accuracy:  89.2% +- 2.6%
+Precision: 0.888 +- 0.049
+Recall:    0.901 +- 0.019
+F1:        0.893 +- 0.023

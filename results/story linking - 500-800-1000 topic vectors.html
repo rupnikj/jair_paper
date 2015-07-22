@@ -1,0 +1,181 @@
+<html>
+<head>
+	<title>Orange viewer</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<style>
+html, body, table {
+	font:normal 10px verdana;
+	margin:0px;
+	padding:0;
+	border:0 none;	
+}
+p {
+	margin:5px;
+}
+
+h1, h2 , h3, h4, h5 {
+   font-family: verdana;
+   width: 100%;
+   padding: 1px;
+   margin: 2px;
+   font-size:100%;
+}
+
+h1 {
+   color: white;
+   background-color: black;
+   padding-left: 2px;
+   margin-top: 12px;
+}
+
+h2 {
+   background-color: #fdffd5;
+   border-bottom: 1px solid black;
+   padding-left: 2px;
+}
+
+ul {
+   margin-left: 10px;
+}
+
+div.insideh1 {
+   padding-left: 4px;
+}
+
+.settings {
+	background-image:url(ext-2.0-rc1/examples/shared/icons/fam/folder_wrench.png);
+}
+.nav {
+	background-image:url(ext-2.0-rc1/examples/shared/icons/fam/folder_go.png);
+}
+
+span.timestamp {
+    position: absolute;
+	right: 40px;
+	color:#dddddd;
+}
+
+div.selected {
+	border: 1px solid black;
+	padding: 3px;
+	/* background-color: #FDFFA5; */
+	margin: 4px;
+}
+
+div.normal {
+	border: 0px;
+	padding: 3px;
+	/* background-color: #FDFFD5;*/
+	margin: 5px;
+}
+
+</style>
+
+<body><table width="100%"><tr><td valign="top"><p style="padding-top:25px;">Index</p><a href="#N001">File</a><br/><a href="#N002">Test Learners</a><br/><a href="#N003">File</a><br/><a href="#N004">Test Learners</a><br/><a href="#N005">File</a><br/><a href="#N006">Test Learners</a><br/><a href="#N007">File</a><br/><a href="#N008">Test Learners</a></td><td><div id="N001" onClick="myself.changeItem(this.id);">    <a name="N001">    <h1>File<span class="timestamp">Mon Mar 23 15, 19:30:06</span></h1>    <div class="insideh1">        
+
+<h2>File</h2>
+
+    <ul><b>File name: </b>R:/Data/JAIR-Data/2015-03-17/LrnStoryLinkingFtrVec - sim_cca_clean_from_800_to_500.tab<br/><b>Format: </b>Tab-delimited file<br/></ul>
+
+
+<h2>Data</h2>
+
+    <ul><b>Examples: </b>1164<br/><b>Attributes: </b>22 (AvgStoryQ, MinStoryQ, MinCosSim, MinVariance, CCAMatchCount, CCAArtMatchRatio, CCAAvgMatchWgt, CCAAvgCosSim, ConceptCosSim, EntityCosSim, KeywordCosSim, ConceptJaccardSim, EntityJaccardSim, KeywordJaccardSim, TimeDiff, CoreTimeDiff, ExtractedDateJaccardSim, MatchingDateCount, MatchingDateRatio, CategorySim, HasSameLocation, DummyVar)<br/><b>Meta attributes: </b>1 (Language pair)<br/><b>Class: </b>ShouldMerge<br/></ul>
+    </div></div>
+<div id="N002" onClick="myself.changeItem(this.id);">    <a name="N002">    <h1>Test Learners<span class="timestamp">Mon Mar 23 15, 19:30:19</span></h1>    <div class="insideh1">        
+
+<h2>Validation method</h2>
+
+    <ul><b>Method: </b>Cross-validation<br/><b>Folds: </b>10<br/><b>Target class: </b>yes<br/></ul>
+
+
+<h2>Data</h2>
+
+    <ul><b>Examples: </b>808<br/><b>Attributes: </b>4 (CCAMatchCount, CCAArtMatchRatio, CCAAvgMatchWgt, CCAAvgCosSim)<br/><b>Meta attributes: </b>1 (Language pair)<br/><b>Class: </b>ShouldMerge<br/></ul>
+
+
+<h2>Results</h2>
+
+<table><tr><th></th><th><b>CA</b></th><th><b>AUC</b></th><th><b>F1</b></th><th><b>Prec</b></th><th><b>Recall</b></th></tr><tr><th><b>SVM</b></th><td>0.7758</td><td>0.8459</td><td>0.7822</td><td>0.7576</td><td>0.8085</td></tr></table>    </div></div>
+<div id="N003" onClick="myself.changeItem(this.id);">    <a name="N003">    <h1>File<span class="timestamp">Mon Mar 23 15, 19:30:39</span></h1>    <div class="insideh1">        
+
+<h2>File</h2>
+
+    <ul><b>File name: </b>R:/Data/JAIR-Data/2015-03-17/LrnStoryLinkingFtrVec - sim_cca_with_500.tab<br/><b>Format: </b>Tab-delimited file<br/></ul>
+
+
+<h2>Data</h2>
+
+    <ul><b>Examples: </b>1164<br/><b>Attributes: </b>22 (AvgStoryQ, MinStoryQ, MinCosSim, MinVariance, CCAMatchCount, CCAArtMatchRatio, CCAAvgMatchWgt, CCAAvgCosSim, ConceptCosSim, EntityCosSim, KeywordCosSim, ConceptJaccardSim, EntityJaccardSim, KeywordJaccardSim, TimeDiff, CoreTimeDiff, ExtractedDateJaccardSim, MatchingDateCount, MatchingDateRatio, CategorySim, HasSameLocation, DummyVar)<br/><b>Meta attributes: </b>1 (Language pair)<br/><b>Class: </b>ShouldMerge<br/></ul>
+    </div></div>
+<div id="N004" onClick="myself.changeItem(this.id);">    <a name="N004">    <h1>Test Learners<span class="timestamp">Mon Mar 23 15, 19:30:44</span></h1>    <div class="insideh1">        
+
+<h2>Validation method</h2>
+
+    <ul><b>Method: </b>Cross-validation<br/><b>Folds: </b>10<br/><b>Target class: </b>yes<br/></ul>
+
+
+<h2>Data</h2>
+
+    <ul><b>Examples: </b>808<br/><b>Attributes: </b>4 (CCAMatchCount, CCAArtMatchRatio, CCAAvgMatchWgt, CCAAvgCosSim)<br/><b>Meta attributes: </b>1 (Language pair)<br/><b>Class: </b>ShouldMerge<br/></ul>
+
+
+<h2>Results</h2>
+
+<table><tr><th></th><th><b>CA</b></th><th><b>AUC</b></th><th><b>F1</b></th><th><b>Prec</b></th><th><b>Recall</b></th></tr><tr><th><b>SVM</b></th><td>0.7820</td><td>0.8505</td><td>0.7885</td><td>0.7628</td><td>0.8159</td></tr></table>    </div></div>
+<div id="N005" onClick="myself.changeItem(this.id);">    <a name="N005">    <h1>File<span class="timestamp">Mon Mar 23 15, 19:30:49</span></h1>    <div class="insideh1">        
+
+<h2>File</h2>
+
+    <ul><b>File name: </b>R:/Data/JAIR-Data/2015-03-17/LrnStoryLinkingFtrVec - sim_cca_with_800.tab<br/><b>Format: </b>Tab-delimited file<br/></ul>
+
+
+<h2>Data</h2>
+
+    <ul><b>Examples: </b>1164<br/><b>Attributes: </b>22 (AvgStoryQ, MinStoryQ, MinCosSim, MinVariance, CCAMatchCount, CCAArtMatchRatio, CCAAvgMatchWgt, CCAAvgCosSim, ConceptCosSim, EntityCosSim, KeywordCosSim, ConceptJaccardSim, EntityJaccardSim, KeywordJaccardSim, TimeDiff, CoreTimeDiff, ExtractedDateJaccardSim, MatchingDateCount, MatchingDateRatio, CategorySim, HasSameLocation, DummyVar)<br/><b>Meta attributes: </b>1 (Language pair)<br/><b>Class: </b>ShouldMerge<br/></ul>
+    </div></div>
+<div id="N006" onClick="myself.changeItem(this.id);">    <a name="N006">    <h1>Test Learners<span class="timestamp">Mon Mar 23 15, 19:30:51</span></h1>    <div class="insideh1">        
+
+<h2>Validation method</h2>
+
+    <ul><b>Method: </b>Cross-validation<br/><b>Folds: </b>10<br/><b>Target class: </b>yes<br/></ul>
+
+
+<h2>Data</h2>
+
+    <ul><b>Examples: </b>808<br/><b>Attributes: </b>4 (CCAMatchCount, CCAArtMatchRatio, CCAAvgMatchWgt, CCAAvgCosSim)<br/><b>Meta attributes: </b>1 (Language pair)<br/><b>Class: </b>ShouldMerge<br/></ul>
+
+
+<h2>Results</h2>
+
+<table><tr><th></th><th><b>CA</b></th><th><b>AUC</b></th><th><b>F1</b></th><th><b>Prec</b></th><th><b>Recall</b></th></tr><tr><th><b>SVM</b></th><td>0.7956</td><td>0.8625</td><td>0.8000</td><td>0.7801</td><td>0.8209</td></tr></table>    </div></div>
+<div id="N007" onClick="myself.changeItem(this.id);">    <a name="N007">    <h1>File<span class="timestamp">Mon Mar 23 15, 19:30:56</span></h1>    <div class="insideh1">        
+
+<h2>File</h2>
+
+    <ul><b>File name: </b>R:/Data/JAIR-Data/2015-03-17/LrnStoryLinkingFtrVec - sim_cca_with_1000.tab<br/><b>Format: </b>Tab-delimited file<br/></ul>
+
+
+<h2>Data</h2>
+
+    <ul><b>Examples: </b>1164<br/><b>Attributes: </b>22 (AvgStoryQ, MinStoryQ, MinCosSim, MinVariance, CCAMatchCount, CCAArtMatchRatio, CCAAvgMatchWgt, CCAAvgCosSim, ConceptCosSim, EntityCosSim, KeywordCosSim, ConceptJaccardSim, EntityJaccardSim, KeywordJaccardSim, TimeDiff, CoreTimeDiff, ExtractedDateJaccardSim, MatchingDateCount, MatchingDateRatio, CategorySim, HasSameLocation, DummyVar)<br/><b>Meta attributes: </b>1 (Language pair)<br/><b>Class: </b>ShouldMerge<br/></ul>
+    </div></div>
+<div id="N008" onClick="myself.changeItem(this.id);">    <a name="N008">    <h1>Test Learners<span class="timestamp">Mon Mar 23 15, 19:30:58</span></h1>    <div class="insideh1">        
+
+<h2>Validation method</h2>
+
+    <ul><b>Method: </b>Cross-validation<br/><b>Folds: </b>10<br/><b>Target class: </b>yes<br/></ul>
+
+
+<h2>Data</h2>
+
+    <ul><b>Examples: </b>808<br/><b>Attributes: </b>4 (CCAMatchCount, CCAArtMatchRatio, CCAAvgMatchWgt, CCAAvgCosSim)<br/><b>Meta attributes: </b>1 (Language pair)<br/><b>Class: </b>ShouldMerge<br/></ul>
+
+
+<h2>Results</h2>
+
+<table><tr><th></th><th><b>CA</b></th><th><b>AUC</b></th><th><b>F1</b></th><th><b>Prec</b></th><th><b>Recall</b></th></tr><tr><th><b>SVM</b></th><td>0.8031</td><td>0.8655</td><td>0.8015</td><td>0.8045</td><td>0.7985</td></tr></table>    </div></div></td></tr></table>
+
+ </body>
+</html>

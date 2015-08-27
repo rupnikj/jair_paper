@@ -51,7 +51,7 @@ Cross-Lingual Document Similarity and Event Tracking}
 
 \begin{abstract}
 
-In today's world, we follow news which is distributed globally. Significant events are reported by different sources and in different languages. In this work, we address the problem of tracking and events in a large multilingual stream. Within a recently developed system (EventRegistry  \shortcite{Leban2014W,Leban2014I}), we examine two aspects of this problem: how to compare articles in different languages and how to link collections of articles in different languages which refer to the same event.  Taking a multi-lingual stream and clusters of articles from each language, we compare different cross-lingual document similarity measures based on Wikipedia. This allows us to compute the similarity of any two articles regardless of language. Building on previous work, we show there are methods which scale well and can compute a meaningful similarity between articles from languages with little or no direct overlap in the training data.  
+In today's world, we follow news which is distributed globally. Significant events are reported by different sources and in different languages. In this work, we address the problem of tracking and events in a large multilingual stream. Within a recently developed system (EventRegistry  \shortcite{Leban2014W,Leban2014I}), we examine two aspects of this problem: how to compare articles in different languages and how to link collections of articles in different languages which refer to the same event.  Taking a multi-lingual stream and clusters of articles from each language, we compare different cross-lingual document similarity measures based on Wikipedia. This allows us to compute the similarity of any two articles regardless of language. Building on previous work, we show there are methods which scale well and can compute a meaningful similarity between articles from languages with little or no direct overlap in the training data.
 Using this capability, we then propose an approach to link clusters of articles across languages which represent the same event. We provide an extensive evaluation of the system as a whole, as well as an evaluation of the quality and robustness of the similarity measure and the linking algorithm.
 
 %Given a multi-lingual stream and clusters of articles from each language, we first propose a method for cross-lingual document similarity based on Wikipedia, which enables us to compute the similarity of any two articles regardless of language. The proposed method can scale to 100 languages and can match articles from languages with little or no direct overlap in the training data. Using this similarity, we then propose an approach to link clusters of articles across languages which represent the same event. We provide an extensive evaluation of the system as a whole, as well as an evaluation of the quality and robustness of the similarity measure and the linking algorithm.
@@ -101,7 +101,7 @@ Main points:
 
 \section{Introduction}
 
-Content on the internet is becoming increasingly multi-lingual. A prime example is Wikipedia - in 2001, the majority of pages were written in English, while in 2015, the percentage of English articles has dropped to 14\%. At the same time, online news has begun to dominate reporting of current events. However, machine translation remains relatively rudimentary - allowing people to understand simple phrases on web pages, but remain inadequate for more advanced understanding of text. In this paper we consider the intersection of these developments: how to track events which are reported about in multiple languages. 
+Content on the internet is becoming increasingly multi-lingual. A prime example is Wikipedia - in 2001, the majority of pages were written in English, while in 2015, the percentage of English articles has dropped to 14\%. At the same time, online news has begun to dominate reporting of current events. However, machine translation remains relatively rudimentary - allowing people to understand simple phrases on web pages, but remain inadequate for more advanced understanding of text. In this paper we consider the intersection of these developments: how to track events which are reported about in multiple languages.
 
 The term event is vague and ambiguous, but for the practical purposes, we define it as ``any significant happening that is being reported about in the media.'' Examples of events would include shooting down of the Malaysia Airlines plane over Ukraine on July 18th, 2014 and HSBC's admittance of aiding their clients in tax evasion on February 9th, 2015 (Figure \ref{fig:event2}). Events such as these are covered by many articles and the question is how to find all the articles in different languages that are describing a single event.
 
@@ -165,9 +165,9 @@ When a cluster is identified and information about the event is extracted, all a
 \subsection{System Requirements}
 \label{sec:sysreq}
 
-Our goal is to build a system that monitors global media and analyzes how events are being reported on. Our approach consists of two steps: tracking events separately in each language (based on language detection and an online clustering approach) and then connecting them. The pipeline must be able to process millions of articles per day and perform billions of similarity computations each day. Both step rely heavily on simliarity computation, which implies that this must be highly scalable. 
+Our goal is to build a system that monitors global media and analyzes how events are being reported on. Our approach consists of two steps: tracking events separately in each language (based on language detection and an online clustering approach) and then connecting them. The pipeline must be able to process millions of articles per day and perform billions of similarity computations each day. Both step rely heavily on simliarity computation, which implies that this must be highly scalable.
 %
-%while both steps must be scalable, the underlying similarity computation is used 
+%while both steps must be scalable, the underlying similarity computation is used
 %- implying that similarity computation should be highly scalable.  %The system should support as many languages as possible.
 Therefore, we focus on implementations that run on a single shared memory machine, as opposed to clusters of machines. This  simplifies implementation and system maintenance.
 To summarize, the following properties are desirable:
@@ -239,9 +239,11 @@ In this section, we describe several approaches to the problem of computing mult
 a simple approach based on $k$-means clustering in \ref{sec:kmeans}, a standard approach based on singular value decomposition in \ref{sec:LSI}, a related
 approach called Canonical Correlation Analysis (CCA) in \ref{sec:CCA} and finally a new, more generally applicable method, which is an extension of CCA to more than two languages in \ref{sec:hublang}.
 %
-CCA can be used to find
-correlated patterns for a pair of languages, whereas the extended method optimizes a
-sum of squared correlations between several language pairs. The method takes advantage of the hub language assumption in the training dataset (the English Wikipedia corresponds to a hub) as well as a preprocessing step based on LSI that acts as regularization and improves scalability. \todo{we need to set this up better}
+CCA can be used to find correlated patterns for a pair of languages, whereas the extended method optimizes a
+Sum of Squared Correlations (SSCOR) between several language pairs, which was introduced in \cite{Kettenring}. The SSCOR problem is difficult to solve in our setting (hundreds of thousands of features, hundreds of thousands of examples). To tackle this, we proposed a method which consists of two ingredients.
+ The first one is based on an observation that certain datasets (such as Wikipedia) are biased towards one language (English), which can be exploited
+ to reformulate a difficult optimization problem as an eigenvector problem. The second ingredient is dimensionality reduction using LSI, which
+ makes the eigenvector problem computationally and numerically tractable. \todo{we need to set this up better. Revised by Jan. Check if OK}
 
 We concentrate on approaches that are based on linear maps rather than alternatives, such as machine translation and probabilistic models, as discussed in the related work section.
 We will start by introducing some notation.
@@ -250,7 +252,13 @@ We will start by introducing some notation.
 
 The cross-lingual similarity models presented in this paper are based on comparable corpora. That is, a corpus of documents in multiple languages, with alignment between documents that are of the same topic, or even a rough translation of each other. Wikipedia is an example of a comparable corpus, where a specific entry can be described in multiple languages (e.g. ``Berlin" is currently described in 222 languages). News articles represent another example, where the same event can be described by newspapers in several languages.
 
-More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least two nonempty documents. A comparable corpus $D = {d_1, \ldots, d_N}$ is a collection of multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times N}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$ and the matrices respect the document alignment - the vector $X_i^\ell$ corresponds to the TFIDF vector of the $i$-th component of multilingual document $d_\ell$. We use $N$ to denote the total row dimension of $X$, i.e. $N:= \sum_{i=1}^m n_i$.\todo{picture - this part isnt that clear}
+More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least two nonempty documents. A comparable corpus $D = {d_1, \ldots, d_s}$ is a collection of $s$ multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times s}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$ and the matrices respect the document alignment - the vector $X_i^\ell$ corresponds to the TFIDF vector of the $i$-th component of multilingual document $d_\ell$. We use $N$ to denote the total row dimension of $X$, i.e. $N:= \sum_{i=1}^m n_i$. See the Figure~\ref{fig:stacked_matrices} for an illustration of the introduced notation.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\textwidth]{stacked_matrices}
+\caption{\label{fig:stacked_matrices} Multilingual corpora and their matrix representations using the vector space model.}
+\end{figure}
 
 
 \subsection{$k$-means}\label{sec:kmeans}
@@ -264,7 +272,7 @@ such that the columns respect the alignment of the documents (here MATLAB notati
 
 We then run the $k$-means algorithm \cite{kmeans} and obtain a centroid matrix $C \in \RR^{N \times k}$, where the $k$ columns represent centroid vectors. The centroid matrix can be split vertically into $m$ blocks: $$C = [C_1^T \cdots C_m^T]^T,$$ according to the number of dimensions of each language, i.e. $C_i \in \RR^{n_i \times k}$.
 %
-The matrices $C_i$ are computed using a multilingual corpus matrix $X$ (obtained from Wikipedia for example). 
+The matrices $C_i$ are computed using a multilingual corpus matrix $X$ (obtained from Wikipedia for example).
 
 To compute  cross-lingual document similarities on new documents, note that each matrix $C_i$ represents a vector space basis and can be used to map points in $\RR^{n_i}$ into a $k$-dimensional space, where the coordinates of a vector $x \in \RR^{n_i}$ are expressed as: $$(C_i^T C_i)^{-1} C_i^T x_i.$$
 

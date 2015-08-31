@@ -264,7 +264,13 @@ More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of
 \subsection{$k$-means}\label{sec:kmeans}
 
 The $k$-means algorithm is perhaps the most well-known and widely-used clustering algorithm. Here, we present its application
-to computing cross-lingual similarities. The idea is based on concatenating the corpus matrices, running standard $k$-means clustering to obtain the matrix of centroids, ``reversing" the concatenation step to obtain a set of aligned bases, which are finally used to compute cross-lingual similarities.
+to computing cross-lingual similarities. The idea is based on concatenating the corpus matrices, running standard $k$-means clustering to obtain the matrix of centroids, ``reversing" the concatenation step to obtain a set of aligned bases, which are finally used to compute cross-lingual similarities. See the Figure~\ref{fig:kmeans} for an illustration of process of computing multilingual clusters and using them to change the coordinates to ``topic`` space.
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\textwidth]{kmeans}
+\caption{\label{fig:kmeans} $k$-means algorithm and coordinate change.}
+\end{figure}
 
  In order to apply the algorithm, we first merge all the term-document matrices into a single matrix $X$ by stacking the individual term-document matrices (as seen in Figure~\ref{fig:stacked_matrices}):
 $$X := \begin{bmatrix}X_1^T ,X_2^T, \cdots, X_m^T \end{bmatrix}^T,$$
@@ -283,13 +289,22 @@ The matrix is a result of mapping documents in a language independent space usin
 
 \subsection{Cross-Lingual Latent Semantic Indexing}\label{sec:LSI}
 
-The second approach we consider is Cross-Lingual Latent Semantic Indexing (CL-LSI)\cite{cl_lsi} which is a variant of LSI~\shortcite{lsi} for more than one language. The method is based on computing a truncated singular value decomposition of $X \approx U S V^T$. Since the matrix can be large we can use an iterative method like the Lanczos~\cite{golub} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead, we use a randomized version of the singular value decomposition (SVD) described in \shortcite{tropp} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
+The second approach we consider is Cross-Lingual Latent Semantic Indexing (CL-LSI)\cite{cl_lsi} which is a variant of LSI~\shortcite{lsi} for more than one language. The method is based on computing a truncated singular value decomposition of $X \approx U S V^T$. See the Figure~\ref{fig:lsi} for the decomposition. Representing documents in ``topic`` coordinates is done in the same way as in the $k$-means case (see Figure~\ref{fig:kmeans}).
+
+\begin{figure}[tbp]
+\centering
+\includegraphics[width=\textwidth]{lsi}
+\caption{\label{fig:lsi} LSI multilingual corpus matrix decomposition.}
+\end{figure}
+ 
+ 
+ Since the matrix can be large we can use an iterative method like the Lanczos~\cite{golub} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead, we use a randomized version of the singular value decomposition (SVD) described in \shortcite{tropp} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
 
 The cross-lingual similarity functions are based on a rank-$k$ truncated SVD: $X \approx U \Sigma V^T,$ where $U \in \RR^{N \times k}$ are basis vectors of interest and $\Sigma \in \RR^{k \times k}$ is truncated diagonal matrix of singular eigenvalues.
 
 An aligned basis is obtained by first splitting $U$ vertically according to the number of dimensions of each language: $U = [U_1^T \cdots U_m^T]^T$. Then, the same as with $k$-means clustering, we compute the pseudoinverses $P_i = (U_i^T U_i)^{-1} U_i^T$. The matrices $P_i$ are used to change the basis from the standard basis in $\RR^{n_i}$ to the basis of columns of $U_i$.
 
-The numerical implementation of the least squares is done by QR algorithm, by computing factorizing $U_i = Q R$, where $Q^TQ = I$ and $R$ is triangular matrix. $P_i$ is then obtained by solving $R P_i = Q$.
+The numerical implementation of the least squares is done by QR algorithm~\cite{golub}, by computing factorizing $U_i = Q R$, where $Q^TQ = I$ and $R$ is triangular matrix. $P_i$ is then obtained by solving $R P_i = Q$.
 
 
 \subsection{Canonical Correlation Analysis}\label{sec:CCA}
@@ -312,7 +327,12 @@ Note that the method in its original form is only applicable to two languages wh
 \todo{each of these sections should have a matrix picture..}
 
 \subsection{Hub language based CCA Extension}\label{sec:hublang}
-Building cross-lingual similarity models based on comparable corpora is challenging for two main reasons. The problem of missing alignment data: when a number of languages is large, the dataset of documents that cover all languages is small (or may even be empty). Even if only two languages are considered, the set of aligned documents can be small (an extreme example is given by the Piedmontese and Hindi Wikipedias where no inter-language links are available). The second problem is the number of documents and involved
+Building cross-lingual similarity models based on comparable corpora is challenging for two main reasons. The first problem is related to missing alignment data: when a number of languages is large, the dataset of documents that cover all languages is small (or may even be empty). Even if only two languages are considered, the set of aligned documents can be small (an extreme example is given by the Piedmontese and Hindi Wikipedias where no inter-language links are available). The second challenge is scale - the data is high-dimensional (hundreds of thousands of features per language, many languages) and the number of multilingual documents may be large (over one million in case of Wikipedia).
+
+
+
+
+
 1. missing data
 2. LSI step
 3. Sum of squared correlations
@@ -321,8 +341,7 @@ Building cross-lingual similarity models based on comparable corpora is challeng
 We describe an extension of CCA to more than two languages, which can be trained on large comparable corpora. The main difficulty with applying the
 LSI and $k$-means approaches is the fact that when one considers a large number of languages, e.g., the top 100 Wikipedia languages (ranked by number of articles), the set of completely
 aligned documents (over all languages) is often small or empty. Even if only two languages are considered, the set of aligned documents can be small (for example, Piedmontese and Hindi
-Wikipedias had no interlanguage links). In Wikipedia, we observed that even though the training resources are scarce between certain language pairs, there often exists indirect training data
-through what we refer to as a hub language.
+Wikipedias had no interlanguage links). In Wikipedia, we observed that even though the training resources are scarce between certain language pairs, there often exists indirect training data through what we refer to as a hub language.
 
 A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$. The prototypical  exampling  in the case of Wikipedia is English. We use the following notation to define subsets of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $$a(i,j) = \left\{k~ |~ d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
 

@@ -240,7 +240,7 @@ a simple approach based on $k$-means clustering in \ref{sec:kmeans}, a standard 
 approach called Canonical Correlation Analysis (CCA) in \ref{sec:CCA} and finally a new, more generally applicable method, which is an extension of CCA to more than two languages in \ref{sec:hublang}.
 %
 CCA can be used to find correlated patterns for a pair of languages, whereas the extended method optimizes a
-Sum of Squared Correlations (SSCOR) between several language pairs, which was introduced in \cite{Kettenring}. The SSCOR problem is difficult to solve in our setting (hundreds of thousands of features, hundreds of thousands of examples). To tackle this, we proposed a method which consists of two ingredients.
+Sum of Squared Correlations (SSCOR) between several language pairs, which was introduced in \cite{Kettenring}. The SSCOR problem is difficult to solve in our setting (hundreds of thousands of features, hundreds of thousands of examples). To tackle this, we propose a method which consists of two ingredients.
  The first one is based on an observation that certain datasets (such as Wikipedia) are biased towards one language (English), which can be exploited
  to reformulate a difficult optimization problem as an eigenvector problem. The second ingredient is dimensionality reduction using LSI, which
  makes the eigenvector problem computationally and numerically tractable. \todo{we need to set this up better. Revised by Jan. Check if OK}
@@ -256,7 +256,7 @@ More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of
 
 \begin{figure}[tbp]
 \centering
-\includegraphics[width=\textwidth]{stacked_matrices}
+\includegraphics[width=\textwidth]{stacked_matrices.pdf}
 \caption{\label{fig:stacked_matrices} Multilingual corpora and their matrix representations using the vector space model.}
 \end{figure}
 
@@ -264,11 +264,11 @@ More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of
 \subsection{$k$-means}\label{sec:kmeans}
 
 The $k$-means algorithm is perhaps the most well-known and widely-used clustering algorithm. Here, we present its application
-to computing cross-lingual similarities. The idea is based on concatenating the corpus matrices, running standard $k$-means clustering to obtain the matrix of centroids, ``reversing" the concatenation step to obtain a set of aligned bases, which are finally used to compute cross-lingual similarities. See the Figure~\ref{fig:kmeans} for an illustration of process of computing multilingual clusters and using them to change the coordinates to ``topic`` space.
+to computing cross-lingual similarities. The idea is based on concatenating the corpus matrices, running standard $k$-means clustering to obtain the matrix of centroids, ``reversing" the concatenation step to obtain a set of aligned bases, which are finally used to compute cross-lingual similarities. See the Figure~\ref{fig:kmeans} for an illustration of process of computing multilingual clusters and using them to change the coordinates to cluster centroid ``topic" space.
 
 \begin{figure}[tbp]
 \centering
-\includegraphics[width=\textwidth]{kmeans}
+\includegraphics[width=\textwidth]{kmeans.pdf}
 \caption{\label{fig:kmeans} $k$-means algorithm and coordinate change.}
 \end{figure}
 
@@ -278,7 +278,7 @@ such that the columns respect the alignment of the documents (here MATLAB notati
 
 We then run the $k$-means algorithm \cite{kmeans} and obtain a centroid matrix $C \in \RR^{N \times k}$, where the $k$ columns represent centroid vectors. The centroid matrix can be split vertically into $m$ blocks: $$C = [C_1^T \cdots C_m^T]^T,$$ according to the number of dimensions of each language, i.e. $C_i \in \RR^{n_i \times k}$.
 %
-The matrices $C_i$ are computed using a multilingual corpus matrix $X$ (obtained from Wikipedia for example).
+To reiterate, the matrices $C_i$ are computed using a multilingual corpus matrix $X$ (based on Wikipedia for example).
 
 To compute  cross-lingual document similarities on new documents, note that each matrix $C_i$ represents a vector space basis and can be used to map points in $\RR^{n_i}$ into a $k$-dimensional space, where the new coordinates of a vector $x \in \RR^{n_i}$ are expressed as: $$(C_i^T C_i)^{-1} C_i^T x_i.$$
 
@@ -289,26 +289,28 @@ The matrix is a result of mapping documents in a language independent space usin
 
 \subsection{Cross-Lingual Latent Semantic Indexing}\label{sec:LSI}
 
-The second approach we consider is Cross-Lingual Latent Semantic Indexing (CL-LSI)\cite{cl_lsi} which is a variant of LSI~\shortcite{lsi} for more than one language. The method is based on computing a truncated singular value decomposition of $X \approx U S V^T$. See the Figure~\ref{fig:lsi} for the decomposition. Representing documents in ``topic`` coordinates is done in the same way as in the $k$-means case (see Figure~\ref{fig:kmeans}).
+The second approach we consider is Cross-Lingual Latent Semantic Indexing (CL-LSI)\cite{cl_lsi} which is a variant of LSI~\shortcite{lsi} for more than one language. The approach is very similar to $k$-means, where we first concatenate the corpus matrices, compute a decomposition, which in case of CL-LSI is a truncated Singular Value Decomposition (SVD), decouple the
+ column space matrix and use the blocks to compute linear maps to a common vector space, where standard cosine similarity is used to compare documents.
+
+ The method is based on computing a truncated singular value decomposition of the concatenated corpus matrix $X \approx U S V^T$. See the Figure~\ref{fig:lsi} for the decomposition. Representing documents in ``topic`` coordinates is done in the same way as in the $k$-means case (see Figure~\ref{fig:kmeans}), which we will
 
 \begin{figure}[tbp]
 \centering
-\includegraphics[width=\textwidth]{lsi}
+\includegraphics[width=\textwidth]{lsi.pdf}
 \caption{\label{fig:lsi} LSI multilingual corpus matrix decomposition.}
 \end{figure}
- 
- 
- Since the matrix can be large we can use an iterative method like the Lanczos~\cite{golub} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead, we use a randomized version of the singular value decomposition (SVD) described in \shortcite{tropp} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
 
-The cross-lingual similarity functions are based on a rank-$k$ truncated SVD: $X \approx U \Sigma V^T,$ where $U \in \RR^{N \times k}$ are basis vectors of interest and $\Sigma \in \RR^{k \times k}$ is truncated diagonal matrix of singular eigenvalues.
+The cross-lingual similarity functions are based on a rank-$k$ truncated SVD: $X \approx U \Sigma V^T,$ where $U \in \RR^{N \times k}$ are basis vectors of interest and $\Sigma \in \RR^{k \times k}$ is truncated diagonal matrix of singular eigenvalues. An aligned basis is obtained by first splitting $U$ vertically according to the number of dimensions of each language: $U = [U_1^T \cdots U_m^T]^T$. Then, the same as with $k$-means clustering, we compute the pseudoinverses $P_i = (U_i^T U_i)^{-1} U_i^T$. The matrices $P_i$ are used to change the basis from the standard basis in $\RR^{n_i}$ to the basis spanned by the columns of $U_i$.
 
-An aligned basis is obtained by first splitting $U$ vertically according to the number of dimensions of each language: $U = [U_1^T \cdots U_m^T]^T$. Then, the same as with $k$-means clustering, we compute the pseudoinverses $P_i = (U_i^T U_i)^{-1} U_i^T$. The matrices $P_i$ are used to change the basis from the standard basis in $\RR^{n_i}$ to the basis of columns of $U_i$.
+\textbf{A note on implementation}
 
-The numerical implementation of the least squares is done by QR algorithm~\cite{golub}, by computing factorizing $U_i = Q R$, where $Q^TQ = I$ and $R$ is triangular matrix. $P_i$ is then obtained by solving $R P_i = Q$.
+  Since the matrix $X$ can be large we could use an iterative method like the Lanczos~\cite{golub} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead, we use a randomized version of the singular value decomposition (SVD) described in \shortcite{tropp} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
+
+To compute the matrices $P_i$ we used the QR algorithm~\cite{golub} to factorize $U_i$ as $U_i = Q_i R_i$, where $Q_i^TQ_i = I$ and $R_i$ is triangular matrix. $P_i$ is then obtained by solving $R_i P_i = Q_i$.
 
 
 \subsection{Canonical Correlation Analysis}\label{sec:CCA}
- The final approach is a statistical technique to analyze data from two sources - after which we will describe our extension to computing cross-lingual similarities.
+ We now present a statistical technique to analyze data from two sources, extension of which we will be presented in the next section.
 %
  Canonical Correlation Analysis (CCA)~\cite{Hotelling} is a dimensionality reduction technique similar to Principal Component Analysis (PCA)~\cite{Pearson1901On}, with an additional assumption that the data consists of feature vectors that arose from two sources (two views) that share some information. Examples include: bilingual document collection ~\shortcite{mrpqr} and collection of images and captions~\shortcite{Hardoon_usingimage}. Instead of looking for linear combinations of features that maximize the variance (PCA) we look for a linear combination of feature vectors from the first view and a linear combination for the second view, that are maximally correlated.
 

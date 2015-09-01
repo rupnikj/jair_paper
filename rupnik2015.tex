@@ -310,7 +310,7 @@ To compute the matrices $P_i$ we used the QR algorithm~\cite{golub} to factorize
 
 
 \subsection{Canonical Correlation Analysis}\label{sec:CCA}
- We now present a statistical technique to analyze data from two sources, extension of which we will be presented in the next section.
+ We now present a statistical technique to analyze data from two sources, extension of which will be presented in the next section.
 %
  Canonical Correlation Analysis (CCA)~\cite{Hotelling} is a dimensionality reduction technique similar to Principal Component Analysis (PCA)~\cite{Pearson1901On}, with an additional assumption that the data consists of feature vectors that arose from two sources (two views) that share some information. Examples include: bilingual document collection ~\shortcite{mrpqr} and collection of images and captions~\shortcite{Hardoon_usingimage}. Instead of looking for linear combinations of features that maximize the variance (PCA) we look for a linear combination of feature vectors from the first view and a linear combination for the second view, that are maximally correlated.
 
@@ -329,21 +329,21 @@ Note that the method in its original form is only applicable to two languages wh
 \todo{each of these sections should have a matrix picture..}
 
 \subsection{Hub language based CCA Extension}\label{sec:hublang}
-Building cross-lingual similarity models based on comparable corpora is challenging for two main reasons. The first problem is related to missing alignment data: when a number of languages is large, the dataset of documents that cover all languages is small (or may even be empty). Even if only two languages are considered, the set of aligned documents can be small (an extreme example is given by the Piedmontese and Hindi Wikipedias where no inter-language links are available). The second challenge is scale - the data is high-dimensional (hundreds of thousands of features per language, many languages) and the number of multilingual documents may be large (over one million in case of Wikipedia).
+Building cross-lingual similarity models based on comparable corpora is challenging for two main reasons. The first problem is related to missing alignment data: when a number of languages is large, the dataset of documents that cover all languages is small (or may even be empty). Even if only two languages are considered, the set of aligned documents can be small (an extreme example is given by the Piedmontese and Hindi Wikipedias where no inter-language links are available), in which case none of the methods presented so far are applicable. 
+ The second challenge is scale - the data is high-dimensional (hundreds of thousands of features per language, many languages) and the number of multilingual documents may be large (over one million in case of Wikipedia). The optimization problem related to CCA is not
+ easy to solve: the covariance matrices themselves (or in a dual formulation, the kernel matrices) are prohibitively large to fit in memory (even storing a 100,000 by 100,000 element matrix requires 80GB of memory) and iterative matrix-multiplication based approaches to 
+ solving generalized eigenvalue problems are required (the covariance matrices can be expressed as products of sparse matrices, which means we have fast matrix-vector multiplication).
+
+We now describe an extension of CCA to more than two languages, which can be trained on large comparable corpora.
+ The extension we consider is based on a generalization of CCA to more than two views, introduced in \cite{Kettenring}, namely the Sum of Squared Correlation SSCOR, which we will state formally in the next paragraph. 
+ 
+ \todo{MESSAGE: Difficult problem, but if the data has a hub, it becomes an eigenvalue problem. With dimensionality reduction based on LSI it can easily be solved.}
+ 
 
 
 
 
-
-1. missing data
-2. LSI step
-3. Sum of squared correlations
-\todo{this list makes no sense}
-
-We describe an extension of CCA to more than two languages, which can be trained on large comparable corpora. The main difficulty with applying the
-LSI and $k$-means approaches is the fact that when one considers a large number of languages, e.g., the top 100 Wikipedia languages (ranked by number of articles), the set of completely
-aligned documents (over all languages) is often small or empty. Even if only two languages are considered, the set of aligned documents can be small (for example, Piedmontese and Hindi
-Wikipedias had no interlanguage links). In Wikipedia, we observed that even though the training resources are scarce between certain language pairs, there often exists indirect training data through what we refer to as a hub language.
+In Wikipedia, we observed that even though the training resources are scarce between certain language pairs, there often exists indirect training data through what we refer to as a hub language.
 
 A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$. The prototypical  exampling  in the case of Wikipedia is English. We use the following notation to define subsets of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $$a(i,j) = \left\{k~ |~ d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
 

@@ -237,7 +237,7 @@ where $d_1$ and $d_2$ are documents written in the $i$-th and $j$-th language re
 \subsection{Cross-Lingual Models}\label{sec:models}
 In this section, we describe several approaches to the problem of computing multilingual simliarities introduced in \ref{sec:tfidf}. We present four approaches:
 a simple approach based on $k$-means clustering in \ref{sec:kmeans}, a standard approach based on singular value decomposition in \ref{sec:LSI}, a related
-approach called Canonical Correlation Analysis (CCA) in \ref{sec:CCA} and finally a new, more generally applicable method, which is an extension of CCA to more than two languages in \ref{sec:hublang}.
+approach called Canonical Correlation Analysis (CCA) in \ref{sec:CCA} and finally a new method, which is an extension of CCA to more than two languages in \ref{sec:hublang}.
 %
 CCA can be used to find correlated patterns for a pair of languages, whereas the extended method optimizes a
 Sum of Squared Correlations (SSCOR) between several language pairs, which was introduced in \cite{Kettenring}. The SSCOR problem is difficult to solve in our setting (hundreds of thousands of features, hundreds of thousands of examples). To tackle this, we propose a method which consists of two ingredients.
@@ -329,29 +329,28 @@ Note that the method in its original form is only applicable to two languages wh
 \todo{each of these sections should have a matrix picture..}
 
 \subsection{Hub language based CCA Extension}\label{sec:hublang}
-Building cross-lingual similarity models based on comparable corpora is challenging for two main reasons. The first problem is related to missing alignment data: when a number of languages is large, the dataset of documents that cover all languages is small (or may even be empty). Even if only two languages are considered, the set of aligned documents can be small (an extreme example is given by the Piedmontese and Hindi Wikipedias where no inter-language links are available), in which case none of the methods presented so far are applicable. 
+Building cross-lingual similarity models based on comparable corpora is challenging for two main reasons. The first problem is related to missing alignment data: when a number of languages is large, the dataset of documents that cover all languages is small (or may even be empty). Even if only two languages are considered, the set of aligned documents can be small (an extreme example is given by the Piedmontese and Hindi Wikipedias where no inter-language links are available), in which case none of the methods presented so far are applicable.
  The second challenge is scale - the data is high-dimensional (hundreds of thousands of features per language, many languages) and the number of multilingual documents may be large (over one million in case of Wikipedia). The optimization problem related to CCA is not
- easy to solve: the covariance matrices themselves (or in a dual formulation, the kernel matrices) are prohibitively large to fit in memory (even storing a 100,000 by 100,000 element matrix requires 80GB of memory) and iterative matrix-multiplication based approaches to 
- solving generalized eigenvalue problems are required (the covariance matrices can be expressed as products of sparse matrices, which means we have fast matrix-vector multiplication).
+ trivial to solve: the covariance matrices themselves are prohibitively large to fit in memory (even storing a 100,000 by 100,000 element matrix requires 80GB of memory) and iterative matrix-multiplication based approaches to  solving generalized eigenvalue problems are required (the covariance matrices can be expressed as products of sparse matrices, which means we have fast matrix-vector multiplication).
 
-We now describe an extension of CCA to more than two languages, which can be trained on large comparable corpora.
- The extension we consider is based on a generalization of CCA to more than two views, introduced in \cite{Kettenring}, namely the Sum of Squared Correlation SSCOR, which we will state formally in the next paragraph. 
- 
- \todo{MESSAGE: Difficult problem, but if the data has a hub, it becomes an eigenvalue problem. With dimensionality reduction based on LSI it can easily be solved.}
- 
+We now describe an extension of CCA to more than two languages, which can be trained on large comparable corpora and can handle missing data.
+ The extension we consider is based on a generalization of CCA to more than two views, introduced in \cite{Kettenring}, namely the Sum of Squared Correlation SSCOR, which we will state formally later in this section. Our approach exploits a certain characteristic of the data, namely the \emph{hub language} characteristic (introduced in the next paragraph) in two
+ ways: to reduce the dimensionality of the data and to simplify the optimization problem.
 
-
-
-
+\textbf{Hub language characteristic}
 In Wikipedia, we observed that even though the training resources are scarce between certain language pairs, there often exists indirect training data through what we refer to as a hub language.
 
-A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$. The prototypical  exampling  in the case of Wikipedia is English. We use the following notation to define subsets of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $$a(i,j) = \left\{k~ |~ d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
+A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$. The prototypical example in the case of Wikipedia is English. We use the following notation to define subsets of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $$a(i,j) = \left\{k~ |~ d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
 
 We now describe a two step approach to building a cross-lingual similarity matrix. The first part is related to LSI and reduces the dimensionality of the data. The second step refines the linear mappings and optimizes the linear dependence between data.
+
+\textbf{Step 1: Hub language based dimensionality reduction}
 
 The first step in our method is to project $X_1, \ldots, X_m$ to lower dimensional spaces without destroying the cross-lingual structure. Treating the nonzero columns of $X_i$ as observation vectors sampled from an underlying distribution $\mathcal{X}_i \in V_i = \RR^{n_i}$, we can analyze the empirical cross-covariance matrices:
 $$C_{i,j} = \frac{1}{|a(i,j)|-1 }\sum_{\ell \in a(i,j)} (X_i^{\ell} - c_i)\cdot (X_j^{\ell} - c_j)^T,$$
  where $c_i = \frac{1}{a_i} \sum_{\ell \in a(i)}X_i^{\ell}$. By finding low rank approximations of $C_{i,j}$ we can identify the subspaces of $V_i$ and $V_j$ that are relevant for extracting linear patterns between $\mathcal{X}_i$ and $\mathcal{X}_j$. Let $X_1$ represent the hub language corpus matrix. The LSI approach to finding the subspaces is to perform the singular value decomposition on the full $N \times N$ covariance matrix composed of blocks $C_{i,j}$. If $|a(i,j)|$ is small for many language pairs (as it is in the case of Wikipedia), then many empirical estimates $C_{i,j}$ are unreliable, which can result in overfitting. For this reason, we perform the truncated singular value decomposition on the matrix $C = [C_{1,2}  \cdots  C_{1,m}] \approx U S V^T$, where where $U \in \RR^{n_1 \times k}, S \in \RR^{k \times k}, V \in \RR^{(\sum_{i=2}^m n_i) \times k}$. We split the matrix $V$ vertically in blocks with $n_2, \ldots, n_m$ rows: $V = [V_2^T  \cdots  V_m^T]^T$. Note that columns of $U$ are orthogonal but columns in each $V_i$ are not (columns of V are orthogonal). Let $V_1 := U$. We proceed by reducing the dimensionality of each $X_i$ by setting: $Y_i = V_i^T \cdot X_i$, where $Y_i \in \RR^{k\times N}$. To summarize, the first step reduces the dimensionality of the data and is based on CL-LSI, but optimizes only the hub-language related cross-covariance blocks.
+
+\textbf{Step 2: Simplifying and solving SSCOR}
 
 The second step involves solving a generalized version of canonical correlation analysis on the matrices $Y_i$ in order to find the mappings $P_i$. The approach is based on the sum of squares of correlations formulation by Kettenring \cite{Kettenring}, where we consider only correlations between pairs $(Y_1, Y_i), i >1$ due to the hub language problem characteristic.
 We will present the original unconstrained optimization problem, then a constrained formulation based on the hub language problem characteristic. Then we will simplify the constraints and reformulate
@@ -405,11 +404,10 @@ $$ W_1 = K_1^{-1} Y_1 $$
 $$ W_i = K_i^{-1} G_{i}^T Y_1 N,$$
 where $N$ is a diagonal matrix that normalizes $G_{i}^T Y_1$, with $N(j,j) := \frac{1}{\|G(_{i} Y_1(:,j)\|}$.
 
- The technique is related to  Generalization of Canonical Correlation Analysis (GCCA) by Carroll \citeyear{Carroll}, where an unknown group configuration variable is defined and objective is to maximize the sum of squared correlation between the group variable and the others. The problem can be reformulated as an eigenvalue problem. The difference lies in the fact that we set the unknown group configuration variable as the hub language, which simplifies the solution. The complexity of our method is $O(k^3)$, \todo{what is $k$?} whereas solving the GCCA method scales as $O(N^3)$ where $N$ is the number of samples (see \cite{gifi}). Another issue with GCCA is that it cannot be directly applied to the case of missing documents.
+\textbf{Remark}
+ The technique is related to  Generalization of Canonical Correlation Analysis (GCCA) by Carroll \citeyear{Carroll}, where an unknown group configuration variable is defined and objective is to maximize the sum of squared correlation between the group variable and the others. The problem can be reformulated as an eigenvalue problem. The difference lies in the fact that we set the unknown group configuration variable as the hub language, which simplifies the solution. The complexity of our method is $O(k^3)$, where $k$ is the reduced dimension from the LSI preprocessing step, whereas solving the GCCA method scales as $O(s^3)$, where $s$ is the number of samples (see \cite{gifi}). Another issue with GCCA is that it cannot be directly applied to the case of missing documents.
 
 To summarize, we first reduced the dimensionality of our data to $k$-dimensional features and then found a new representation (via linear transformation) that maximizes directions of linear dependence between the languages. The final projections that enable mappings to a common space are defined as: $P_i(x) = W_i^T V_i^T x.$
-
-
 
 
 \section{Cross-lingual Event Linking}\label{sec:linking}

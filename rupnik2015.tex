@@ -798,6 +798,9 @@ In our current implementation, we use the variation of hub approach. Our project
  Usage of proxy matrices enables projection of all input documents in the common space and handling language pairs with missing or low alignment. That enables us to do block-wise similarity computations further improving system efficiency. Our code can therefore be easily parallelized using matrix multiplication rather than performing more matrix - vector multiplications. This speeds up our code by a factor around $4.$ In this way, we obtain some caching gains and ability to use vectorization.
 Our system is also easily extendable. Adding a new language requires the  computation of  a projector matrix and proxy matrices with all other already available languages.
 
+\subsection{Repeatability of Experiments}
+\todo{Dataset of clusters, code, github}
+
 \section{Discussion and Future Work}
 \todo{We should mention the api, datasetswhatever here - for reprodicability}
 

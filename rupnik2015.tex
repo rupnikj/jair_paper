@@ -239,7 +239,6 @@ The second approach we consider is Cross-Lingual Latent Semantic Indexing (CL-LS
 \centering
 \includegraphics[width=10cm]{lsi.pdf}
 \caption{\label{fig:lsi} LSI multilingual corpus matrix decomposition.}
-\todo{Missing matrix S of singular values!!!}
 \end{figure}
 
 The cross-lingual similarity functions are based on a rank-$k$ truncated SVD: $X \approx U \Sigma V^T,$ where $U \in \RR^{N \times k}$ are basis vectors of interest and $\Sigma \in \RR^{k \times k}$ is a truncated diagonal matrix of singular eigenvalues. An aligned basis is obtained by first splitting $U$ vertically according to the number of dimensions of each language: $U = [U_1^T \cdots U_m^T]^T$. Then, the same as with $k$-means clustering, we compute the pseudoinverses $P_i = (U_i^T U_i)^{-1} U_i^T$. The matrices $P_i$ are used to change the basis from the standard basis in $\RR^{n_i}$ to the basis spanned by the columns of $U_i$.
@@ -279,7 +278,7 @@ We now describe an extension of CCA to more than two languages, which can be tra
  ways: to reduce the dimensionality of the data and to simplify the optimization problem.
 
 \textbf{Hub language characteristic}
-In the case of Wikipedia we observed that even though the training resources are scarce for certain language pairs, there often exists indirect training data that we can use as a proxy -- hub language.\todo{Check this, I prettified it.}
+In the case of Wikipedia, we observed that even though the training resources are scarce for certain language pairs, there often exists indirect training data. By considering a third language, which has training data with both languages in the pair,  we can use the composition of learned maps as a proxy. We refer to this third language as a hub language.
 
 A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$. The prototypical example in the case of Wikipedia is English. We use the following notation to define subsets of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $$a(i,j) = \left\{k~ |~ d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
 

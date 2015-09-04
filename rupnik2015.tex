@@ -53,51 +53,7 @@ Cross-Lingual Document Similarity and Event Tracking}
 
 In today's world, we follow news which is distributed globally. Significant events are reported by different sources and in different languages. In this work, we address the problem of tracking of events in a large multilingual stream. Within a recently developed system (EventRegistry  \shortcite{Leban2014W,Leban2014I}), we examine two aspects of this problem: how to compare articles in different languages and how to link collections of articles in different languages which refer to the same event.  Taking a multilingual stream and clusters of articles from each language, we compare different cross-lingual document similarity measures based on Wikipedia. This allows us to compute the similarity of any two articles regardless of language. Building on previous work, we show there are methods which scale well and can compute a meaningful similarity between articles from languages with little or no direct overlap in the training data.
 Using this capability, we then propose an approach to link clusters of articles across languages which represent the same event. We provide an extensive evaluation of the system as a whole, as well as an evaluation of the quality and robustness of the similarity measure and the linking algorithm.
-
-%Given a multi-lingual stream and clusters of articles from each language, we first propose a method for cross-lingual document similarity based on Wikipedia, which enables us to compute the similarity of any two articles regardless of language. The proposed method can scale to 100 languages and can match articles from languages with little or no direct overlap in the training data. Using this similarity, we then propose an approach to link clusters of articles across languages which represent the same event. We provide an extensive evaluation of the system as a whole, as well as an evaluation of the quality and robustness of the similarity measure and the linking algorithm.
-\begin{comment}
-Main points:
-\begin{itemize}
-\item Problem of tracking events in a large multilingual stream - we reduce it to event linking
-\item Two contributions. We propose a method that enables cross-lingaul document similarity an approach to linking multilingual data and an approach that uses is to link events.
-\item Evaluation of cross-lingual approaches on Wikipedia and the event linking task.
-\end{itemize}
-\end{comment}
 \end{abstract}
-%\section{Overview}
-%Structure
-%\begin{itemize}
-%\item Introduction
-%\item Cross lingual document similarity (model)
-%\item  Event Detection
-%\item  Combing the approaches
-%\item Experiments
-%\item Conclusions
-%\end{itemize}
-%The story:
-%\begin{itemize}
-%\item Description of the problem - we would liek to understand events ans sequences of events, but our observables (e.g. news stories) occur in a variety of languages
-%\item We present an approach to tackle this problem using a combination of techniques....
-%\item Ultimately we present a tool showing the feasibility of our approach
-%%\end{itemize}
-%
-%\section{Overview}
-%Structure
-%\begin{itemize}
-%\item Introduction
-%\item System overview
-%\item Cross lingual document similarity (algorithms)
-%\item Event linking
-%\item Experiments
-%\item Conclusions
-%\end{itemize}
-%The story:
-%\begin{itemize}
-%\item Description of the problem - we would like to understand global news as sequences of events, but our observables (e.g. news stories) occur in a variety of languages
-%\item We present an approach to tackle this problem using a combination of techniques....
-%\item Ultimately we present a tool showing the feasibility of our approach
-%\end{itemize}
-%
 
 \section{Introduction}
 
@@ -121,19 +77,6 @@ The first approach represents a continuation of previous work \shortcite{nips,si
 
 Based on the similarity function we propose a novel algorithm for linking events/clusters across languages. The approach is based on learning a classification model from labelled data based on several sets of features. In addition to these features, cross-lingual similarity is also used to quickly identify a small list of potential linking candidates for each cluster.
 This greatly increases the scalability of the system.
-
-%As input we consider a stream of articles in different languages and a list of events. Our goal is to assign articles to their corresponding events. A priori we do not know the coverage of the articles, that is not all the events may be covered and we do not know that all the articles necessarily fit into one of the events.  To achieve our goal, we divide the task into two parts: clustering the articles according to topic (regardless of language) and matching the clusters to events.
-%
-%To cluster the articles, rather than rely on machine translations, we adopt well-established monolingual text mining tools to the multilingual setting. This represents the continuation of previous work \shortcite{nips,sikdd,nips2,iti} where we explored representations of documents which were valid over multiple languages.  The representations could be interpreted as multi-lingual topics, which were then used as proxies to compute cross-lingual similarities between documents. To learn the representations, we use Wikipedia as a training corpus. Significantly, we do not only consider the major or \emph{hub} languages such as English, German, French, etc. which have significant overlap in article coverage, but also smaller languages (in terms of number of Wikipedia articles) such as Slovenian and Hindi, which may have a negligible overlap in article coverage. We can then define a similarity between any two articles regardless of language,  which allows us to cluster the articles according to topic. The underlying assumption being that articles describing the same event are similar  and will therefore be put into the same cluster.
-%
-%The second step is to match our computed clusters to events. Since our similarity measure and clustering
-%may not be perfect, we need to find the ``best" correspondence between clusters and events. In this paper, we test several different algorithms for both steps for performance in an integrated system. In particular, we test our approach within an online system for detection of world events, called Event Registry \shortcite{Leban2014W,Leban2014I}. Event Registry is a repository of events, where events are automatically identified by analyzing news articles.
-
-%
-%Event Registry works by collecting and analyzing news articles that are published by news outlets in different languages all over the world. Collected articles are first semantically annotated by identifying in them mentions of relevant concepts -- either entities or important keywords. The disambiguation and entity linking of the concepts is done using Wikipedia as the main knowledge base.
-%   The key step in Event Registry is then to apply an online clustering algorithm on the articles in order to identify groups of articles that are discussing the same event.
-%
-%   Within this system, we test our multilingual similarity measures as well as our algorithms for matching clusters across languages.  The result is that we can test total performance in a multilingual, real-world setting.
 
 The paper is organized as follows: we first provide an overview of the system as a whole (Section ~\ref{sec:pipeline}), followed by details on each of the two steps described above. We first introduce the problem of cross-lingual similarity computation (Section~\ref{sec:crosslingual}), which is followed by several approaches for measuring cross-lingual similarity (Section~\ref{sec:models}) and then the algorithms for matching clusters in different languages (Section~\ref{sec:linking}).  To improve readability, we describe relevant related work for each module in its corresponding section. Finally, we present and interpret the experimental results, give conclusions and describe promising future directions.
 
@@ -166,9 +109,7 @@ When a cluster is identified and information about the event is extracted, all a
 \label{sec:sysreq}
 
 Our goal is to build a system that monitors global media and analyzes how events are being reported on. Our approach consists of two steps: tracking events separately in each language (based on language detection and an online clustering approach) and then connecting them. The pipeline must be able to process millions of articles per day and perform billions of similarity computations each day. Both step rely heavily on simliarity computation, which implies that this must be highly scalable.
-%
-%while both steps must be scalable, the underlying similarity computation is used
-%- implying that similarity computation should be highly scalable.  %The system should support as many languages as possible.
+
 Therefore, we focus on implementations that run on a single shared memory machine, as opposed to clusters of machines. This  simplifies implementation and system maintenance.
 To summarize, the following properties are desirable:
 \begin{itemize}
@@ -178,7 +119,6 @@ To summarize, the following properties are desirable:
 \item \textbf{Implementation} - The system is straightforward to implement, with few parameters to tune.
 \end{itemize}
 We believe that a cross-lingual similarity component that meets such requirements is very desirable in a commercial setting, where several different costs have to be taken into consideration.
-
 
 \section{Related work}
 
@@ -192,7 +132,7 @@ There are four main families of approaches to cross-lingual similarity.
 
 \textbf{Probabilistic topic models}. There exist many variants to modelling documents in a language independent way by using probabilistic graphical models. The models include:  Joint Probabilistic Latent Semantic Analysis (JPLSA) \shortcite{platt2010translingual}, Coupled Probabilistic LSA (CPLSA) \cite{platt2010translingual}, Probabilistic Cross-Lingual LSA (PCLLSA)\cite{PCL_LSA} and Polylingual Topic Models (PLTM) \shortcite{polyLDA} which is a Bayesian version of PCLLSA. The methods (except for CPLSA) describe the multilingual document collections as samples from generative probabilistic models, with variations on the assumptions on the model structure. The topics represent latent variables that are used to generate observed variables (words), a process specific to each language. The parameter estimation is posed as an inference problem which is typically intractable and one usually solves it using approximate techniques. Most variants of solutions are based on Gibbs sampling or Variational Inference, which are nontrivial to implement and may require an experienced practitioner to apply. Furthermore, representing a new document as a mixture of topics is another potentially hard inference problem which must be solved.
 
-\textbf{Matrix factorization}. Non-negative matrix factorization based \cite{nonnegfactor_lsi}, Cross-Lingual Latent Semantic Indexing CL-LSI\shortcite{cl_lsi}\cite{multilingualBook}, Canonical Correlation Analysis (CCA) \cite{Hotelling}, Oriented Principal Component Analysis \cite{platt2010translingual}. The quadratic time and space dependency of the OPCA method makes it impractical for large scale purposes. In addition, OPCA forces the vocabulary sizes for all languages to be the same, which is less intuitive. For our setting, the method in \cite{nonnegfactor_lsi} has a prohibitively high computational cost when building models (it uses dense matrices of dimensions that is the product of training set size and vocabulary size). Our proposed approach combines CCA and CL-LSI. Another closely related method is Explicit Semantic Analysis (ESA) \cite{ESA}, which uses Wikipedia (as do we in the current work) to compare documents. It can be interpreted as using the sample covariance matrix between features of two languages to define the dot product that is used to compute similarities. 
+\textbf{Matrix factorization}. Non-negative matrix factorization based \cite{nonnegfactor_lsi}, Cross-Lingual Latent Semantic Indexing CL-LSI\shortcite{cl_lsi}\cite{multilingualBook}, Canonical Correlation Analysis (CCA) \cite{Hotelling}, Oriented Principal Component Analysis \cite{platt2010translingual}. The quadratic time and space dependency of the OPCA method makes it impractical for large scale purposes. In addition, OPCA forces the vocabulary sizes for all languages to be the same, which is less intuitive. For our setting, the method in \cite{nonnegfactor_lsi} has a prohibitively high computational cost when building models (it uses dense matrices of dimensions that is the product of training set size and vocabulary size). Our proposed approach combines CCA and CL-LSI. Another closely related method is Explicit Semantic Analysis (ESA) \cite{ESA}, which uses Wikipedia (as do we in the current work) to compare documents. It can be interpreted as using the sample covariance matrix between features of two languages to define the dot product that is used to compute similarities.
 The authors of ESA compare it to CL-LSI and find that CL-LSI can outperform ESA in an information retrieval, but is costlier to optimize over a large corpus (ESA requires no training). We find that the scalability argument does not apply in our case: based on advances in numerical linear algebra we can solve large CL-LSI problems (millions of documents as opposed to 10,000 document limit reported in \cite{ESA}). In addition, ESA is less suited for computing similarities between two large monolingual streams. For example, each day we have to compute similarities between 500,000 English and 500,000 German news articles. Comparing each German news article with 500,000 English news articles is either prohibitively slow (involves projecting all English articles on Wikipedia) or consumes too much memory (involves storing the projected English articles, which for a Wikipedia of size 1,000,000 is a 500,000 by 1000,0000 non-sparse matrix).
 
 \textbf{Monolingual}. Finally, related work includes monolingual approaches that treat document written in different languages in a monolingual fashion. The intuition is that named entities (for example, ``Obama'') and cognate words (for example, ``tsunami'') are written in the same or similar fashion in many languages. For example, the Cross-Language Character n-Gram Model (CL-CNG) \cite{plagiarism} represents documents as bags of character n-grams. Another approach is to use language dependent keyword lists based on cognate words \cite{pouliquen2008story}. These approaches may be suitable for comparing documents written in languages that share a writing system, which does not apply to the case of global news tracking.
@@ -234,9 +174,6 @@ Processing a multilingual dataset results in several vector spaces with varying 
 The similarity between documents in language $i$ and language $j$ is defined as a bilinear operator represented as a matrix $S_{i,j} \in \RR^{n_i \times n_j}$:
 $$sim_{i,j}(d_1, d_2) = \frac{ \langle \phi_i (d_1), S_{i,j} \phi_j (d_2) \rangle }{\|\phi_i(d_1)\| \|\phi_j(d_2)\|},$$
 where $d_1$ and $d_2$ are documents written in the $i$-th and $j$-th language respectively. If the maximal singular value of $S_{i,j}$ is bounded by $1$, then the similarity scores will lie on the interval $[-1, 1]$. In Section \ref{sec:models} we will describe some approaches to computing $S_{i,j}$ given training data. \todo{add some more details/intuition.}
-\begin{comment}
-Technical detail. Map everything in the english space. $S_{1, 2} = Q^{en}_1^T Q^{en}_2,$ where  Q^{en}_1 and Q^{en}_2 are orthogonal matrices. All non zero singular values are thus automatically equal to one.
-\end{comment}
 
 \subsection{Cross-Lingual Models}\label{sec:models}
 In this section, we describe several approaches to the problem of computing multilingual simliarities introduced in \ref{sec:tfidf}. We present four approaches:
@@ -247,7 +184,7 @@ CCA can be used to find correlated patterns for a pair of languages, whereas the
 Sum of Squared Correlations (SSCOR) between several language pairs, which was introduced in \cite{Kettenring}. The SSCOR problem is difficult to solve in our setting (hundreds of thousands of features, hundreds of thousands of examples). To tackle this, we propose a method which consists of two ingredients.
  The first one is based on an observation that certain datasets (such as Wikipedia) are biased towards one language (English), which can be exploited
  to reformulate a difficult optimization problem as an eigenvector problem. The second ingredient is dimensionality reduction using LSI, which
- makes the eigenvector problem computationally and numerically tractable. \todo{we need to set this up better. Revised by Jan. Check if OK. Andrej checked}
+ makes the eigenvector problem computationally and numerically tractable.
 
 We concentrate on approaches that are based on linear maps rather than alternatives, such as machine translation and probabilistic models, as discussed in the section on related work.
 We will start by introducing some notation.
@@ -278,7 +215,7 @@ to computing cross-lingual similarities. The idea is based on concatenating the 
 
  In order to apply the algorithm, we first merge all the term-document matrices into a single matrix $X$ by stacking the individual term-document matrices (as seen in Figure~\ref{fig:stacked_matrices}):
 $$X := \begin{bmatrix}X_1^T ,X_2^T, \cdots, X_m^T \end{bmatrix}^T,$$
-such that the columns respect the alignment of the documents (here MATLAB notation for concatenating matrices is used). Therefore, each document  is represented by a long vector indexed by the terms in all languages. \todo{picture here. Updated: added Figure 3}
+such that the columns respect the alignment of the documents (here MATLAB notation for concatenating matrices is used). Therefore, each document  is represented by a long vector indexed by the terms in all languages.
 
 We then run the $k$-means algorithm \cite{kmeans} and obtain a centroid matrix $C \in \RR^{N \times k}$, where the $k$ columns represent centroid vectors. The centroid matrix can be split vertically into $m$ blocks: $$C = [C_1^T \cdots C_m^T]^T,$$ according to the number of dimensions of each language, i.e. $C_i \in \RR^{n_i \times k}$.
 %
@@ -331,7 +268,6 @@ The optimization problem can be reduced to an eigenvalue problem and includes in
 A single canonical variable is usually inadequate in representing the original random vector and typically one looks for $k$ projection pairs $(w_i^1, w_j^1),\ldots,(w_i^k, w_j^k)$, so that $(w_i^{u})^T \mathcal{X}_i$ and $(w_j^{u})^T \mathcal{X}_j$ are highly correlated and $(w_i^{u})^T \mathcal{X}_i$ is uncorrelated with $(w_i^{v})^T \mathcal{X}_i$  for $u \neq v$ and analogously for $w_j^u$ vectors.
 
 Note that the method in its original form is only applicable to two languages where an aligned set of observations is available.
-\todo{each of these sections should have a matrix picture..}
 
 \subsection{Hub language based CCA Extension}\label{sec:hublang}
 Building cross-lingual similarity models based on comparable corpora is challenging for two main reasons. The first problem is related to missing alignment data: when a number of languages is large, the dataset of documents that cover all languages is small (or may even be empty). Even if only two languages are considered, the set of aligned documents can be small (an extreme example is given by the Piedmontese and Hindi Wikipedias where no inter-language links are available), in which case none of the methods presented so far are applicable.
@@ -435,7 +371,7 @@ Matching of clusters is a \emph{generalized matching} problem. We cannot assume 
 
 We are also seeking for an algorithm which does not do exhaustive comparison of all clusters, since that can become prohibitively expensive when working in a real-time setting. More specifically, we wish to avoid testing cluster $c_i$ with all the clusters from all the other languages. Performing exhaustive comparison would result in $O(|C|^2)$ tests, where $|C|$ is the number of all clusters (over all languages), which is not feasible when the number of clusters is on the order of tens of thousands. We address this by testing only clusters that are connected with at least one $k$-nearest neighbor (marked as \emph{candidate clusters} in Figure~\ref{fig:clusters}).
 
-\subsection{Algorithm}
+\subsection{Algorithm}\label{algo:features}
 
 In order to identify clusters that are equivalent to cluster $c_i$, we have developed a two-stage algorithm. For a cluster $c_i$, we first efficiently identify a small set of candidate clusters and then find those clusters among the candidates, which are equivalent to $c_i$. An example is  shown in  Figure~\ref{fig:clusters}.
 
@@ -509,14 +445,8 @@ We get inter-language link matrix using previously stored redirection links and 
 \subsection{Experiments With Missing Alignment Data}\label{experiments:hubcca}
 
  In this subsection, we will investigate the empirical performance of hub CCA approach. We will demonstrate that this approach can be successfully applied even in the case of fully missing alignment information.
- To this purpose, we select a subset of Wikipedia languages containing three major languages, English (4,212k articles)--\emph{en} (hub language), Spanish (9,686k articles)--\emph{es}, Russian (9,662k articles)--\emph{ru}, and five minority (in the sense of Wikipedia sizes) languages, Slovenian (136k articles)--\emph{sl}, Piedmontese (59k articles)--\emph{pms}, Waray-Waray (112k articles)--\emph{war} (all with about 2 million native speakers), Creole (54k articles)--\emph{ht} (8 million native speakers), and Hindi (97k articles)--\emph{hi} (180 million native speakers). For preprocessing, we remove the documents that contain less than 20 different words (stubs \footnote{Such documents are typically garbage, the titles of the columns in the table, remains of the parsing process, or Wikipedia articles with very little or no information contained in one or two sentences.}) and remove words occurring in less than 50 documents as well as the top 100 most frequent words (in each language separately). We represent the documents as normalized TFIDF\cite{Salton88term-weightingapproaches} weighted vectors.
- \todo{tfidf over what corpus  - is this static? Andrej: It is always static in hub based approach, i think based on en - es alignment in this case!}
- %These are languages with Wikipedia article sizes comparable to the minority languages.  (since the number of speakers does not directly correlate with the number of Wikipedia articles). The prime hub candidate is the English %language which is well aligned with all other Wikipedia languages, although the alignment quality varies quite a bit. Furthermore, we remove the documents that contain less than 20 different words and remove words that are too %infrequent as well as the top 100 most frequent words in the vocabularies.
- Although the English language is well aligned with other languages,\todo{well-aligned with what} number of articles highly correlates with the
-    number of articles connected to English, with all Wikipedia languages, we must note that quality of alignment varies quite a bit, especially in the case of small Wikipedias.
-% \todo{Move this to footnote for stubs}
-
-
+ To this purpose, we select a subset of Wikipedia languages containing three major languages, English (4,212k articles)--\emph{en} (hub language), Spanish (9,686k articles)--\emph{es}, Russian (9,662k articles)--\emph{ru}, and five minority (in the sense of Wikipedia sizes) languages, Slovenian (136k articles)--\emph{sl}, Piedmontese (59k articles)--\emph{pms}, Waray-Waray (112k articles)--\emph{war} (all with about 2 million native speakers), Creole (54k articles)--\emph{ht} (8 million native speakers), and Hindi (97k articles)--\emph{hi} (180 million native speakers). For preprocessing, we remove the documents that contain less than 20 different words (stubs \footnote{Such documents are typically garbage, the titles of the columns in the table, remains of the parsing process, or Wikipedia articles with very little or no information contained in one or two sentences.}) and remove words occurring in less than 50 documents as well as the top 100 most frequent words (in each language separately). We represent the documents as normalized TFIDF\cite{Salton88term-weightingapproaches} weighted vectors. The IDF scores are computed for each language with the exception of English based on its aligned documents with the English Wikipedia. The English language IDF scores are based on all English documents for which aligned Spanish documents exist.
+ 
 The evaluation is based on splitting the data into training and test sets. %(which are described later).
 We select the test set documents as all multilingual documents with at least one nonempty alignment from the list: (\emph{hi}, \emph{ht}), (\emph{hi}, \emph{pms}), (\emph{war}, \emph{ht}), (\emph{war}, \emph{pms}). This guarantees that we cover all the languages. Moreover this test set is suitable for testing the retrieval through the hub as the chosen pairs have empty alignments. The remaining documents are used for training. In Table \ref{table:train_test}, we display the corresponding sizes of training and test documents for each language pair.
 
@@ -551,8 +481,6 @@ pms&	95~-~96&	96~-~96&	94~-~94&	93~-~93&	85~-~85&	23~-~26&	66~-~54&	 \\
 \end{center}
 \end{table}
 }
-%
-%We now describe the selection of train and test sets. We select the test set documents as all multi-lingual documents with at least one nonempty alignment from the list: (\emph{hi}, \emph{ht}), (\emph{hi}, \emph{pms}), (\emph{war}, \emph{ht}), (\emph{war}, \emph{pms}). This guarantees that we cover all the languages. Moreover this test set is suitable for testing the retrieval thorough the hub as the chosen pairs have empty alignments. The remaining documents are used for training. In Table \ref{table:train_test}, we display the corresponding sizes of training and test documents for each language pair. The first row represents the size of the training sets used to construct the mappings in low dimensional language independent space using the English--\emph{en} as a hub. The diagonal elements represent number of the unique training documents and test documents in each language.
 
 {
 \renewcommand\tabcolsep{3pt}
@@ -608,13 +536,11 @@ There is also a problem with the quality of the test data. For example, if we lo
 
 \subsection{Evaluation Of Cross-Lingual Event Linking}
 In order to determine how accurately we can predict cluster equivalence, we performed two experiments in a multilingual setting using the English, German and Spanish language for which we had labelled data to evaluate the linking performance. In the first experiment, we tested how well  the individual approaches for cross-lingual article linking perform when used for linking the clusters about the same event. In the second experiment we tested how accurate the prediction model is when trained on different subsets of learning features. To evaluate the prediction accuracy for a given dataset we used 10-fold cross validation.
-%In this technique, the dataset is partitioned into 10 folds, where 9 folds are used for training a model and the left-out fold is then used to test the accuracy of the model. The learning %and testing process is repeated 10 times, each time with a different left-out fold.
 
 We created a manually labelled dataset in order to evaluate cross-lingual event linking using two human annotators. The annotators were provided with an interface listing the articles, their content from and top concepts for a pair of clusters and their task was to determine if the clusters were equivalent or not (i.e. discuss same event). To obtain a pair of clusters $(c_i, c_j)$ to annotate, we first randomly chose a cluster $c_i$, used the Algorithm~\ref{cluster_merge_algo1} to compute a set of potentially equivalent clusters $C$ and randomly chose a cluster $c_j \in C$. The dataset provided by the annotators contains 808 examples, of which 402 are equivalent clusters pairs and 406 are not. Clusters in each learning example are either in English, Spanish or German. Although Event Registry imports articles in other languages as well, we restricted our experiments to these three languages. We chose only these three languages since they have very large number of articles and clusters per day which makes the cluster linking problem hard due to large number of possible links.
 
-% which method?
-In Section~\ref{sec:models}, we  described three main algorithms for identifying similar articles in different languages. These algorithms were $k$-means, LSI and hub CCA. As a training set, we used common Wikipedia alignment for all three languages. To test which of these algorithms performed best, we made the following test. For each of the three algorithms, we analyzed all articles in Event Registry and for each article computed the most similar articles in other languages. To test how informative the identified similar articles are for cluster linking we then trained three classifiers as described in Section~\ref{trainClassifier}\todo{This section does not exist!} -- one for each algorithm. Each classifier was allowed to use as learning features only the cross-lingual article linking features for which values are determined based on the selected algorithm ($k$-means, LSI and hub CCA). The results of the trained models are shown in Table~\ref{table:linkingEvalAlgos}.
-%The table shows for each of the algorithms the obtained classification accuracy, precision and recall.
+In Section~\ref{sec:models}, we  described three main algorithms for identifying similar articles in different languages. These algorithms were $k$-means, LSI and hub CCA. As a training set, we used common Wikipedia alignment for all three languages. To test which of these algorithms performed best, we made the following test. For each of the three algorithms, we analyzed all articles in Event Registry and for each article computed the most similar articles in other languages. To test how informative the identified similar articles are for cluster linking we then trained three classifiers as described in Section~\ref{algo:features} -- one for each algorithm. Each classifier was allowed to use as learning features only the cross-lingual article linking features for which values are determined based on the selected algorithm ($k$-means, LSI and hub CCA). The results of the trained models are shown in Table~\ref{table:linkingEvalAlgos}.
+
 We can see that the most informative features for cluster linking are obtained using the hub CCA algorithm, while $k$-means performs the worst.
 
 % AMMR experiments
@@ -627,22 +553,6 @@ Furthermore, we inspected how the number of topics influences the accuracy of cl
 We also analyzed how cluster size influences the accuracy of cluster linking. We would expect that if the tested pair of clusters has a larger number of articles then the classifier should be able to more accurately predict whether the clusters should be linked or not. The reasoning is that the large clusters would provide more document linking information (more articles mean more links to other similar articles) as well as more accurately aggregated semantic information. In the case of smaller clusters, the errors of the similarity models have greater impact which should decrease the performance of the classifier, too. To validate this hypothesis we have split the learning examples into two datasets -- one containing cluster pairs where the combined number of articles from both clusters is below 20 and one dataset where the combined number is 20 or more. The results of the experiment can be seen in Table~\ref{table:linkingEvalAlgosLargeSmall}. As it can be seen, the results confirm our expectations: for smaller clusters it is indeed harder to correctly predict if the cluster pair should be merged or not. \todo{Andrej: A lahko poeditiras naslednje stavke - niso zelo jasno napisani. Trenutno ne znam bolje :(} The hub CCA outperforms other methods in this sense in terms of precision, which is consistent with its AMRR performance, see Figure~\ref{pic:AMRR}.
 It is worth noting that added accuracy is also beneficial when we wish to choose good representatives of clusters. Therefore, we decided to use hub CCA in the cluster linking component.
 
-%{\oldText{TODO:} add some explanation why this might be so.}
-%\emph{Andrej adds some tests, new experiment description graphs, and explanations for performance, done by Monday}
-%15000 test documents, around 300 000 sth training documents
-%Results for feature spaces of dimensions 500, 800, 1000  overfitting, 800 minor improvement
-%Timex complexity of similarity computation scales linearly with dimension space. We double numbers of articles and decrease memory requirements by 1/2.
-%CCA       CA          AUC         Prec        Recall
-%CCA =     [0.7882      0.8504      0.7692	   0.8209
-%           0.7957      0.8624      0.7788      0.8234
-%           0.8031      0.8654      0.8015      0.8035];
-%LSIS=     [0.7994      0.8627      0.7778      0.8358
-%           0.7956      0.8634      0.7828      0.8159
-%           0.7994      0.8642      0.8030      0.7910];
-%LSIW=     [0.7894      0.8606      0.7673      0.8284;
-%           0.7870      0.8632      0.7662      0.8234;
-%           0.8018      0.8663      0.7854      0.8284];
-
 %AMPR as function of the number of feature vectors
 %500 is good, 800 better, 1000 overfitting, noise!
 \begin{figure}
@@ -652,10 +562,7 @@ It is worth noting that added accuracy is also beneficial when we wish to choose
 \caption{Average of mean reciprocal ranks}
 \label{pic:AMRR}
 \end{figure}
-%Why the hub approach?
-%Optimize for language pairs in the system that have the largest number of articles in the system!
-%Is star CCA really the best???
-%Maybe omit this table?
+
 \begin{table}[h]
 \caption{Accuracy of cluster linking with 500 - 800 - 1000 topic vectors obtained from different cross-lingual similarity algorithms. The table shows for each of the algorithms the obtained classification accuracy, precision and recall.}
 \label{table:linkingEvalAlgos}
@@ -686,29 +593,12 @@ It is worth noting that added accuracy is also beneficial when we wish to choose
 \end{center}
 \end{table}
 
-
-
 In the second experiment, we evaluate how relevant individual groups of features are to correctly determine cluster equivalence. For this purpose, we tested the accuracies obtained using individual groups of features, as well as using different combination of groups. Since hub CCA had the best  performance of the three algorithms, we used it to compute the values of the cross-lingual article linking features. The results of the evaluation are shown in Table~\ref{table:linkingEval}. We can see that using a single group of features, the highest prediction accuracy can be achieved using  concept-related features. The classification accuracy in this case is 88.5\%. By additionally including also the cross-lingual article linking features, the classification accuracy rises slightly to 89.4\%. Using all three groups of features, the achieved accuracy is 89.2\%.
 
-To test if the accuracy of the predictions is language dependent we have also performed the evaluations separately on individual language pairs. For this experiment we have split the annotated learning examples into three datasets, where each dataset contained only examples for one language pair. When training the classifier all three groups of features were available. The results are shown in Table~\ref{langPairEval}. We can see that the highest accuracy can be obtained when we need to decide if an English and German cluster represent the same event. A possible interpretation for these results is that this language pair has the most language resources (the highest number of Wikipedia pages) which results in the most accurate cross-lingual article similarity measure as well as the most extensive semantic annotation of the articles.
+To test if the accuracy of the predictions is language dependent we have also performed the evaluations separately on individual language pairs. For this experiment we have split the annotated learning examples into three datasets, where each dataset contained only examples for one language pair. When training the classifier all three groups of features were available. The results are shown in Table~\ref{table:langPairEval}. We can see that the highest accuracy can be obtained when we need to decide if an English and German cluster represent the same event. A possible interpretation for these results is that this language pair has the most language resources (the highest number of Wikipedia pages) which results in the most accurate cross-lingual article similarity measure as well as the most extensive semantic annotation of the articles.
 
 Based on the performed experiments, we can make the following conclusions. The cross-lingual similarity algorithms provide valuable information that can be used to identify clusters that describe the same event in different languages. For the task of cluster linking, the cross-lingual article linking features are however significantly less informative compared to the concept-related features that are extracted from the semantic annotations. Nevertheless, the cross-lingual article similarity features are very important for two reasons. The first  is that they allow us to identify for a given cluster a limited set of candidate clusters that are potentially equivalent. This is a very important feature since it reduces the search space by several orders of magnitude. The second reason these features are important is that concept annotations are not available for all articles as the annotation of news articles is computationally intensive and can only be done for a subset of collected articles. The prediction accuracies for individual language pairs are comparable although it seems that the achievable accuracy correlates with the amount of available language resources.
 
-%\begin{table}[h]
-%\caption{Accuracy of cluster linking with features obtained from different cross-lingual similarity algorithms}
-%\label{table:linkingEvalAlgos}
-%\begin{center}
-%\begin{tabular}{|c|c|c|c|}
-%  \hline
-%  \cline{1-4}
-%  Models & CA & Precision & Recall \\ \cline{1-4}
-%  CCA & 77.6\% & 78.3 \%  & 81.1\%  \\ \cline{1-4}
-%  $k$-means & 73.9\% & 69.5\%  & 84.6\%  \\ \cline{1-4}
-%  LSI & 79.2\% & 78.9\%  & 80.6\%  \\ \cline{1-4}
-%  \hline
-%\end{tabular}
-%\end{center}
-%\end{table}
 
 \begin{table}[h]
 \caption{The accuracy of the classifier for story linking using different sets of learning features.}
@@ -747,13 +637,7 @@ Based on the performed experiments, we can make the following conclusions. The c
 \end{table}
 
 \subsection{Scaling}
-%\emph{I think that this section should be short.}
-%100 languages!
-%Memory 100 GB per day
-%Newsfeed volume 430k articles per day, 210k english, 36k Spanish, 27k German, 17k French, ....
-%Number of similarities, 430k similarities every 200ms, currently could handle 1M articles,
-%(n \over 2) 500X500 proxy matrices, 300000x500 Projector matrices, 430000x500 data
-%Premultiply with proxy matrices, compare blockwise!
+
 One of the main advantages of our approach is that it is highly scalable. It is fast, very robust to quality of training data, easily extendable, simple to implement and has relatively small hardware requirements. The similarity pipeline is the most computationally intensive part and currently runs on two Intel Xeon E5-2667 v2, 3.30GHz processor machine with 256GB of RAM. This is sufficient to do similarity computation over 150 languages if needed, see \url{http://xling.ijs.si} for live demo over 100 languages. It currently uses Wikipedia as a freely available knowledge base and experiments show that the similarity pipeline dramatically reduces the search space when linking clusters.
 
 Currently, we compute similarities over $24$ languages with tags: eng, spa, deu, zho, ita, fra, rus, swe, nld, tur, jpn, por, ara, fin, ron, kor, hrv, tam, hun, slv, pol, srp, cat, ukr but we support any language from the top $100$ Wikipedia languages. Our data stream is Newsfeed (http://newsfeed.ijs.si/) which provides $430k$ unique articles per day. Our system currently computes 2 million similarities per second, that means that we compute $16 \cdot 10^{10}$ similarities per day. We
@@ -766,7 +650,7 @@ Our system is also easily extendable. Adding a new language requires the  comput
 
 \subsection{Repeatability of Experiments}
 We have made publicly available at \url{https://github.com/rupnikj/jair_paper.git} both the code and data that were used in the experiments.
-The manually labelled dataset used in the evaluation of event linking is available at in the ``dataset`` subfolder of the github repository. The included archive contains two folders: ``positive'' and ``negative'', where the first folder includes examples of cluster pairs in two languages that represent the same event and the second folder contains pairs of clusters in two languages that do not represent different events. Each example is a JSON file that contains at the top level information about a pair of clusters (including text of the articles) as well as a set of ``meta'' attributes, that correspond to features described in \ref{trainClassifier}.
+The manually labelled dataset used in the evaluation of event linking is available at in the ``dataset`` subfolder of the github repository. The included archive contains two folders: ``positive'' and ``negative'', where the first folder includes examples of cluster pairs in two languages that represent the same event and the second folder contains pairs of clusters in two languages that do not represent different events. Each example is a JSON file that contains at the top level information about a pair of clusters (including text of the articles) as well as a set of ``meta'' attributes, that correspond to features described in Section \ref{algo:features}.
 
 The ``code'' folder includes MATLAB scripts for building cross-lingual similarity models introduced in \ref{sec:models}, which can be used with publicly available Wikipedia corpus to reproduce the cross-lingual similarity evaluation. We have also made available the similarity computation over 100 languages as a service at \url{xling.ijs.si}.
 

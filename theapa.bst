@@ -1,3 +1,4 @@
+
 %$$$ theapa.bst $$$ --- Version 2.5.1 (May 1992)
 %    by Young U. Ryu (young@emx.utexas.edu)
 
@@ -359,22 +360,22 @@ FUNCTION {format.key}
   if$
 }
 
-FUNCTION {format.title}
-{ title empty$
-    { "" }
-    { "\BBOQ " title "t" change.case$ * "\BBCQ" *}
-  if$
-}
+%FUNCTION {format.title}
+%{ title empty$
+%    { "" }
+%    { "\BBOQ " title "t" change.case$ * "\BBCQ" *}
+%  if$
+%}
 
 % If you don't want to change cases of article titles,
 % use the following `format.title' function instead the one.
 
-%FUNCTION {format.title}
-%{ title empty$
-%    { "" }
-%    { "\BBOQ " title * "\BBCQ" *}
-%  if$
-%}
+FUNCTION {format.title}
+{ title empty$
+    { "" }
+    { "\BBOQ " title * "\BBCQ" *}
+  if$
+}
 
 FUNCTION {n.dashify}
 { 't :=
@@ -559,8 +560,8 @@ FUNCTION {format.in.ed.booktitle}
 { booktitle empty$
     { "" }
     { editor empty$
-        { "In " format.emphasize.booktitle * }
-        { "In " format.editors * ", " * format.emphasize.booktitle * }
+        { "In " format.emphasize.booktitle * }                            
+        { "In " format.editors * ", " * format.emphasize.booktitle * }    
       if$
     }
   if$
@@ -609,7 +610,7 @@ FUNCTION {format.article.crossref}
     }
     { "In " key * }
   if$
-  " \cite{" * crossref * "}" *
+  " \citeyear{" * crossref * "}" *
 }
 
 FUNCTION {format.crossref.editor}
@@ -655,7 +656,7 @@ FUNCTION {format.book.crossref}
     }
     { format.crossref.editor * }
   if$
-  " \cite{" * crossref * "}" *
+  " \citeyear{" * crossref * "}" *
 }
 
 FUNCTION {format.incoll.inproc.crossref}
@@ -676,7 +677,7 @@ FUNCTION {format.incoll.inproc.crossref}
     }
     { "In " format.crossref.editor * }
   if$
-  " \cite{" * crossref * "}" *
+  " \citeyear{" * crossref * "}" *
 }
 
 FUNCTION {article}
@@ -823,7 +824,7 @@ FUNCTION {inproceedings}
           organization output
           publisher output
         }
-        { address output.nonnull
+        { address output.atitle.nonnull
           new.sentence
           organization output
           publisher output
@@ -1141,7 +1142,7 @@ FUNCTION {format.full.lab.names}
               if$
               t "others" =
                 { " et~al." * }
-                { "\ \BBA\ " * t * }
+                { " \BBA\ " * t * }
               if$
             }
           if$
@@ -1164,7 +1165,7 @@ FUNCTION {format.lab.names}
           'skip$
           { s #2 "{ff }{vv }{ll}{ jj}" format.name$ "others" =
                 { " et~al." * }
-                { "\ \BBA\ " * s #2 "{vv~}{ll}" format.name$ * }
+                { " \BBA\ " * s #2 "{vv~}{ll}" format.name$ * }
              if$
           }
        if$
@@ -1439,3 +1440,7 @@ FUNCTION {end.bib}
 }
 
 EXECUTE {end.bib}
+
+
+
+

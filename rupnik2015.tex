@@ -126,7 +126,7 @@ We believe that a cross-lingual similarity component that meets such requirement
 
 \section{Related work}
 
-In this section we will relate the methods we use to other alternatives in the literature. Since there are two distinctive tasks that we tackle in this paper (computing cross-lingual document similarity and cross-lingual cluster linking) we have separated the related work into two parts.
+In this section, we describe previous work described  in the literature. Since there are two distinctive tasks that we tackle in this paper (computing cross-lingual document similarity and cross-lingual cluster linking), we have separated the related work into two corresponding parts.
 
 \subsection{Cross-lingual document similarity}
 
@@ -152,7 +152,7 @@ A system, which is significantly different but worth mentioning, is the GDELT pr
 
 \section{Cross-lingual Document Similarity}
 \label{sec:crosslingual}
-Document similarity is an important component in techniques from text mining and natural language processing. Many techniques use the similarity as a black box, e.g., a kernel in Support Vector Machines. Comparison of documents (or other types of text snippets) in a monolingual setting is a well-studied problem in the field of information retrieval \cite{Salton88term-weightingapproaches}. We first formally introduce the problem followed by our approach.
+Document similarity is an important component in techniques from text mining and natural language processing. Many techniques use the similarity as a black box, e.g., a kernel in Support Vector Machines. Comparison of documents (or other types of text snippets) in a monolingual setting is a well-studied problem in the field of information retrieval \cite{Salton88term-weightingapproaches}. We first formally introduce the problem followed by a description of  our approach.
 
 \subsection{Problem definition}\label{sec:tfidf}
 We will first describe how documents are represented as vectors and how to compare douments in a mono-lingual setting. We then define a way to measure cross-lingual similarity which is natural for the models we consider.
@@ -198,7 +198,7 @@ We will start by introducing some notation.
 
 The cross-lingual similarity models presented in this paper are based on comparable corpora. A \emph{comparable corpus} is a collection of documents in multiple languages, with alignment between documents that are of the same topic, or even a rough translation of each other. Wikipedia is an example of a comparable corpus, where a specific entry can be described in multiple languages (e.g. ``Berlin" is currently described in 222 languages). News articles represent another example, where the same event can be described by newspapers in several languages.
 
-More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least \textbf{two nonempty documents}. This means that in our analyses we discard strictly monolingual documents for which no cross-lingual information is available. A comparable corpus $D = {d_1, \ldots, d_s}$ is a collection of $s$ multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times s}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$ and the matrices respect the document alignment - the vector $X_i^\ell$ corresponds to the TFIDF vector of the $i$-th component of multilingual document $d_\ell$. We use $N$ to denote the total row dimension of $X$, i.e. $N:= \sum_{i=1}^m n_i$. See the Figure~\ref{fig:stacked_matrices} for an illustration of the introduced notation.
+More formally, a \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least \textbf{two nonempty documents}. This means that in our analyses we discard strictly monolingual documents for which no cross-lingual information is available. A comparable corpus $D = {d_1, \ldots, d_s}$ is a collection of $s$ multilingual documents. By using the vector space model, we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times s}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$ and the matrices respect the document alignment - the vector $X_i^\ell$ corresponds to the TFIDF vector of the $i$-th component of multilingual document $d_\ell$. We use $N$ to denote the total row dimension of $X$, i.e. $N:= \sum_{i=1}^m n_i$. See the Figure~\ref{fig:stacked_matrices} for an illustration of the introduced notation.
 
 \begin{figure}[tbp]
 \centering
@@ -248,7 +248,7 @@ The second approach we consider is Cross-Lingual Latent Semantic Indexing (CL-LS
 
 The cross-lingual similarity functions are based on a rank-$k$ truncated SVD: $X \approx U \Sigma V^T,$ where $U \in \RR^{N \times k}$ are basis vectors of interest and $\Sigma \in \RR^{k \times k}$ is a truncated diagonal matrix of singular eigenvalues. An aligned basis is obtained by first splitting $U$ vertically according to the number of dimensions of each language: $U = [U_1^T \cdots U_m^T]^T$. Then, the same as with $k$-means clustering, we compute the pseudoinverses $P_i = (U_i^T U_i)^{-1} U_i^T$. The matrices $P_i$ are used to change the basis from the standard basis in $\RR^{n_i}$ to the basis spanned by the columns of $U_i$.
 
-\textbf{A note on implementation}
+\paragraph{A note on implementation}
 
   Since the matrix $X$ can be large we could use an iterative method like the Lanczos~\cite{golub} algorithm with reorthogonalization to find the left singular vectors (columns of $U$) corresponding to the largest singular values. It turns out that the Lanczos method converges slowly as the gap between the leading singular values is small. Moreover, the Lanczos method is hard to parallelize. Instead, we use a randomized version of the singular value decomposition (SVD) described in \shortcite{tropp} that can be viewed as a block Lanczos method. That enables us to use parallelization and speeds up the computation considerably.
 
@@ -282,7 +282,7 @@ We now describe an extension of CCA to more than two languages, which can be tra
  The extension we consider is based on a generalization of CCA to more than two views, introduced in \cite{Kettenring}, namely the Sum of Squared Correlations SSCOR, which we will state formally later in this section. Our approach exploits a certain characteristic of the data, namely the \emph{hub language} characteristic (introduced in the next paragraph) in two
  ways: to reduce the dimensionality of the data and to simplify the optimization problem.
 
-\textbf{Hub language characteristic}
+\paragraph{Hub language characteristic.}
 In the case of Wikipedia, we observed that even though the training resources are scarce for certain language pairs, there often exists indirect training data. By considering a third language, which has training data with both languages in the pair,  we can use the composition of learned maps as a proxy. We refer to this third language as a hub language.
 
 A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$. As we have mentioned, we only focus on multilingual documents that include at least two languages. The prototypical example in the case of Wikipedia is English. Our notion of the hub language could be interpreted in the following way.
@@ -292,14 +292,13 @@ We use the following notation to define subsets of the multilingual comparable c
 
 We now describe a two step approach to building a cross-lingual similarity matrix. The first part is related to LSI and reduces the dimensionality of the data. The second step refines the linear mappings and optimizes the linear dependence between data.
 
-\textbf{Step 1: Hub language based dimensionality reduction}
+\paragraph{Step 1: Hub language based dimensionality reduction.}
 
 The first step in our method is to project $X_1, \ldots, X_m$ to lower-dimensional spaces without destroying the cross-lingual structure. Treating the nonzero columns of $X_i$ as observation vectors sampled from an underlying distribution $\mathcal{X}_i \in V_i = \RR^{n_i}$, we can analyze the empirical cross-covariance matrices:
 $$C_{i,j} = \frac{1}{|a(i,j)|-1 }\sum_{\ell \in a(i,j)} (X_i^{\ell} - c_i)\cdot (X_j^{\ell} - c_j)^T,$$
  where $c_i = \frac{1}{a_i} \sum_{\ell \in a(i)}X_i^{\ell}$. By finding low-rank approximations of $C_{i,j}$ we can identify the subspaces of $V_i$ and $V_j$ that are relevant for extracting linear patterns between $\mathcal{X}_i$ and $\mathcal{X}_j$. Let $X_1$ represent the hub language corpus matrix. The LSI approach to finding the subspaces is to perform the singular value decomposition on the full $N \times N$ covariance matrix composed of blocks $C_{i,j}$. If $|a(i,j)|$ is small for many language pairs (as it is in the case of Wikipedia), then many empirical estimates $C_{i,j}$ are unreliable, which can result in overfitting. For this reason, we perform the truncated singular value decomposition on the matrix $C = [C_{1,2}  \cdots  C_{1,m}] \approx U S V^T$, where $U \in \RR^{n_1 \times k}, S \in \RR^{k \times k}, V \in \RR^{(\sum_{i=2}^m n_i) \times k}$. We split the matrix $V$ vertically in blocks with $n_2, \ldots, n_m$ rows: $V = [V_2^T  \cdots  V_m^T]^T$. Note that columns of $U$ are orthogonal but columns in each $V_i$ are not (columns of V are orthogonal). Let $V_1 := U$. We proceed by reducing the dimensionality of each $X_i$ by setting: $Y_i = V_i^T \cdot X_i$, where $Y_i \in \RR^{k\times N}$. To summarize, the first step reduces the dimensionality of the data and is based on CL-LSI, but optimizes only the hub language related cross-covariance blocks.
 
-\textbf{Step 2: Simplifying and solving SSCOR}
-
+\paragraph{Step 2: Simplifying and solving SSCOR.}
 The second step involves solving a generalized version of canonical correlation analysis on the matrices $Y_i$ in order to find the mappings $P_i$. The approach is based on the sum of squares of correlations formulation by Kettenring \cite{Kettenring}, where we consider only correlations between pairs $(Y_1, Y_i), i >1$ due to the hub language problem characteristic.
 We will present the original unconstrained optimization problem, then a constrained formulation based on the hub language problem characteristic. Then we will simplify the constraints and reformulate
 the problem as an eigenvalue problem by using the method of Lagrange multipliers.
@@ -352,7 +351,7 @@ $$ W_1 = K_1^{-1} Y_1 $$
 $$ W_i = K_i^{-1} G_{i}^T Y_1 N,$$
 where $N$ is a diagonal matrix that normalizes $G_{i}^T Y_1$, with $N(j,j) := \frac{1}{\|G(_{i} Y_1(:,j)\|}$.
 
-\textbf{Remark}
+\paragraph{Remark}
  The technique is related to  Generalization of Canonical Correlation Analysis (GCCA) by Carroll \citeyear{Carroll}, where an unknown group configuration variable is defined and the objective is to maximize the sum of squared correlation between the group variable and the others. The problem can be reformulated as an eigenvalue problem. The difference lies in the fact that we set the unknown group configuration variable as the hub language, which simplifies the solution. The complexity of our method is $O(k^3)$, where $k$ is the reduced dimension from the LSI preprocessing step, whereas solving the GCCA method scales as $O(s^3)$, where $s$ is the number of samples (see \cite{gifi}). Another issue with GCCA is that it cannot be directly applied to the case of missing documents.
 
 To summarize, we first reduced the dimensionality of our data to $k$-dimensional features and then found a new representation (via linear transformation) that maximizes directions of linear dependence between the languages. The final projections that enable mappings to a common space are defined as: $P_i(x) = W_i^T V_i^T x.$

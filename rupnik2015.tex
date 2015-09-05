@@ -167,13 +167,14 @@ $$\phi(d)_k = {TF}_k(d) \log\left( \frac{N}{{DF}_k}\right).$$
 \noindent\textbf {Mono-lingual similarity.}
 A common way of computing similarity between documents is \emph{cosine similarity},
 $$sim(d_1, d_2) = \frac{\langle \phi(d_1), \phi(d_2)\rangle}{\|\phi(d_1)\| \|\phi(d_2)\|},$$
-where $\langle \cdot,\cdot \rangle$ and $\|\cdot\|$ are standard inner product and Euclidean norm. Cosine similarity and other related approaches assume that the similarity is reflected in the overlap of words. While always defined, this metric is only meaningful when the documents $d_1$ and $d_2$ are defined on the same space (e.g. have a comparable vocabulary or are written in the same language, since otherwise their supports are disjoint).
+where $\langle \cdot,\cdot \rangle$ and $\|\cdot\|$ are standard inner product and Euclidean norm. When dealing with two or more languages, one could ignore the language information
+and build a vector space using the union of tokens over the languages. A cosine similarity function in such a space can be useful to some extent, for example "internet" or "Obama" may appear both in a Spanish and English texts and the presence of such terms in both an English and a Spanish document would contribute to their similarity. In general however, large parts of vocabularies may not intersect, which means that given a language pair, many words in both languages cannot contribute to the similarity score, which makes the similarity function very insensitive.
 
 \noindent\textbf {Cross-lingual similarity.}
 Processing a multilingual dataset results in several vector spaces with varying dimensionality, one for each language. The dimensionality of the vector space corresponding to the $i$-th language is denoted by $n_i$ and and the vector space model mapping is denoted by $\phi_i : \text{text} \rightarrow \RR^{n_i}$.
 The similarity between documents in language $i$ and language $j$ is defined as a bilinear operator represented as a matrix $S_{i,j} \in \RR^{n_i \times n_j}$:
 $$sim_{i,j}(d_1, d_2) = \frac{ \langle \phi_i (d_1), S_{i,j} \phi_j (d_2) \rangle }{\|\phi_i(d_1)\| \|\phi_j(d_2)\|},$$
-where $d_1$ and $d_2$ are documents written in the $i$-th and $j$-th language respectively. If the maximal singular value of $S_{i,j}$ is bounded by $1$, then the similarity scores will lie on the interval $[-1, 1]$. In Section \ref{sec:models} we will describe some approaches to computing $S_{i,j}$ given training data. \todo{add some more details/intuition.}
+where $d_1$ and $d_2$ are documents written in the $i$-th and $j$-th language respectively. If the maximal singular value of $S_{i,j}$ is bounded by $1$, then the similarity scores will lie on the interval $[-1, 1]$. We will provide an overview of the models in Section \ref{sec:models} and then introduce additional notation in \ref{sec:notation}. Starting with Section \ref{sec:kmeans} and ending with Section \ref{sec:hublang} we will describe some approaches to computing $S_{i,j}$ given training data.
 
 \subsection{Cross-Lingual Models}\label{sec:models}
 In this section, we will describe several approaches to the problem of computing multilingual simliarities introduced in \ref{sec:tfidf}. We present four approaches:
@@ -189,11 +190,11 @@ Sum of Squared Correlations (SSCOR) between several language pairs, which was in
 We concentrate on approaches that are based on linear maps rather than alternatives, such as machine translation and probabilistic models, as discussed in the section on related work.
 We will start by introducing some notation.
 
-\subsection{Notation}
+\subsection{Notation}\label{sec:notation}
 
 The cross-lingual similarity models presented in this paper are based on comparable corpora. A \emph{comparable corpus} is a collection of documents in multiple languages, with alignment between documents that are of the same topic, or even a rough translation of each other. Wikipedia is an example of a comparable corpus, where a specific entry can be described in multiple languages (e.g. ``Berlin" is currently described in 222 languages). News articles represent another example, where the same event can be described by newspapers in several languages.
 
-More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least two nonempty documents. A comparable corpus $D = {d_1, \ldots, d_s}$ is a collection of $s$ multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times s}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$ and the matrices respect the document alignment - the vector $X_i^\ell$ corresponds to the TFIDF vector of the $i$-th component of multilingual document $d_\ell$. We use $N$ to denote the total row dimension of $X$, i.e. $N:= \sum_{i=1}^m n_i$. See the Figure~\ref{fig:stacked_matrices} for an illustration of the introduced notation.
+More formally, \emph{multilingual document} $d = (u_1,\ldots u_m)$ is a tuple of $m$ documents on the same topic (comparable), where $u_i$ is the document written in language $i$. Note that individual document $u_i$ can be an empty document (missing resource) and each $d$ must contain at least \textbf{two nonempty documents}. This means that in our analyses we discard strictly monolingual documents for which no cross-lingual information is available. A comparable corpus $D = {d_1, \ldots, d_s}$ is a collection of $s$ multilingual documents. By using the vector space model we can represent $D$ as a set of $m$ matrices $X_1,\ldots,X_m$, where $X_i \in \RR^{n_i \times s}$ is the matrix corresponding to the language $i$ and $n_i$ is the vocabulary size of language $i$. Furthermore, let $X_i^{\ell}$ denote the $\ell$-th column of matrix $X_i$ and the matrices respect the document alignment - the vector $X_i^\ell$ corresponds to the TFIDF vector of the $i$-th component of multilingual document $d_\ell$. We use $N$ to denote the total row dimension of $X$, i.e. $N:= \sum_{i=1}^m n_i$. See the Figure~\ref{fig:stacked_matrices} for an illustration of the introduced notation.
 
 \begin{figure}[tbp]
 \centering
@@ -280,7 +281,10 @@ We now describe an extension of CCA to more than two languages, which can be tra
 \textbf{Hub language characteristic}
 In the case of Wikipedia, we observed that even though the training resources are scarce for certain language pairs, there often exists indirect training data. By considering a third language, which has training data with both languages in the pair,  we can use the composition of learned maps as a proxy. We refer to this third language as a hub language.
 
-A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$. The prototypical example in the case of Wikipedia is English. We use the following notation to define subsets of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $$a(i,j) = \left\{k~ |~ d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
+A \emph{hub language} is a language with a high proportion of non-empty documents in $D = \left\{d_1,..., d_{\ell}\right\}$. As we have mentioned, we only focus on multilingual documents that include at least two languages. The prototypical example in the case of Wikipedia is English. Our notion of the hub language could be interpreted in the following way.
+If a non-English Wikipedia page contains one or more links to variants of the page in other languages, English is very likely to be one of them. That makes English a hub language.
+
+We use the following notation to define subsets of the multilingual comparable corpus: let $a(i,j)$ denote the index set of all multilingual documents with non-missing data for the $i$-th and $j$-th language:  $$a(i,j) = \left\{k~ |~ d_k = (u_1,...,u_m), u_i \neq \emptyset, u_j \neq \emptyset \right\},$$ and let $a(i)$ denote the index set of all multilingual documents with non missing data for the $i$-th language.
 
 We now describe a two step approach to building a cross-lingual similarity matrix. The first part is related to LSI and reduces the dimensionality of the data. The second step refines the linear mappings and optimizes the linear dependence between data.
 
@@ -401,7 +405,7 @@ $C \leftarrow \{\}$\;
 
 The second stage of the algorithm determines which (if any) of the candidate clusters are equivalent to $c_i$. We treat this task as a supervised learning problem. For each candidate cluster $c_j \in C$, we compute a vector of learning features that should be indicative of whether $c_i$ and $c_j$ are equivalent or not and apply a binary classification model that predicts if the clusters are equivalent or not. The classification algorithm that we used to train a model was a linear Support Vector Machine (SVM) method \shortcite{shawe-taylor04kernel}.
 
-We use three groups of features to describe cluster pair $(c_i, c_j)$. The first group is based on {\bf cross-lingual article links}, which are derived using cross-lingual similarity: each news article $a_i$ is linked with its $10$-nearest neighbors articles from all other languages. The group contains the following features:
+We use three groups of features to describe cluster pair $(c_i, c_j)$. The first group is based on {\bf cross-lingual article links}, which are derived using cross-lingual similarity: each news article $a_i$ is linked with its $10$-nearest neighbors articles from all other languages (10 per each language). The group contains the following features:
 
 \begin{itemize}
 \item \texttt{linkCount} is the number of times any of the news articles from $c_j$ is among $10$-nearest neighbors for articles from $c_i$. In other words, it is the number of times an article from $c_i$ has a very similar article (i.e. is among 10 most similar) in $c_j$.
@@ -634,7 +638,7 @@ Based on the performed experiments, we can make the following conclusions. The c
 \end{center}
 \end{table}
 
-\subsection{Scaling}
+\subsection{Remarks on the scalability of the implementation}
 
 One of the main advantages of our approach is that it is highly scalable. It is fast, very robust to quality of training data, easily extendable, simple to implement and has relatively small hardware requirements. The similarity pipeline is the most computationally intensive part and currently runs on a machine with two Intel Xeon E5-2667 v2, 3.30GHz processors with 256GB of RAM. This is sufficient to do similarity computation over a large number of languages if needed. It currently uses Wikipedia as a freely available knowledge base and experiments show that the similarity pipeline dramatically reduces the search space when linking clusters.
 
@@ -646,7 +650,7 @@ In our current implementation, we use the variation of the hub approach. Our pro
  Usage of proxy matrices enables the projection of all input documents in the common space and handling language pairs with missing or low alignment. That enables us to do block-wise similarity computations further improving system efficiency. Our code can therefore be easily parallelized using matrix multiplication rather than performing more matrix - vector multiplications. This speeds up our code by a factor of around $4.$ In this way, we obtain some caching gains and ability to use vectorization.
 Our system is also easily extendable. Adding a new language requires the  computation of  a projector matrix and proxy matrices with all other already available languages.
 
-\subsection{Repeatability of Experiments}
+\subsection{Remarks on the repeatability of Experiments}
 We have made publicly available at \url{https://github.com/rupnikj/jair_paper.git} both the code and data that were used in the experiments.
 The manually labelled dataset used in the evaluation of event linking is available at in the ``dataset`` subfolder of the github repository. The included archive contains two folders: ``positive'' and ``negative'', where the first folder includes examples of cluster pairs in two languages that represent the same event and the second folder contains pairs of clusters in two languages that do not represent different events. Each example is a JSON file that contains at the top level information about a pair of clusters (including text of the articles) as well as a set of ``meta'' attributes, that correspond to features described in Section \ref{algo:features}.
 

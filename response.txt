@@ -1,0 +1,583 @@
+Reviewer 1
+
+This paper presents a model for article clusters linking across languages. Although it is stressed from the very beginning that this model is intended to link news articles, both news and Wikipedia articles are used for experimentation.
+
+Fair efforts are made to extensively evaluate the proposed model and demonstrate its performance. Nevertheless, I observe a few important issues including:
+
+1. It is not clear what the main point of the paper is: the proposal of a new cross-language similarity model or its application into event linking across languages.
+
+Authors' response: We have rephrased the introduction that the main point of this paper is to analyze the system as a whole while concentrating on two specific parts of the pipeline. 
+
+2. The description of the proposed model is not completely clear (and the departing point is a black box which is not properly described, but the reader is addressed to previous research work).
+
+Authors' response: We have reorganized the paper and added descriptions to make the paper more self contained. Furthermore, we have made our test dataset and pipeline (code) publicly available to allow for further comparisons.
+
+3. I miss some important related models in the comparison (e.g., CL-ESA)
+
+Authors' response: The related work section was revised.
+
+4. Reproducing most of the experiments is close to impossible.
+
+Authors' response: We have added a section on reproducibility where we provide access to relevant code and data in the evaluation.
+
+5. The paper does not flow properly. It is verbose when defining standard concepts and scarce when key aspects should be discussed.
+
+Authors' response: We have revised the paper to improve the flow and presentation.
+
+Please, see my detailed comments below:
+
+PER-SECTION COMMENTS
+
+ABSTRACT
+As you reduce your experiments to up to eight languages only, I would avoid being so ambitious as for claiming "it can scale to 100 languages".Even if this could be truth, no evidence is presented in this paper to support this claim.
+
+Authors' response: We have revised the abstract and removed the claim (although xling.ijs.si, implemented by the authors, demonstrates that this is possible, the reviewers point that we have not tested it in this context remains valid).
+
+SECTION 1
+
+"Machine translation remains relatively rudimentary -
+allowing people to understand simple phrases on web pages, but remain inadequate for more advanced understanding of text." Why is this sentence relevant to justify your current work?
+
+Authors' response: We have found that a common question is why is direct machine translation (e.g. via Google translate) insufficient for extending monolingual techniques - this sentence is meant to address that. 
+
+Figure 1: is this snapshot part of your own system? If not, please give proper credit to the source.
+
+Authors' response: The figure is part of our system. We included an elaboration:  "The results shown in the figure can be obtained using the query \url{http://eventregistry.org/event/997350\#?lang=eng\&tab=articles}. The content presented is part of the Event Registry system, developed by the authors."
+
+SECTION 2
+Figure 2: This figure does not help to better understand the pipeline as not too many (additional from the text) details are given. Please, stress the modules that represent your current contributions, maybe with some different color.
+
+Figure 3: Once again, this figure does not contribute to better understanding your model. May I suggest you to describe the different steps in a list and drop the figure?
+
+Authors' response: Both images were removed and replaced with an image that provides information about the components in the pipeline. The image is much more informative and helps to clarify the overall system as well as the components that are described in this paper.
+
+"A new document is first tokenized, stop words are removed and words are stemmed." I understand these are "generic" steps that you run on different languages and this causes the tools, algorithms and vocabularies different. I suggest you to add a table summarizing the tools, resources, and the proper associated citations (alternatively, it could also be an appendix)
+
+Authors' response: We have added references to the components and tools used in the system pipeline.
+
+"The clusters, we consider must have..." Please, rewrite.
+
+Authors' response: The text has been rewritten.
+
+"The system is described in more detail elsewhere (Leban et al., 2014b, 2014a)." I miss here the proper details of the clustering strategy. How is the on-line algorithm set up? Is the model deterministic? That is, no matter what documents come first, the final clustering is going to be the same? How do clusters and centroids evolve? I understand most of this represents previous work. Still, try to make this paper as self-contained as possible.
+
+Authors' response: More details about the clustering approach have been added. Additionally, a reference to a paper describing the clustering approach has been also provided.
+
+SECTION 3
+"The system should support as many languages as possible." You can safely remove this sentence
+
+Authors' response: The sentence has been removed.
+
+Section 3.1: regarding the desirable properties, I believe they are essential and may not be necessary to mention them in such a detail (they divert the attention of the reader).
+
+Authors' response: We have elaborated further. The requirements now have their own section and we stated them because some of them are specific to our use case - linking large news streams.
+
+"Supporting a new language should be straightforward." It is only straightforward if a comparable corpus is at hand. I understand such resources are found with more ease, but this does not mean that adding new languages is straightforward.
+
+Authors' response: The sentence has been removed.
+
+You say 3 families, but include 4. Beside considering the standard literature on the topic (e.g., [1]), you could consider the analysis of cross-language similarity measures included in [2] to compliment (even re-arrange) yours. One particular model used there ---CL-ESA---, is pretty similar to yours and should be worth including it in the comparison.
+
+Authors' response: We have revised the section and extended the related work, which now covers CL-ESA as well.
+
+The discussion about classification-based models is scarce. The description nor the justification are convincing.
+
+Authors' response: We removed the classification-based references, since we determined they are not suitable for cross-lingual similarity computation (the first reference is based on translations, the second reference only finds one dimensional projections).
+
+Page 6: "Based on the discussion above [...]". I do not see an actual discussion of the models. They are just listed (acronyms and extended version, and a short reasoning to justify why the authors discard it are included). This is the risk when no proper section to review related work is included.
+
+Authors' response: We have rephrased the sentence and restructured and extended the related work section. 
+
+Section 3.2: "how to compare" Compare what?
+
+Authors' response: The phrase in question was changed to: "how to compare documents"
+
+"A document TFIDF vector is its original vector multiplied element-wise by the weights." This sentence does not make sense. All in all, your definition of the tf-idf weighting schema is too verbose and even confusing. This is a standard model for weighting the relevance of a term in a document. Please, reduce the verbose description and be more precise; a couple of sentences should be more than enough (you might use the resulting extra space to better discuss the related work).
+
+Authors' response: we have revised the paragraph on TFIDF.
+
+"Cosine similarity, and other related approaches, assumes that the similarity is reflected in the overlap of words, and as such works only when the documents d1 and d2 are written in the same language." This is false. Cosine measures the similarity between two vectors, regardless of what such vectors represent. In this case, they are words, but it could be anything. If one would be able to come out with a vectorial representation valid across languages (i.e., by mapping the terms into a common space), cosine could be used as well. Please, fix this issue.
+
+Authors' response: The paragraph was revised and made more precise.
+
+SECTION 4
+In general, I find the definitions of the models a little bit cryptic. In particular, I find the connection between canonical correlation analysis and hub languages obscure.
+
+Authors' response: We have extended the presentation of both CCA and its extension.
+
+When listing the three approaches (which might be included in the paragraph rather than appear itemized), add a short description of the third model as you did with the other two.
+
+Authors' response: We have added additional remarks on the third model and restructured the text.
+
+Section 4.2: It is not clear to me whether these matrix representations/clusters are for the Wikipedia comparable corpus or for the news corpus.
+
+Authors' response: We have included a clarification.
+
+Please, add the proper citation for "Gram-Schmidt step".
+
+Authors' response: We have added a reference to Gram-Schmidt.
+
+SECTION 5
+The distribution of this section is poor. For instance, resources are used before they are defined. This is counterintuitive. Please, reorganize as necessary.
+
+Authors' response: The text has been rearranged: we moved the features before the algorithm and the dataset description to evaluation section.
+
+Section 5.1: what are both l_a and l_b? Are they the different languages? You had defined them as l_1, l_2,... l_k just a few lines before.
+
+Authors' response: The issue was fixed with more consistent notation.
+
+Figure 4 and around. The caption fails to describe the figure, making it hard to understand. Please, move this discussion to the main text (if it is actually necessary) and add a caption describing the figure. For instance. what is the meaning of the different-color arrows?
+
+Authors' response: The figure has been redrawn. Figure caption describes only what is shown in the Figure, implications and explanations are moved to the main text.
+
+Moreover, I am confused here. I thought you had said that the computation of similarities was made with respect to clusters' centroids.Was that only true for the monolingual clustering process? Is it true for this cross-language setting?
+
+Authors' response: This is now clarified in text.
+
+Last paragraph of 5.1: How do you deal with this issue exactly? What are the constraints?
+
+Authors' response: We have added an explanation to the last paragraph and improved the Figure.
+
+Section 5.2: I guess with "the lists" you mean the three vectors?
+
+Authors' response: Yes, we have corrected the text accordingly.
+
+Algorithm 2 is not necessary. The ML pipeline in which features are obtained for classifying an object is well known. You already describe everything necessary (what features are used, what learner is applied, how the data was annotated) later.
+Authors' response: Algorithm 2 has been removed and the text was updated accordingly.
+Still, I miss a few things: what is the information displayed to the annotators? Does it resembles the features? Is it just a collection of texts? 
+ Authors' response: More details have been added.
+Are the resources (e.g., annotated data) publicly available?
+ Authors' response: Yes, we now explain this in the subsection on repeatability of experiments.
+
+Section 5.4: The descriptions in this subsection are confusing. It is not straightforward to map that two articles are linked across languages if one of them appears among the 10 most similar documents of the other one.
+
+Authors' response: We have cleaned up the descriptions.
+
+Up to now, I find myself confused about whether you are talking about Wikipedia articles or news articles. For instance, when you talk about cross-language article linking, the idea of inter-language links in Wikipedia comes to my mind. Even if I accept that this confusion could be the result of my personal background, I encourage you to make the descriptions more clear and sharp to avoid it.
+
+Authors' response: We now use “news article” instead of “article” in most places.
+
+"an interface displaying information" What interface was shown to the annotators? What information they had at hand?
+
+Authors' response: We have added additional information on the annotation process.
+
+Cross-lingual article linking features: As the authors give no details about this process, understanding how this was used (and how it is used now) is difficult. Moreover, if I understood properly, the cluster-generation process is fully monolingual. What exactly is this cross-lingual linking information?
+
+Authors' response: We have added details describing how we get from cross-lingal similarity to cross-lingual links using a 10-nearest neighbour approach.
+
+Concept related features: I do not feel particularly comfortable with your claim that finding a named entity and identifying the corresponding Wikipedia article means semantically annotating a text.
+
+ Authors' response: The text has been rephrased.
+
+"[...] for cases where the weights are not relevant, [...]". In what cases the weight is not relevant when computing a similarity? Please, specify. The measure is called "Jaccard coefficient"; please add the corresponding reference.
+
+ Authors' response: The text has been revised and a reference has been added.
+
+SECTION 6
+Section 6.1 should not be part of the evaluation, but of the description of the resources applied in your model. Therefore, you should move it to Section 5.
+
+Authors' response: We have reorganized the paper, so that Section 4 and Section 5 describe the methodology and Section 6 describes the data and the experiments. The approaches in Section 4 and Section 5 are general and independent of the Wikipedia dataset. Wikipedia was used to build and evaluate the models from Section 4 and we feel that the most appropriate place to introduce it is in the Evaluation section.
+
+Include the proper citations for both Eurovoc and Europarl please.
+
+Authors' response: We have included the proper citations.
+
+What special namespace? Do you mean for instance the categories or discussion pages? Please, clarify.
+
+Authors' response: We refered to categories and discussion pages. Clarification has been included in the paper.
+
+Page 18, last paragraph: Even if a naive solution, it seems to make sense. Something that I miss is how you handle those cases in which an article in one language links to a missing one in the other language. 
+Authors' response: Missing links are simply omitted in our approach.
+I am assuming you are only generating bilingual matrices here. Otherwise, I miss how you handle cases in which {a,b} are articles in language 1 and c is an article in language 2. What happens if a points to c and c points to b? Both a and b become equivalent to c? This is not 100% correct.
+
+Authors' response: This results in multiple documents pointing from the document c, if first one is a, link to b is omitted
+  a  b  c
+a 0  0  1
+b 0  0  1
+c 1  1  0
+In the rare case that after symmetrization we have multiple links pointing from the document, we pick the first one that we encountered.
+
+Last paragraph in 6.1: If you are actually processing the more than 250 languages in Wikipedia, "all" is correct. If not, please be sharp and mention only the number of editions you are processing (and for which you report results here).
+
+Authors' response: We have added a footnote to clarify: \footnote{https://www.wikipedia.org/ dumps available in 2013}
+
+Section 6.2: Why do you measure these languages in terms of native speakers? Measuring them in terms of Wikipedia articles seems to make more sense in this context.
+
+Authors' response: We have added the number of articles in wikipedia to the text and  highlighted the difference with native speakers. We feel the latter is relevant since the number of news stories does depend on the number of speakers, meaning we may need to compare many articles from languages which have small wikipedias.
+
+"Although the English language is well aligned with all Wikipedia languages". This is false. For instance, see [3,4].
+
+Authors' response: This is true in the sense that number of articles is  highly correlated with the number of articles connected to English. It, however,  does not imply anything about the quality of alignment. The point of [3] is in fact to  shows that quality of alignment is very bad.
+
+"Furthermore, we call the document consisting of less than 20 different words, a stub." Remove this. It is implicit in your preprocessing description. You can include the description "This documents are typically..." in a footnote.
+
+Authors' response: The text has been moved to a footnote.
+
+"The evaluation is based on splitting the data into training and test sets (which are described later)." It would be better if you describe this right now. Otherwise, the reader has to go forward and backward all the time to understand what is going on.
+
+Authors' response: The description of test and train test was moved as proposed.
+
+Table 1: I guess the number on the left (right) corresponds to 500 (1000) topics? Please, describe it explicitly.
+
+Authors' response: We have explicitly described it in the caption.
+
+"The fist row represents the size of the training [...]" Move this to the caption of Table 2. In general I find your captions poor and even misleading (e.g., see Table 4 and Figure 5).
+
+ Authors' response: We have moved the description into the caption.
+
+Table 2: The way in which you build the training-test sets causes the results obtained on the different language pairs incomparable. The distributions of training-test sets is also completely different across languages. Moreover, I guess you do not have training instances for hi-[ht,pms], war-pms and others? How can you still run experiments on these languages (with such a high performance, like in hi-pms)? Am I missing something?
+
+Authors' response: Scores are not directly comparable and meant to be only used pairwise. The test documents are the same.  One of the points of our system is that we use the hub language as a proxy language. By mapping into the proxy language from the target and source language, we can obtain a mapping between source and target. The quality of these is presented in the experiments.
+
+"In this technique, the dataset is partitioned [...]" Remove the description of 10-fold cross validation. This procedure is well known.
+
+Authors' response: We omit the description.
+
+"The table shows for each of the algorithms the obtained classification accuracy, precision and recall." Move it to the caption.
+
+Authors' response: We moved the text into table's caption.
+
+Figure 6.3: do you mean Figure 5?
+
+Authors' response: The reference has been fixed.
+
+Table 4:
+- CA -> A
+Authors' response: CA has been replaced with Accuracy
+- The number of features corresponds to the size of the vocabulary?
+Authors' response: The number of features corresponds to the number of "topics" or the dimension of the latent space.
+- As you are running a fold validation, these must be average values. Please, add the standard deviation as well.
+Authors' response: Standard deviations were added for the tables where the deviations fit - in some tables deviations would make the table too wide and very hard to read.
+- Why is k-means applied with 500 features only?
+Authors' response: We have provided an explanation in the paper - the reason is high computational cost and low quality results on 500 features.
+- It is interesting to observe that LSI performs better with less features. Why? How sensitive are the models to the number of features?
+Authors' response: A possible interpretation is that using the truncated SVD decomposition acts as denoising. The progression of 500 - 800 - 1000 aims to demonstrate the diminishing return of adding more latent features. Higher numbers of feature also induce higher similarity computation cost - there are two tradeoffs: the computational complexity and quality of results.
+- All in all, the results of CCA and LSI seem quite comparable.
+Authors' response: This is not surprising as CCA is just a refinement.
+- Can you report the results for each language pair?
+Authors' response: The table with these results was added
+- Please, add F-measure (also to Table 5).
+Authors' response: F measures were added to some of the tables. In some experiments, the table becomes too wide so it was not added. If necessary, the results are already computed in the results folder in the two html files (available at https://github.com/rupnikj/jair_paper/tree/master/results).
+
+Table 5: what is large/small? Maybe this evolution could be better observed in a figure and that would avoid you the necessity of defining large and small.
+
+Authors' response: The details about this are now provided and the text has been rewritten.
+
+I guess "cross-lingual article linking features" means concepts in the table. Linking them is not so straightforward.
+
+Authors' response: The concepts correspond to performing "semantic" analysis on texts, where texts are annotated with entities, and using those annotations sets for cross-lingual similarity computation. The cross-lingual article linking features are derived based on cross-lingual comparisons of documents contained in clusters. We have revised the part that describes the features to make those details clearer.
+
+"The computed features are however significantly less informative compared to the features computed on the annotated concepts." What computed features?
+
+Authors' response: The text has been rewritten to make this point clear.
+
+Table 6: for completeness, Misc+concepts should be added as well.
+
+Authors' response: The missing feature pairs have been added.
+
+"This is sufficient to do similarity computation over 150 languages if needed." Either justify this estimation, show the empirical evidence, or drop this sentence.
+
+Authors' response: We have revised the sentence.
+
+REFERENCES
+[1] Peters, C., Braschler, M. and Clough, P. (2012) Multilingual Information Retrieval: From Research to Practice, Springer: Heidelberg, Germany, ISBN 978-3-642-23007-3, 217 pages. Available from Springer.
+
+[2] Potthast, Barrón-Cedeño, Stein, and Rosso. Cross-Language Plagiarism Detection. Language Resources and Evaluation (LRE), 45 : 45-62, March 2011
+Typos and grammar issues:
+
+[3] Paramita, Clough, Aker, Gaizauskas: Correlation between Similarity Measures for Inter-Language Linked Wikipedia Articles. Proc. of the 8th Intl. Language Resources and Evaluation (LREC 2012). pp. 790-797. ELRA, Istanbul, Turkey (2012)
+
+[4] http://en.wikipedia.org/wiki/Wikipedia:WikiProject_Interlanguage_Links
+
+TYPOS:
+the Ukraine -> Ukraine
+corresponding Section -> section
+desireable ->
+the the
+new articles -> news (?)
+the c_j -> c_j
+millionarticles
+also have a
+
+Authors' response: We have corrected the paper accordingly. The authors believe that using the phrase "news articles" makes the presentation clearer.
+----------------------------------------------------------------------------------------------------
+Reviewer 2
+
+The paper presents research on cross-lingual document similarity using CCA, and the use of the method as the basis of an event-tracking application on multilingual news feeds.
+
+ In my opinion the research described in the paper is original and relevant, and it is an excellent match for the Special Track.
+
+However, I think the the paper needs a significant effort to improve its clarity and organization before being publishable. Details follow.
+
+* Figure 1 is illegible. Please take the screenshot with better resolution.
+
+Authors' response: We have added a higher resolution screenshot as well as a link.
+
+* Figures 2 and 3 are rather obvious and maybe innecessary. On the other hand, some figures would help to understand the construction of the matrices described in section 4.
+
+Authors' response: We have added additional figures.
+
+* Section 4 is a bit messy. The authors state that they present 3 approaches, but then they present 4 (because they introduce CCA "for completeness"). Also, the itemize at the beggining of section 4 could be better correlated with its corresponding subsections (either with more similar names, or just referencing the subsection for each item) to ease the reader's path trough the paper.
+
+Authors' response: We revised the section 4. Cross-Lingual Models  accordingly.
+
+* In section 4.5, the sentence "we describe an extension to CCA, but is more applicable to ...", is unclear.  It should be "..., which is applicable to.." (?)
+(btw, I don't think "applicable" is a gradual adjective. It is either applicable or not, but it can't be "more applicable")
+
+Authors' response: We have revised the text according to the recommendation.
+
+* Avoid vague references such as "as described above/below".
+ E.g. section 5 "the main application on which we test the above similarity" should be "... we test the similarity described in section 4.5"  (there were 4 similarities "above")
+
+Authors' response: We have corrected the issue.
+
+* Figure 4 is referred in section 5.1 as an example of generalized matching (vs bipartite matching). The same figure is referred in section 5.3 as an example of the two stage algorithm of filtering a reduced set of candidate clusters to then compute their actual similarity. I can see how the Figure shows the later, but I fail to see how it shows the former. If two figures are needed use two, do not reuse, because it causes confusion (though in this case, I'd say that the generalized matching idea does not need a support figure).
+
+Authors' response: We have corrected the issue.
+
+* Section 6 is also a bit messy. The introduction mentions three sets of experiments, but then only two subsections follow. The third "set" of experiments seems to have been clustered into the second set. Please clarify the section introduction and state which subsections describe each set of experiments (ideally one subsection per set).
+
+Authors' response: We have rephrased it to indicate the two sets of experiments and rewritten the section introduction.
+
+* Section 6, introduction "..compare the main approaches the we presented..." should be "...that we presented"
+
+Authors' response: We have corrected the issue.
+
+* Section 6.1, "millionarticles" => "million articles".  Please use a speller.
+
+Authors' response: We have corrected the issue.
+
+* Section 6.2 presents the cross-lingual document similarity results, and briefly discusses them, to go next to the train/test set construction. I think it would be clearer if first the data sets are presented  (maybe even in their own subsubsection) and after, results are reported and discussed.
+
+Authors' response: This has been corrected -- the train/test construction is now described first. We believe that the additional subsection would be more distracting than clarifying. 
+
+* In Caption of Table 1,  "500 topics;1000 topics" should be
+  "500 topics - 100 topics" (with a dash) to mimic the format
+  of the data cells, thus suggesting the right interpretation.
+  The same in Table 2:  "training:test" should be "training - test"
+
+Authors' response: We have corrected both issues.
+
+* The description of Table 2 is unclear. The first row and the diagonal are described, but they contain exactly the same values. Is that an error?
+If it is not, then, what is the point of having them both?
+
+Authors' response: This is correct. We only select articles aligned with English. We have added a clarification in the figure caption.
+
+* Table 3 should follow the pattern of tables 1 and 2, and use a dash as
+  separator, instead of presenting values as pairs (which they are not).
+  Also, caption should express what are the left/right values respectively.
+
+Authors' response: We have revised the paper accordingly.
+
+* Last paragraph in section 6.2: "There is also have a problem"
+
+Authors' response: We have corrected the issue.
+
+* Section 6.3 also needs to improve in clarity.
+  - The first paragraph ends with a completely unnecessary description of what
+    is 10-fold cross validation. I guess JAIR readers do know what it is.
+Authors' response: We have addressed this in the paper.
+  - The second paragraph is completely confusing. It describes that a dataset
+    with only two features (linkCount and avgSimScore) is used, but then
+    results are shown in Table 4, with presents results with
+    500-800-1,000 features.
+Authors' response: We have rewritten the part related to describing the experiment.
+  - (BTW, spell figures over 1,000 with appropriate commas:
+     i.e. 15,000 and 300,000 instead of 15000 and 300000)
+Authors' response: We have corrected the issue.
+  - Third paragraph: "manages with 500 features performam comparably to LSI"
+    ==> performing (??)
+Authors' response: We have corrected the issue.
+  - fourth paragraph: "choosing number of features vectors larger than..."
+    ==> "choosing a number of features larger than... "   (I guess....)
+Authors' response: We have corrected the issue.
+* Section 6.4
+    - "400k similarities per 200ms" is a weird measure.  Why not just
+       "2 million similarities per second" ?
+    - "process more than million articles" => "process more than one million articles"
+
+Authors' response: Both issues were corrected.
+
+* Section 7
+This section should summarize the presented research, highlight the main contributions, and outline future research lines. It more or less does, but again in a messy style. There is an itemize that shows three items of different types: One contribution, one result, and one further work. If they are different things, do not put them in the same itemize, use different paragraphs.
+
+Authors' response: We have removed the bullets and updated the content in the discussion. The content is now cleaner and should flow nicely.
+
+     Also, some connective text would be nice, introducing each part (instead of an itemized list): when the summary starts, when contributions are higlighted, when future work is described (which should be completely separated from the rest).
+
+Authors' response: This was also taken into account - the future work is now a subsection.
+
+----------------------------------------------------------------------------------------------------
+Reviewer 3
+
+The authors describe and evaluate several methods to link clusters of news articles (produced elsewhere) across a wide range of languages. The multilingual feature spaces used for the cross-lingual similarity calculations are produced on the basis of Wikipedia articles and their cross-lingual links, including via hub languages. Canonical Correlation Analysis (Hub-CCA) was identified as being the best-performing method. The methods were tested both on news article clusters and on Wikipedia pages. They were tested not only for main language pairs, but also for language pairs with little coverage.
+
+The task of linking similar documents across languages is rather difficult and also computationally demanding, especially when extending to many different languages and language pairs. Relatively little previous work exists and only a very small number of real-life working systems with such functionality have been developed, while the importance of cross-lingual information access is of increasing importance in our globalised world. The authors have put a lot of work into developing the methods and the system. The evaluation is very comprehensive and convincing. The article is generally well-written and clear (but many typos will need correcting).
+
+Questions, comments and suggestions for improvement, section by section:
+
+1. Introduction
+
+I feel that you need to describe more clearly what the term ‘event’ means for you and what kinds of ‘events’ you intend to link. Are events time-limited? Are the many articles, spread over several weeks, of the recent Ebola outbreak in a whole range of countries one event or many? Similarly for discussions on bird flu, global warming, (civil) war in Ukraine, etc. In such cases, the borderline between events on one hand and topics (subject domains) on the other is not clear. You cannot solve this, but you can take a stand on what you intend to include. You took a practical stand by deciding that you will only look at articles up to four days of age. A possible extension of your system (future work) might be to keep news clusters ‘alive’ (i.e. link to them) as long as new articles get added to them.
+
+Authors' response: The reviewer is correct that the term event is ill-defined. In the end, we used human annotation to define what belongs to an event. We agree that where to draw the line where do define an event is an interesting and highly non-trivial question and well beyond the scope of this paper. An event for us, is a spatio-temporal entity, where articles must be sufficiently close in time, space and content. We have added this explanation to the introduction. 
+
+3. Cross-lingual Document Similarity
+
+I feel that section 3.1 should be split into ‘Requirements of our system’ (or the like) and ‘related work’ as the first page of 3.1 describes your needs/your settings rather than the work of others.
+
+Authors' response: The requirements have been moved into the pipeline section. The related work is now a separate section.
+
+You mention the cross-lingual news linking work in NewsExplorer/Europe Media Monitor (EMM) at a later point, but shouldn’t the cross-lingual linking methods presented by Pouliquen et al. be included in your section 3.1? Some of their papers explicitly referring to the cross-lingual linking process are:
+
+-          Pouliquen & Steinberger (2008). Story tracking: linking similar news over time and across languages.
+-          Pouliquen et al. (2004). Automatic Linking of Similar Texts Across Languages.
+-          Pouliquen et al. (2004). Multilingual and Cross-lingual News Topic Tracking.
+-          Pouliquen et al. (2003). Automatic Identification of Document Translations in Large Multilingual Document Collections.
+
+Authors' response: The papers by Pouliquen overlap quite a bit and describe the similar methodologies. We’ve added another reference to the “Story tracking …” paper and extended the cross-lingual similarity related work section.
+
+The latter seems to address an alternative way of evaluating the cross-lingual text linking in the setting where it is unknown whether an equivalent cross-lingual equivalence exists.
+
+Authors' response: We have considered the evaluation reported in Pouliquen et al. (2003), but we concluded that such an evaluation is most relevant in the setting of plagiarism detection, where one wants to detect translated content. In our case we focus primarily on finding comparable documents, the scenario most relevant to the event linking component in the full EventRegistry system.
+
+In 3.2, on the basis of what corpus are the IDF values produced?
+
+Authors' response: We have added a footnote. The IDF is computed dynamically for each new article over all the articles in the feed that are within a 10 day window.
+
+4. Cross-lingual models
+
+What are your criteria to distinguish ‘hub languages’ from the others? How many hub languages do you use? Or maybe I did not understand well and this does not matter?
+
+Authors' response: The hub languages are languages that are present in a large portion of multilingual documents. If a Wikipedia page written in a non-English language has one or more links to variants of the page in other languages, English is very likely to be one of them. That makes it a hub language.
+
+Section 4.5 is three pages long and I wonder whether all the contents fit under the header ‘hub languages’. Please check and amend, if needed.
+
+Authors' response: We restructured and revised the section to provide a clearer presentation.
+
+The large number of steps and methods used in the processes described in section 4.5 make it hard to determine where anything might go wrong or where anything might not be optimal.
+
+Authors' response: We split the presentation into subsections that motivate the method, expose the main assumption in the data and how to exploit it in two steps (dimensionality reduction and optimization problem simplification).
+
+5. Cross-lingual event linking
+
+Under ‘related work’ (5.2), you may want to mention the multilingual NewsTin media monitoring system. To my knowledge, they cover eleven languages. Although they apply multilingual categorisation rather than direct cross-lingual linking of related news, the functionality is similar.
+
+For EMM, the most representative overview publication I could find is:
+
+-          Steinberger et al. (2009). An Introduction to the Europe Media Monitor Family of Applications.
+
+Authors' response: The related work has been moved to different part of the paper and updated according to the recommendations. 
+
+In 5.3, you explain that you calculate cross-lingual similarities for all individual news articles, which seems to be a rather heavy process. I understand that you do initially need to do this as you use the results to identify the most similar clusters in the other languages. However, wouldn’t it make sense to then use the output of your ‘Algorithm 1’ to learn how to link the clusters directly?
+
+Authors' response: Article-article similarity is computed only when new articles appear in news stream. Clusters change as new articles are available and that would require re-evaluation of cluster matches after each update.
+
+Do you compare all individual articles across languages on the same day only or on all articles within your four-day window?
+
+Authors' response: We compare articles within a one day window.
+
+Please clarify (on page 17, concept-related features) how you recognise mentions of people, locations, keywords, etc. as it is non-trivial to do this for a large variety of languages. Is there any word sense disambiguation involved? Or do you only consider those ‘concepts’ that are marked with a hyperlink?
+
+Authors' response: We have added a reference to the disambiguation approach.
+
+I have the same remark regarding the ‘miscellaneous features’, where you say that you recognise the event locations. This, again, is a non-trivial task as place names are frequently homographic with person names, with other place names and also with common words of a language. Furthermore, usually more than one location name is mentioned in an article or an article cluster. How do you recognise THE event location? This needs clarifying.
+
+Authors' response: We have included an explanation that this is provided by the EventRegistry system and it is a task on itself.
+
+I believe that when you (repeatedly) refer to Figure 6.3, you want to make reference to Figure 5. Please correct.
+
+Authors' response: The reference has been fixed.
+
+It would be interesting to see some sort of an error analysis on wrongly identified web links.
+
+Authors' response: We agree with the reviewer that a better understanding of the wrongly identified links would be interesting. If such additional structure could be found in the errors, it could certainly improve the results. However, we do not know of an established methodology to perform such an analysis and feel that developing a new methodology for this is out of the scope of this paper.
+
+
+Good work!
+
+========================
+English language corrections:
+
+The paper is rather well written and it is mostly clear. However, there are many small English mistakes. In some sections there are more than in others, so if your best English speaker could go through the final text, this would be useful.
+
+I found two general TYPES of mistakes:
+
+-          Lacking hyphens. I believe that the general rule is that you need a hyphen if you combine two different parts of speech as noun modifiers, e.g. ‘concept-related features’, ‘language-(in)dependent space’, ‘low-rank approximations’, ‘hub language-related blocks’ (but no hyphen in noun-noun compounds!), ‘well-studied problem’, ‘translation-based’, ‘factorization-based’,  ‘clustering-based’, ‘sample-based’, ‘lower-dimensional’, ‘low-dimensional’, ‘concept-related’, ‘500-dimensional’, ‘LSI-based’, ‘CCA-based’, ‘extraction-based’, etc.
+
+-          Missing determiners. This is a particular challenge for people speaking Slavic languages and it is difficult to give some generic advice on when to use the definite, indefinite or no determiner.
+
+-          ‘That is’. I feel that you overuse this expression a bit, but mostly you should add ‘that is’ to the sentence it refers to (add a comma before) and certainly not start a new sentence with ‘That is’.
+
+And here is a non-exhaustive list of proposals for changes:
+
+-          Tracking and events à tracking of events (in the Abstract)
+-          The term ‘event’ (usage ‘event’ as meta-language term)
+-          ‘The disambiguated and entity linking of the concepts’ à ?
+-          Please reformulate the last sentence of the caption of Figure 2. I find it hard to parse.
+-          assumption being that à assumption is that
+-          Page 3, last sentence of Section 1: you twice use ‘first’, while the second step should probably be called ‘Second’ or ‘Then’?
+-          multi-lingual à multilingual
+-          Caption of Figure 3: add a colon between ‘articles’ and ‘it first’?
+-          Pre-processing on the à of the
+-          corss-lingual à cross-lingual
+-          take advantage of comparable corpus à corpora
+-          classification problem related à classification problem-related
+-          Page 7: Standard vector à The standard vector
+-          corresponds to word or phrase à words or phrases (Or: a word or a phrase)
+-          approaches, assumes à approaches, assume
+-          the the maximal à the maximal
+-          we describe … described in à reformulate
+-          related work section à section on related work (?)
+-          is truncated diagonal matrix à is a truncated …
+-          by QR algorithm à by the QR algorithm
+-          sources – after which à sources. After this (?)
+-          with an additional assumption à with the … (?)
+-          to CCA, but is à to CCA, which is
+-          where where à where
+-          to can be recovered à can be …
+-          and objective is à and the …
+-          sum of squared correlation à correlations
+-          particularly new articles à news articles (?)
+-          about same event à about the …
+-          . First vector à . The first vector
+-          algoirthm à algorithm
+-          millionarticles à million articles
+-          can point to redirection link also à redirection links
+-          link as inter-language links à link because inter-language links (confusing otherwise: ‘we store the link as something else’)
+-          If inter-language link à If an …
+-          transform this matrix to symmetric à to be symmetric
+-          of CCA hub à of the CCA hub
+-          This documents are à These (Or: Such)
+-          We perform the two-step à a two-step (?)
+-          Train and test sets à training and test sets
+-          Thorough the hub à through
+-          represent number of à represent the number of
+-          for each training English matrix à for each English training matrix (?) (Or: each training of the English matrix?)
+-          of Creole language à of the …
+-          many of remaining à many of the remaining
+-          confirmed for Creole … language à confirmed for the Creole … languages
+-          is also have a à is also a
+-          look at test à look at the test
+-          on other side à on the other side
+-          in multilingual setting using English, … language à in a multilingual setting using the English, … languages
+-          how accurate is the prediction model when à how accurate the prediction model is when
+-          performs the worse à the worst
+-          500 features performain à performing
+-          to LS based approach à to the LSI-based approach
+-          choosing number of features vectors à choosing the number of feature vectors
+-          with large number of documents à large numbers. 
+Authors' response: The authors believe that both versions are grammatically correct.
+-          processor machine with à machines
+-          depend of number à depend on the number
+-          more than million à more than one million
+-          variation of hub approach à of the hub …
+-          enables projection à enables the projection
+-          a factor around 4 à a factor of around 4
+-          present good baseline à present a good …
+-          independently of the à independently from the (?)
+
+Authors' response: We have corrected the English language related problems.
+
+
+----------------------------------------------------------------------------------------------------

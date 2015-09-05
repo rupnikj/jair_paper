@@ -51,7 +51,7 @@ Cross-Lingual Document Similarity and Event Tracking}
 
 \begin{abstract}
 
-In today's world, we follow news which is distributed globally. Significant events are reported by different sources and in different languages. In this work, we address the problem of tracking of events in a large multilingual stream. Within a recently developed system (EventRegistry  \shortcite{Leban2014W,Leban2014I}), we examine two aspects of this problem: how to compare articles in different languages and how to link collections of articles in different languages which refer to the same event.  Taking a multilingual stream and clusters of articles from each language, we compare different cross-lingual document similarity measures based on Wikipedia. This allows us to compute the similarity of any two articles regardless of language. Building on previous work, we show there are methods which scale well and can compute a meaningful similarity between articles from languages with little or no direct overlap in the training data.
+In today's world, we follow news which is distributed globally. Significant events are reported by different sources and in different languages. In this work, we address the problem of tracking of events in a large multilingual stream. Within a recently developed system EventRegistry  \shortcite{Leban2014W,Leban2014I} we examine two aspects of this problem: how to compare articles in different languages and how to link collections of articles in different languages which refer to the same event.  Taking a multilingual stream and clusters of articles from each language, we compare different cross-lingual document similarity measures based on Wikipedia. This allows us to compute the similarity of any two articles regardless of language. Building on previous work, we show there are methods which scale well and can compute a meaningful similarity between articles from languages with little or no direct overlap in the training data.
 Using this capability, we then propose an approach to link clusters of articles across languages which represent the same event. We provide an extensive evaluation of the system as a whole, as well as an evaluation of the quality and robustness of the similarity measure and the linking algorithm.
 \end{abstract}
 
@@ -449,7 +449,7 @@ We get inter-language link matrix using previously stored redirection links and 
 
  In this subsection, we will investigate the empirical performance of hub CCA approach. We will demonstrate that this approach can be successfully applied even in the case of fully missing alignment information.
  To this purpose, we select a subset of Wikipedia languages containing three major languages, English (4,212k articles)--\emph{en} (hub language), Spanish (9,686k articles)--\emph{es}, Russian (9,662k articles)--\emph{ru}, and five minority (in the sense of Wikipedia sizes) languages, Slovenian (136k articles)--\emph{sl}, Piedmontese (59k articles)--\emph{pms}, Waray-Waray (112k articles)--\emph{war} (all with about 2 million native speakers), Creole (54k articles)--\emph{ht} (8 million native speakers), and Hindi (97k articles)--\emph{hi} (180 million native speakers). For preprocessing, we remove the documents that contain less than 20 different words (stubs \footnote{Such documents are typically garbage, the titles of the columns in the table, remains of the parsing process, or Wikipedia articles with very little or no information contained in one or two sentences.}) and remove words occurring in less than 50 documents as well as the top 100 most frequent words (in each language separately). We represent the documents as normalized TFIDF\cite{Salton88term-weightingapproaches} weighted vectors. The IDF scores are computed for each language with the exception of English based on its aligned documents with the English Wikipedia. The English language IDF scores are based on all English documents for which aligned Spanish documents exist.
- 
+
 The evaluation is based on splitting the data into training and test sets. %(which are described later).
 We select the test set documents as all multilingual documents with at least one nonempty alignment from the list: (\emph{hi}, \emph{ht}), (\emph{hi}, \emph{pms}), (\emph{war}, \emph{ht}), (\emph{war}, \emph{pms}). This guarantees that we cover all the languages. Moreover this test set is suitable for testing the retrieval through the hub as the chosen pairs have empty alignments. The remaining documents are used for training. In Table \ref{table:train_test}, we display the corresponding sizes of training and test documents for each language pair.
 
@@ -553,7 +553,10 @@ We also compared the proposed approaches on the task of Wikipedia mate retrieval
 Furthermore, we inspected how the number of topics influences the accuracy of cluster linking. As we can see from Table~\ref{table:linkingEvalAlgos} choosing a number of features larger than $500$ barely affects linking performance, which is in contrast with the fact that additional topics helped to improve AMMR, see Figure~\ref{pic:AMRR}. Such differences may have arisen due to different domains of training and testing (Wikipedia pages versus news articles).
 
 % cluster size?
-We also analyzed how cluster size influences the accuracy of cluster linking. We would expect that if the tested pair of clusters has a larger number of articles then the classifier should be able to more accurately predict whether the clusters should be linked or not. The reasoning is that the large clusters would provide more document linking information (more articles mean more links to other similar articles) as well as more accurately aggregated semantic information. In the case of smaller clusters, the errors of the similarity models have greater impact which should decrease the performance of the classifier, too. To validate this hypothesis we have split the learning examples into two datasets -- one containing cluster pairs where the combined number of articles from both clusters is below 20 and one dataset where the combined number is 20 or more. The results of the experiment can be seen in Table~\ref{table:linkingEvalAlgosLargeSmall}. As it can be seen, the results confirm our expectations: for smaller clusters it is indeed harder to correctly predict if the cluster pair should be merged or not. \todo{Andrej: A lahko poeditiras naslednje stavke - niso zelo jasno napisani. Trenutno ne znam bolje :(} The hub CCA outperforms other methods in this sense in terms of precision, which is consistent with its AMRR performance, see Figure~\ref{pic:AMRR}.
+We also analyzed how cluster size influences the accuracy of cluster linking. We would expect that if the tested pair of clusters has a larger number of articles then the classifier should be able to more accurately predict whether the clusters should be linked or not. The reasoning is that the large clusters would provide more document linking information (more articles mean more links to other similar articles) as well as more accurately aggregated semantic information. In the case of smaller clusters, the errors of the similarity models have greater impact which should decrease the performance of the classifier, too. To validate this hypothesis we have split the learning examples into two datasets -- one containing cluster pairs where the combined number of articles from both clusters is below 20 and one dataset where the combined number is 20 or more. The results of the experiment can be seen in Table~\ref{table:linkingEvalAlgosLargeSmall}. As it can be seen, the results confirm our expectations: for smaller clusters it is indeed harder to correctly predict if the cluster pair should be merged or not.
+ 
+ 
+ The hub CCA outperforms other methods in this sense in terms of precision, which is consistent with its AMRR performance, see Figure~\ref{pic:AMRR}.
 It is worth noting that added accuracy is also beneficial when we wish to choose good representatives of clusters. Therefore, we decided to use hub CCA in the cluster linking component.
 
 %AMPR as function of the number of feature vectors
@@ -573,7 +576,7 @@ It is worth noting that added accuracy is also beneficial when we wish to choose
   \hline
   \cline{1-4}
   Models & Accuracy & Precision & Recall \\ \cline{1-4}
-  CCA      & 78.2 - 79.6 - 80.3 \% & 76.3 - 78.0 - 80.5 \%  & 81.6 - 82.1 - 79.9 \%  \\ \cline{1-4}
+  hub CCA      & 78.2 - 79.6 - 80.3 \% & 76.3 - 78.0 - 80.5 \%  & 81.6 - 82.1 - 79.9 \%  \\ \cline{1-4}
   LSI      & 78.9 - 78.7 - 80.6 \%  & 76.8 - 77.0 - 78.7 \%  & 83.3 - 80.6 - 83.6 \%  \\ \cline{1-4}
  $k$-means & 73.9\phantom{ - 78.7 - 80.6 }\% & 69.5\phantom{ - 78.7 - 80.6 }\%  & 84.6\phantom{ - 78.7 - 80.6 }\%  \\ \cline{1-4}
 \end{tabular}
@@ -587,8 +590,8 @@ It is worth noting that added accuracy is also beneficial when we wish to choose
 \begin{tabular}{|c|c|c|c|}
   \hline
   \cline{1-4}
-  Models & A & Precision & Recall \\ \cline{1-4}
-  CCA      & 81.2 - 77.8 \% & 80.5 - 74.5 \%  & 91.3 - 57.5 \%  \\ \cline{1-4}
+  Models & Accuracy & Precision & Recall \\ \cline{1-4}
+  hub CCA      & 81.2 - 77.8 \% & 80.5 - 74.5 \%  & 91.3 - 57.5 \%  \\ \cline{1-4}
   LSI      & 82.8 - 76.4 \% & 81.3 - 70.9 \%  & 93.1 - 57.5 \%  \\ \cline{1-4}
  $k$-means & 75.5 - 71.2 \% & 72.8 - 70.8 \%  & 95.3 - 36.2 \%  \\ \cline{1-4}
 \end{tabular}
@@ -610,11 +613,11 @@ Based on the performed experiments, we can make the following conclusions. The c
   \hline
   \cline{1-5}
   Features & A & Precision & Recall & F1 \\ \cline{1-5}
-  CCA & $78.3\% \pm 5.9\%$ & $0.782 \pm 0.070$ & $0.789 \pm 0.052$ & $0.784 \pm 0.055$ \\ \cline{1-5}
+  hub CCA & $78.3\% \pm 5.9\%$ & $0.782 \pm 0.070$ & $0.789 \pm 0.052$ & $0.784 \pm 0.055$ \\ \cline{1-5}
   Concepts & $88.5\% \pm 2.7\%$ & $0.886 \pm 0.048$ & $0.886 \pm 0.022$ & $0.885 \pm 0.024$ \\ \cline{1-5}
   Misc & $54.8\% \pm 6.7\%$ & $0.618 \pm 0.165$ & $0.582 \pm 0.302$ & $0.524 \pm 0.130$ \\ \cline{1-5}
-  CCA + Concepts & $89.4\% \pm 2.5\%$ & $0.894 \pm 0.046$ & $0.896 \pm 0.024$ & $0.894 \pm 0.023$ \\ \cline{1-5}
-  CCA + Misc & $78.8\% \pm 5.0\%$ & $0.789 \pm 0.071$ & $0.794 \pm 0.046$ & $0.790 \pm 0.045$ \\ \cline{1-5}
+  hub CCA + Concepts & $89.4\% \pm 2.5\%$ & $0.894 \pm 0.046$ & $0.896 \pm 0.024$ & $0.894 \pm 0.023$ \\ \cline{1-5}
+  hub CCA + Misc & $78.8\% \pm 5.0\%$ & $0.789 \pm 0.071$ & $0.794 \pm 0.046$ & $0.790 \pm 0.045$ \\ \cline{1-5}
   Concepts + Misc & $88.7\% \pm 2.6\%$ & $0.888 \pm 0.046$ & $0.888 \pm 0.022$ & $0.887 \pm 0.023$ \\ \cline{1-5}
   All & $89.2\% \pm 2.6\%$ & $0.888 \pm 0.049$ & $0.901 \pm 0.019$ & $0.893 \pm 0.023$ \\ \cline{1-5}
   \hline

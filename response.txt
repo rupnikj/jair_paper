@@ -184,7 +184,7 @@ Authors' response: We have included the proper citations.
 
 What special namespace? Do you mean for instance the categories or discussion pages? Please, clarify.
 
-Authors' response: We refered to categories and discussion pages. Clarification has been included in the paper.
+Authors' response: We ignore Wikipedia pages whose titles start with a Wikipedia namespace, such as "Category:" for example. We have revised the paper to make it clearer. 
 
 Page 18, last paragraph: Even if a naive solution, it seems to make sense. Something that I miss is how you handle those cases in which an article in one language links to a missing one in the other language. 
 Authors' response: Missing links are simply omitted in our approach.
